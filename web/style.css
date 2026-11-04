@@ -906,3 +906,47 @@ body.dark .brand-mark {
   font-weight: 600;
   color: var(--text);
 }
+.planning-panel {
+  margin-top: 20px;
+}
+.planning-panel > h2 {
+  margin-bottom: 16px;
+}
+#plan-form,
+#budget-form {
+  margin-top: 20px;
+}
+.planning-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.planning-row:last-child {
+  border-bottom: 0;
+}
+.planning-row p {
+  margin: 4px 0;
+  font-size: 12px;
+}
+.recurrence {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.recurrence summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.recurrence p {
+  margin: 8px 0;
+  font-size: 12px;
+}
+@media (max-width: 800px) {
+  .planning-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

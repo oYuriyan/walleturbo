@@ -14,10 +14,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DBSession
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.config import settings
+from app.planning import router as planning_router
 from app.pdf_import import router as pdf_router
 from app.db import (
     Transaction,
     Goal,
+    MonthPlan,
+    Budget,
     Account,
     Card,
     Statement,
@@ -57,7 +60,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -76,6 +79,7 @@ app.add_middleware(
 app.add_middleware(ResponseHeadersMiddleware)
 app.include_router(cards_router)
 app.include_router(pdf_router)
+app.include_router(planning_router)
 
 
 @app.exception_handler(IntegrityError)
@@ -371,6 +375,8 @@ def export(user=Depends(current_user), db: DBSession = Depends(db_session)):
                 ("statements", Statement),
                 ("card_charges", Charge),
                 ("statement_payments", StatementPayment),
+                ("month_plans", MonthPlan),
+                ("budgets", Budget),
             ]
         },
     }
@@ -386,7 +392,7 @@ def erase(
         db.execute(delete(model).where(model.owner == user))
     db.execute(delete(Transaction).where(Transaction.owner == user))
     db.execute(delete(Goal).where(Goal.owner == user))
-    for model in (Card, Account):
+    for model in (Card, Account, MonthPlan, Budget):
         db.execute(delete(model).where(model.owner == user))
     db.commit()
     request.session.clear()

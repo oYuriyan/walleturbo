@@ -32,6 +32,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - Metas com atualização da reserva e estimativa mensal sem rendimentos.
 - Contas, cartões, parcelas exatas em centavos, estornos, conferência e pagamentos parciais sem duplicar despesas.
 - Visões separadas de resultado mensal e movimentação líquida de caixa.
+- Limites por categoria, cenário mensal e simulação conservadora de aportes; recorrências de assinaturas com evidências.
 - Exportação JSON e exclusão dos dados financeiros ativos.
 - Sessão opaca no Redis, CSRF, verificação OIDC/ACR, limites de requisição e corpo.
 - Layout responsivo, claro/escuro, navegação por teclado e mensagens acessíveis.
@@ -46,6 +47,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - [Contas e faturas](docs/FATURAS.md)
 - [Leitura assistida de PDF e limites](docs/PDF.md)
 - [Migrações preservando dados](docs/MIGRACOES.md)
+- [Planejamento, limites e recorrências](docs/PLANEJAMENTO.md)
 - [Plano de entrega e critérios de aceite](docs/ROADMAP.md)
 - [Homologação e evidências](docs/HOMOLOGACAO.md)
 - [Operação e versionamento](docs/OPERACAO.md)

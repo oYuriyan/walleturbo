@@ -9,6 +9,7 @@
     <script src="/assets/app.js" defer></script>
     <script src="/assets/cards.js" defer></script>
     <script src="/assets/pdf.js" defer></script>
+    <script src="/assets/planning.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -24,6 +25,8 @@
           <span>⇄</span> Movimentações</button
         ><button class="nav" data-view="finance">
           <span>▤</span> Contas e cartões</button
+        ><button class="nav" data-view="planning">
+          <span>▥</span> Planejamento</button
         ><button class="nav" data-view="goals">
           <span>◎</span> Minhas metas</button
         ><button class="nav" data-view="privacy">
@@ -196,6 +199,76 @@
         <div id="card-list" class="goals-grid"></div>
         <h2 class="statement-heading">Faturas do período</h2>
         <div id="statement-list"></div>
+      </section>
+      <section id="planning" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Planejamento do mês</h2>
+            <p>
+              Defina limites, reveja recorrências e simule aportes para suas
+              metas
+            </p>
+          </div>
+        </div>
+        <p id="planning-notice" role="status"></p>
+        <div class="content-grid">
+          <article class="panel">
+            <h2>Seu cenário mensal</h2>
+            <form id="plan-form">
+              <label
+                >Renda de referência (R$, opcional)<input
+                  name="income"
+                  inputmode="decimal"
+                  pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+              ><label
+                >Margem que deseja preservar (R$)<input
+                  name="buffer"
+                  inputmode="decimal"
+                  required
+                  value="0"
+                  pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+              ><label class="checkbox"
+                ><input name="complete" type="checkbox" /> Conferi que as
+                receitas, despesas e faturas deste mês estão completas</label
+              ><button class="button" type="submit">Salvar cenário</button>
+            </form>
+          </article>
+          <article class="panel">
+            <h2>Limite por categoria</h2>
+            <form id="budget-form">
+              <label>Categoria<select name="category"></select></label
+              ><label
+                >Limite mensal (R$)<input
+                  name="amount"
+                  required
+                  inputmode="decimal"
+                  pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+              ><button class="button" type="submit">Salvar limite</button>
+            </form>
+            <p>
+              Os limites não reservam dinheiro e não alteram seus lançamentos
+            </p>
+          </article>
+        </div>
+        <article class="panel planning-panel">
+          <h2>Limites e gastos</h2>
+          <div id="budget-list"></div>
+        </article>
+        <article class="panel planning-panel">
+          <h2>Plano de aportes</h2>
+          <p id="capacity"></p>
+          <div id="planning-warnings"></div>
+          <div id="goal-plan-list"></div>
+        </article>
+        <article class="panel planning-panel">
+          <h2>Assinaturas para revisar</h2>
+          <p>
+            Recorrências observadas em pelo menos três meses, sem presumir falta
+            de uso
+          </p>
+          <div id="recurrence-list"></div>
+        </article>
+        <p id="planning-disclaimer" class="subtle"></p>
       </section>
       <section id="goals" class="view" hidden>
         <div class="section-heading">

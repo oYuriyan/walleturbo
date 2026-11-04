@@ -1,5 +1,12 @@
 # Histórico de alterações
 
+## 0.4.0 — em desenvolvimento
+
+- Planejamento mensal e limites por categoria com conferência dos agregados.
+- Simulação de aportes limitada por receita, resultado, caixa e margem preservada.
+- Recorrências de assinaturas com evidências de meses distintos, excluindo parcelas.
+- Migração 003, exportação/exclusão ampliadas e teste de planejamento no navegador.
+
 ## 0.3.0 — em desenvolvimento
 
 - Leitura assistida de PDF textual com seleção, edição e confirmação de candidatos.

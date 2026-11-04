@@ -18,6 +18,7 @@ jobs:
           node --check web/app.js
           node --check web/cards.js
           node --check web/pdf.js
+          node --check web/planning.js
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
@@ -34,11 +35,16 @@ jobs:
           npm install --prefix /tmp/walleturbo-e2e playwright@1.58.2
           /tmp/walleturbo-e2e/node_modules/.bin/playwright install --with-deps chromium
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_pdf.cjs
+      - name: Validar planejamento no navegador
+        run: |
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_planning.cjs
       - name: Salvar evidências sintéticas de interface
         uses: actions/upload-artifact@v4
         with:
           name: revisao-pdf
-          path: artifacts/pdf-*.png
+          path: |
+            artifacts/pdf-*.png
+            artifacts/planning-*.png
       - name: Encerrar serviços de teste
         if: always()
         run: docker compose down

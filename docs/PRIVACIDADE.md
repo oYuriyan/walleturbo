@@ -32,3 +32,5 @@ Exportação dos dados financeiros próprios, incluindo contas, cartões, parcel
 Não habilitar cookies analíticos/marketing ou integrações de oferta automaticamente. Recomendações futuras devem informar patrocínio/afiliação e não incentivar compras que prejudiquem as metas do usuário.
 
 Na leitura assistida de PDF, original e texto completo são processados transitoriamente em memória pelo serviço isolado. O Redis retém metadados pseudônimos e hashes de linhas da prévia por até dez minutos. Não há envio a IA. Consulte PDF.md para limites e retenção.
+
+Planejamento: renda de referência opcional, margem preservada, confirmação mensal e limites por categoria são usados para simulações determinísticas. Não são enviados a terceiros. Estão incluídos na exportação e exclusão financeira.

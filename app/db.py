@@ -169,6 +169,33 @@ class StatementPayment(Base):
     )
 
 
+class MonthPlan(Base):
+    __tablename__ = "month_plans"
+    owner: Mapped[str] = mapped_column(String(128), primary_key=True)
+    month: Mapped[str] = mapped_column(String(7), primary_key=True)
+    income_reference_cents: Mapped[int | None] = mapped_column(
+        BigInteger, nullable=True
+    )
+    buffer_cents: Mapped[int] = mapped_column(BigInteger, default=0)
+    records_complete: Mapped[bool] = mapped_column(Boolean, default=False)
+    stats_signature: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    __table_args__ = (
+        CheckConstraint(
+            "income_reference_cents IS NULL OR income_reference_cents BETWEEN 1 AND 99999999999"
+        ),
+        CheckConstraint("buffer_cents BETWEEN 0 AND 99999999999"),
+    )
+
+
+class Budget(Base):
+    __tablename__ = "budgets"
+    owner: Mapped[str] = mapped_column(String(128), primary_key=True)
+    month: Mapped[str] = mapped_column(String(7), primary_key=True)
+    category: Mapped[str] = mapped_column(String(40), primary_key=True)
+    amount_cents: Mapped[int] = mapped_column(BigInteger)
+    __table_args__ = (CheckConstraint("amount_cents BETWEEN 1 AND 99999999999"),)
+
+
 engine = create_engine(settings().database_url, pool_pre_ping=True)
 Session = sessionmaker(engine)
 

@@ -150,6 +150,8 @@ async function refresh() {
   if (typeof loadFinance === "function") await loadFinance();
   if (demo && typeof applyDemoCards === "function") applyDemoCards(data);
   render(data);
+  if (view === "planning" && typeof loadPlanning === "function")
+    await loadPlanning();
 }
 function render(data) {
   $("#cash-result").textContent =

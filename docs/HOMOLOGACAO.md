@@ -73,3 +73,7 @@ As pendências citadas no relatório 0.1 devem ser lidas como estado daquela ent
 66 testes locais aprovados, incluindo PDFs inválidos, escaneados, protegidos, com ações, excesso de páginas, protocolo limitado, revisão obrigatória, isolamento de usuário/sessão/fatura e deduplicação de seleções parciais. Os documentos são sintéticos; não há homologação de layouts de bancos. O Compose isolado e o navegador foram aprovados no CI, conforme evidência abaixo. O limite de disco do ambiente local motivou a validação integral no runner do GitHub.
 
 **CI 0.3 aprovado:** [execução 41826812495](https://github.com/oYuriyan/walleturbo/actions/runs/41826812495), commit `e60ea41`: build, 66 testes em container, auditoria, JavaScript, banco novo/legado, concorrência, PDF em leitor sem rede e navegador. O navegador confirmou prévia sem persistência, edição de descrição/valor, estorno e importação revisada em desktop/mobile. Capturas sintéticas estão no artefato `revisao-pdf` da execução. O runner foi fixado em Ubuntu 24.04, compatível com a versão de Playwright usada.
+
+## Incremento 0.4 — planejamento
+
+74 testes locais aprovados, incluindo isolamento de cenários/limites, estornos, capacidade de aporte, ausência de receita, invalidação por agregados e recorrência sem parcelas. O pipeline adiciona navegação de cenário e limite mensal, com capturas sintéticas. Não há análise por modelo de IA, certificação financeira ou garantia de economia. Ver PLANEJAMENTO.md.
