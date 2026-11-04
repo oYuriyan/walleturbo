@@ -4,20 +4,16 @@ const { createHmac } = require('crypto');
 const fs = require('fs');
 const assert = require('assert/strict');
 const base = 'http://localhost:8000';
-function totp(secret) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let bits = '';
-  for (const c of secret.toUpperCase().replace(/[\s=]/g, '')) {
-    assert(alphabet.includes(c));
-    bits += alphabet.indexOf(c).toString(2).padStart(5, '0');
-  }
-  const key = Buffer.from((bits.match(/.{8}/g) || []).map(b => parseInt(b, 2)));
+function totp(secret, now = Date.now()) {
+  // O campo oculto do Keycloak contém o segredo bruto; a tela/QR usa Base32.
+  const key = Buffer.from(secret, 'utf8');
   const counter = Buffer.alloc(8);
-  counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000)));
+  counter.writeBigUInt64BE(BigInt(Math.floor(now / 30000)));
   const hash = createHmac('sha1', key).update(counter).digest();
   const offset = hash[hash.length - 1] & 15;
   return ((hash.readUInt32BE(offset) & 0x7fffffff) % 1000000).toString().padStart(6, '0');
 }
+assert.equal(totp('12345678901234567890', 59000), '287082');
 (async () => {
   const fixture = JSON.parse(fs.readFileSync(0, 'utf8'));
   const browser = await chromium.launch({headless: true, args: ['--no-sandbox']});
@@ -70,4 +66,8 @@ function totp(secret) {
     await context.close();
     await browser.close();
   }
-})().catch(() => { console.error('FAIL: fluxo OIDC real; conferir etapa sem expor credenciais.'); process.exitCode = 1; });
+})().catch((error) => {
+  const location = (error.stack || '').split('\n').find(line => line.includes('browser_oidc.cjs:'));
+  console.error('FAIL: fluxo OIDC real:', error.name, location?.trim() || 'sem localização');
+  process.exitCode = 1;
+});
