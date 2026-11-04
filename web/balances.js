@@ -58,12 +58,15 @@ async function loadBalances() {
       ? `Subtotal conhecido: ${money(data.known_subtotal_cents)}. ${data.unknown_accounts} conta(s) sem referência aplicável e ${data.unassigned_transactions} lançamento(s) sem conta. Total completo indisponível.`
       : `Saldo calculado das contas: ${money(data.total_cents)}.`) +
     " Calculado pelos registros até a data, sem consulta bancária.";
-  $("#new-transfer").disabled = data.accounts.length < 2;
+  $("#new-transfer").disabled =
+    data.accounts.filter((a) => !a.archived).length < 2;
   if (!data.accounts.length)
     empty(target, "Cadastre uma conta para definir sua referência de saldo.");
   data.accounts.forEach((a) => {
     const panel = el("article", undefined, "panel account-balance");
     panel.dataset.accountId = a.id;
+    if (a.archived)
+      panel.append(el("span", "Conta arquivada · saldo preservado", "badge"));
     panel.append(
       el("h3", a.name),
       el(
@@ -96,23 +99,24 @@ async function loadBalances() {
           `${a.excluded_movements} movimento(s) anteriores à referência, mantidos somente no histórico.`,
         ),
       );
-    panel.append(
-      button(
-        a.version ? "Corrigir referência" : "Definir saldo inicial",
-        () => {
-          const f = balanceDialog("opening");
-          $("#opening-title").textContent = "Referência de saldo · " + a.name;
-          f.elements.account_id.value = a.id;
-          f.elements.request_id.value = crypto.randomUUID();
-          f.elements.expected_version.value = a.version;
-          f.elements.date.value = a.opening_date || day;
-          f.elements.amount.value =
-            a.opening_cents === null
-              ? ""
-              : (a.opening_cents / 100).toFixed(2).replace(".", ",");
-        },
-      ),
-    );
+    if (!a.archived || a.version)
+      panel.append(
+        button(
+          a.version ? "Corrigir referência" : "Definir saldo inicial",
+          () => {
+            const f = balanceDialog("opening");
+            $("#opening-title").textContent = "Referência de saldo · " + a.name;
+            f.elements.account_id.value = a.id;
+            f.elements.request_id.value = crypto.randomUUID();
+            f.elements.expected_version.value = a.version;
+            f.elements.date.value = a.opening_date || day;
+            f.elements.amount.value =
+              a.opening_cents === null
+                ? ""
+                : (a.opening_cents / 100).toFixed(2).replace(".", ",");
+          },
+        ),
+      );
     target.append(panel);
   });
   transferOffset = 0;

@@ -2,11 +2,11 @@
 
 ## Primeiro acesso
 
-Abra a aplicação. **Explorar demonstração** carrega exemplos fictícios na memória da aba. Você pode criar e editar lançamentos/metas; ao recarregar, tudo é descartado. Nenhum exemplo é gravado no banco. Para uso real, selecione **Entrar com segurança** depois que a equipe configurar OIDC, Google e MFA.
+Abra a aplicação. **Explorar demonstração** carrega exemplos fictícios na memória da aba. Você pode criar e editar lançamentos/metas; ao recarregar, tudo é descartado. Nenhum exemplo é gravado no banco. Para uso real, selecione **Entrar com segurança** no ambiente local com Keycloak/TOTP configurado. Google e domínio permanecem adiados.
 
 ## Rotina mensal
 
-Selecione o mês no topo. O resultado mensal é receitas menos despesas diretas e parcelas no mês de vencimento, com estornos. A movimentação de caixa considera pagamentos de fatura na data registrada. Nenhum deles é saldo consultado no banco. Vá a Movimentações para adicionar uma receita ou despesa, informando valor positivo, data, descrição e categoria. Marque a revisão quando tiver conferido a classificação. Para parcelas, estornos e pagamento de cartão, use **Contas e cartões**, conforme [Faturas](FATURAS.md); não registre também o pagamento como despesa direta. Transferências entre contas ainda não são suportadas.
+Selecione o mês no topo. O resultado mensal é receitas menos despesas diretas e parcelas no mês de vencimento, com estornos. A movimentação de caixa considera pagamentos de fatura na data registrada. Nenhum deles é saldo consultado no banco. Vá a Movimentações para adicionar uma receita ou despesa, informando valor positivo, data, descrição e categoria. Marque a revisão quando tiver conferido a classificação. Para parcelas, estornos e pagamento de cartão, use **Contas e cartões**, conforme [Faturas](FATURAS.md); não registre também o pagamento como despesa direta. Para transferir entre suas contas, use **Registrar transferência**, conforme a seção de saldos abaixo.
 
 A busca filtra descrição e categoria no mês selecionado. **Revisar** permite corrigir todos os campos. **Excluir** solicita confirmação antes de remover o lançamento.
 
@@ -32,7 +32,7 @@ Informe nome, valor alvo, valor já reservado e prazo. Atualize a reserva confor
 
 ## Privacidade
 
-Use **Baixar meus dados** para obter JSON com lançamentos, metas, contas, cartões, faturas, parcelas e pagamentos. Para excluir lançamentos e metas ativos, digite `EXCLUIR`. A conta do provedor de identidade não é removida. A implantação final deverá informar prazos de retenção de backup e canal de atendimento ao titular.
+Use **Baixar meus dados** para obter JSON com lançamentos, metas, contas, cartões, faturas, parcelas e pagamentos. A exportação inclui também planejamento, limites, referências de saldo, transferências e seus estados de arquivamento. Para apagar os dados financeiros, digite `EXCLUIR`. A conta do provedor de identidade não é removida. A implantação final deverá informar prazos de retenção de backup e canal de atendimento ao titular.
 
 O tema é alternado pelo botão ◐. Somente essa preferência fica no localStorage. Navegação e formulários suportam teclado; use Escape para fechar diálogos.
 
@@ -41,3 +41,11 @@ O tema é alternado pelo botão ◐. Somente essa preferência fica no localStor
 Em **Contas e cartões**, cadastre as contas e use **Definir saldo inicial**. Informe o saldo no início da data escolhida; movimentos desse dia entram no cálculo. Use **Consultar até a data** para uma posição acumulada independente do mês de faturas. Sem referência, o saldo é desconhecido; registros sem conta impedem afirmar um consolidado completo.
 
 **Corrigir referência** registra nova versão e motivo, preservando as anteriores na exportação. A correção redefine a base do cálculo, não representa receita. **Registrar transferência** exige origem/destino distintos, data, valor e descrição; registra uma operação já realizada fora da aplicação. **Reverter transferência** preserva a original e compensa as contas na data informada. Na mesma data, corrige um registro indevido; em data posterior, representa devolução. Consulte [SALDOS.md](SALDOS.md) para regras e exemplos.
+
+## Gerenciar contas e cartões
+
+Em **Contas e cartões**, use **Gerenciar conta** ou **Gerenciar cartão**. Altere o nome e salve; os vínculos permanecem e o novo nome aparece também nas operações antigas. Marque **Arquivado** e salve para impedir novos registros. Desmarque para reativar.
+
+O arquivamento não zera saldos nem oculta dívidas. Faturas existentes ainda podem ser conferidas e pagas usando uma conta ativa. Correções de lançamentos já vinculados à conta e reversões continuam disponíveis. Para importar CSV/PDF no cartão, reative-o primeiro.
+
+Se outra sessão tiver atualizado o cadastro, a gravação será recusada. **Recarregar cadastro** descarta o formulário atual e busca a versão mais recente; revise antes de salvar novamente. **Excluir cadastro vazio** aparece após salvar o arquivamento; a exclusão é recusada se houver vínculos, inclusive fatura vazia, referência de saldo ou transferência revertida. Consulte [Ciclo de vida](CADASTROS.md) para a política completa.

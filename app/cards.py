@@ -128,6 +128,18 @@ def owned(db, model, user, identifier, lock=False):
     return row
 
 
+def require_active(row):
+    if row.archived:
+        raise HTTPException(
+            409, "Cadastro arquivado. Reative antes de registrar uma nova operação."
+        )
+    return row
+
+
+def active_statement_card(db, user, statement):
+    return require_active(owned(db, Card, user, statement.card_id, lock=True))
+
+
 def statement_for(db, user, card, month):
     # Chamador mantém lock no cartão: criação concorrente é serializada.
     statement = db.scalar(
@@ -138,6 +150,7 @@ def statement_for(db, user, card, month):
         )
     )
     if not statement:
+        require_active(card)
         statement = Statement(
             owner=user,
             card_id=card.id,
@@ -284,6 +297,7 @@ def purchase(
         if previous[0].payload_hash != digest:
             raise HTTPException(409, "Identificador de envio já usado com outros dados")
         return [public(c) for c in previous]
+    require_active(card)
     result = []
     for i, amount in enumerate(split_cents(body.amount_cents, body.installments)):
         statement = statement_for(db, user, card, shift_month(body.first_month, i))
@@ -395,7 +409,7 @@ def pay(
     db: Session = Depends(db_session),
 ):
     statement = lock_statement(db, user, statement_id)
-    owned(db, Account, user, body.account_id)
+    account = owned(db, Account, user, body.account_id, lock=True)
     digest = hashlib.sha256((statement_id + fingerprint(body)).encode()).hexdigest()
     previous = db.scalar(
         select(StatementPayment).where(
@@ -407,6 +421,7 @@ def pay(
         if previous.payload_hash != digest:
             raise HTTPException(409, "Identificador de envio já usado com outros dados")
         return public(previous)
+    require_active(account)
     if statement.status != "closed":
         raise HTTPException(
             409, "Confira o total da fatura antes de registrar o pagamento"
@@ -457,6 +472,7 @@ def preview(
 ):
     statement = owned(db, Statement, user, statement_id)
     require_open(statement)
+    active_statement_card(db, user, statement)
     return {"entries": [e.model_dump() for e in csv_entries(body)]}
 
 
@@ -469,6 +485,7 @@ def import_statement(
 ):
     statement = lock_statement(db, user, statement_id)
     require_open(statement)
+    active_statement_card(db, user, statement)
     entries = csv_entries(body)
     created = 0
     for entry, key in zip(entries, import_keys(entries)):

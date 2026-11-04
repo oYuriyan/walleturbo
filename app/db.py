@@ -72,6 +72,10 @@ class Account(Base):
     )
     owner: Mapped[str] = mapped_column(String(128), index=True)
     name: Mapped[str] = mapped_column(String(80))
+    archived: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+    version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     __table_args__ = (UniqueConstraint("owner", "id"),)
 
 
@@ -135,6 +139,10 @@ class Card(Base):
     )
     owner: Mapped[str] = mapped_column(String(128), index=True)
     name: Mapped[str] = mapped_column(String(80))
+    archived: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+    version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     due_day: Mapped[int] = mapped_column(Integer)
     __table_args__ = (
         UniqueConstraint("owner", "id"),

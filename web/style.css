@@ -964,3 +964,5 @@ body.dark .brand-mark {
 .account-balance-value {
   font-size: 24px;
 }
+
+.account-management { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }

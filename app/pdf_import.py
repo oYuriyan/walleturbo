@@ -12,7 +12,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 from app import security
-from app.cards import owned, require_open, lock_statement, ReviewInput
+from app.cards import (
+    owned,
+    require_open,
+    lock_statement,
+    ReviewInput,
+    active_statement_card,
+)
 from app.db import Statement, Charge, db_session
 from app.domain import suggest_category
 from app.pdf_protocol import MAX_PDF_BYTES, extract_isolated
@@ -164,6 +170,7 @@ async def preview(
     # Não executar parser antes de autenticar e conferir o proprietário.
     statement = await run_in_threadpool(owned, db, Statement, user, statement_id)
     require_open(statement)
+    await run_in_threadpool(active_statement_card, db, user, statement)
     if request.headers.get("content-type", "").split(";")[0] != "application/pdf":
         raise HTTPException(415, "Envie o arquivo com Content-Type application/pdf")
     await run_in_threadpool(db.rollback)  # Libera a conexão enquanto o leitor trabalha.
@@ -209,6 +216,7 @@ def confirm(
 ):
     statement = lock_statement(db, user, statement_id)
     require_open(statement)
+    active_statement_card(db, user, statement)
     raw = security.store.get(preview_key(body.preview_token))
     metadata = json.loads(raw) if raw else {}
     if (

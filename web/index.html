@@ -11,6 +11,7 @@
     <script src="/assets/pdf.js" defer></script>
     <script src="/assets/planning.js" defer></script>
     <script src="/assets/balances.js" defer></script>
+    <script src="/assets/lifecycle.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -633,6 +634,46 @@
         <button id="pdf-confirm" type="submit" class="button full" disabled>
           Importar seleção revisada
         </button>
+      </form>
+    </dialog>
+    <dialog id="lifecycle-dialog">
+      <form id="lifecycle-form">
+        <div class="section-heading">
+          <h2 id="lifecycle-title">Gerenciar cadastro</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" /><input
+          name="kind"
+          type="hidden"
+        /><input name="version" type="hidden" />
+        <label>Apelido<input name="name" maxlength="80" required /></label>
+        <label class="check"
+          ><input name="archived" type="checkbox" />Arquivado</label
+        >
+        <p>
+          Arquivar mantém os saldos e o histórico e impede novas operações. Você
+          pode reativar depois. Faturas existentes continuam disponíveis para
+          revisão e pagamento.
+        </p>
+        <p>
+          O apelido atualizado aparecerá também nos registros anteriores.
+          Alterar vencimento exige uma revisão própria das faturas.
+        </p>
+        <div class="actions">
+          <button class="button" type="submit">Salvar cadastro</button
+          ><button id="reload-lifecycle" class="ghost" type="button">
+            Recarregar cadastro
+          </button>
+        </div>
+        <button id="delete-empty-entity" class="danger" type="button" hidden>
+          Excluir cadastro vazio
+        </button>
+        <p id="lifecycle-delete-note" class="subtle">
+          A exclusão exige cadastro arquivado e sem registros vinculados. Se
+          houver histórico, mantenha-o arquivado.
+        </p>
       </form>
     </dialog>
     <dialog id="opening-dialog">

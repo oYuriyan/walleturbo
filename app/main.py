@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DBSession
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.config import settings
+from app.lifecycle import router as lifecycle_router
 from app.balances import router as balances_router
 from app.planning import router as planning_router
 from app.pdf_import import router as pdf_router
@@ -31,7 +32,13 @@ from app.db import (
     StatementPayment,
     db_session,
 )
-from app.cards import router as cards_router, owned, public, monthly_card_summary
+from app.cards import (
+    router as cards_router,
+    owned,
+    public,
+    monthly_card_summary,
+    require_active,
+)
 from app.domain import Entry, GoalInput, parse_csv, import_keys, summarize
 from app.security import (
     SecurityMiddleware,
@@ -63,7 +70,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.5.0",
+    version="0.6.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -82,6 +89,7 @@ app.add_middleware(
 app.add_middleware(ResponseHeadersMiddleware)
 app.include_router(cards_router)
 app.include_router(balances_router)
+app.include_router(lifecycle_router)
 app.include_router(pdf_router)
 app.include_router(planning_router)
 
@@ -111,6 +119,8 @@ def ready(db: DBSession = Depends(db_session)):
     try:
         db.execute(select(Statement.id).limit(1))
         db.execute(select(Transaction.account_id).limit(1))
+        db.execute(select(Account.archived, Account.version).limit(1))
+        db.execute(select(Card.archived, Card.version).limit(1))
         db.execute(select(OpeningBalance.id).limit(1))
         db.execute(select(Transfer.id).limit(1))
         store.ping()
@@ -249,7 +259,7 @@ def create_entry(
     body: Entry, user=Depends(current_user), db: DBSession = Depends(db_session)
 ):
     if body.account_id:
-        owned(db, Account, user, body.account_id)
+        require_active(owned(db, Account, user, body.account_id, lock=True))
     entry = Transaction(owner=user, **body.model_dump())
     db.add(entry)
     db.commit()
@@ -270,7 +280,9 @@ def update_entry(
     if entry is None:
         raise HTTPException(404, "Lançamento não encontrado")
     if body.account_id:
-        owned(db, Account, user, body.account_id)
+        account = owned(db, Account, user, body.account_id, lock=True)
+        if body.account_id != entry.account_id:
+            require_active(account)
     for key, value in body.model_dump().items():
         setattr(entry, key, value)
     db.commit()
@@ -312,7 +324,7 @@ def confirm(
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from None
     if body.account_id:
-        owned(db, Account, user, body.account_id)
+        require_active(owned(db, Account, user, body.account_id, lock=True))
     created = 0
     for entry, key in zip(entries, import_keys(entries)):
         entry.account_id = body.account_id

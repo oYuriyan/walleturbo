@@ -3,6 +3,7 @@ let financeAccounts = [],
   financeCards = [],
   financeStatements = [];
 function clearFinance() {
+  if (typeof clearLifecycle === "function") clearLifecycle();
   if (typeof clearBalances === "function") clearBalances();
   financeAccounts = [];
   financeCards = [];
@@ -76,8 +77,11 @@ function populate(select, rows, emptyLabel) {
     select.append(o);
   });
 }
-function populateAccounts(select, optional = false) {
-  populate(select, financeAccounts, optional ? "Sem conta vinculada" : null);
+function populateAccounts(select, optional = false, currentId = null) {
+  const rows = financeAccounts
+    .filter((a) => !a.archived || a.id === currentId)
+    .map((a) => ({ ...a, name: a.name + (a.archived ? " · Arquivada" : "") }));
+  populate(select, rows, optional ? "Sem conta vinculada" : null);
 }
 function button(label, fn, cls = "ghost") {
   const b = el("button", label, cls);
@@ -114,7 +118,16 @@ function renderFinance() {
   cards.replaceChildren();
   statements.replaceChildren();
   accounts.append(el("span", "Contas cadastradas", "subtle"));
-  financeAccounts.forEach((a) => accounts.append(el("span", a.name, "badge")));
+  financeAccounts.forEach((a) => {
+    const row = el("div", undefined, "account-management");
+    row.dataset.entityId = a.id;
+    row.append(
+      el("span", a.name + (a.archived ? " · Arquivada" : ""), "badge"),
+    );
+    if (csrf && !demo && typeof manageEntity === "function")
+      row.append(button("Gerenciar conta", () => manageEntity(a, "accounts")));
+    accounts.append(row);
+  });
   if (!financeAccounts.length)
     accounts.append(
       el(
@@ -133,17 +146,25 @@ function renderFinance() {
         `Vencimento: dia ${c.due_day}. Ajustado para o último dia em meses curtos.`,
       ),
     );
-    panel.append(
-      button("Abrir fatura do período", async () => {
-        if (demo) localStatement(c, $("#month").value);
-        else
-          await api(
-            `/api/cards/${c.id}/statements?month=${$("#month").value}`,
-            "POST",
-          );
-        await refresh();
-      }),
-    );
+    panel.dataset.entityId = c.id;
+    if (c.archived)
+      panel.append(
+        el("p", "Cartão arquivado · faturas e pagamentos preservados", "badge"),
+      );
+    if (csrf && !demo && typeof manageEntity === "function")
+      panel.append(button("Gerenciar cartão", () => manageEntity(c, "cards")));
+    if (!c.archived)
+      panel.append(
+        button("Abrir fatura do período", async () => {
+          if (demo) localStatement(c, $("#month").value);
+          else
+            await api(
+              `/api/cards/${c.id}/statements?month=${$("#month").value}`,
+              "POST",
+            );
+          await refresh();
+        }),
+      );
     cards.append(panel);
   });
   if (!financeCards.length)
@@ -169,9 +190,13 @@ function renderFinance() {
       panel.append(heading);
       const actions = el("div", undefined, "actions");
       if (s.status === "open") {
+        const archived = financeCards.find((c) => c.id === s.card_id)?.archived;
+        if (!archived)
+          actions.append(
+            button("Importar CSV", () => openImport(s.id)),
+            button("Ler PDF", () => openPdf(s.id)),
+          );
         actions.append(
-          button("Importar CSV", () => openImport(s.id)),
-          button("Ler PDF", () => openPdf(s.id)),
           button(
             "Conferir total",
             () => {
@@ -202,8 +227,10 @@ function renderFinance() {
             button(
               "Registrar pagamento",
               () => {
-                if (!financeAccounts.length)
-                  throw Error("Cadastre uma conta de origem primeiro.");
+                if (!financeAccounts.some((a) => !a.archived))
+                  throw Error(
+                    "Cadastre ou reative uma conta de origem primeiro.",
+                  );
                 const f = $("#payment-form");
                 f.reset();
                 f.elements.id.value = s.id;
@@ -355,8 +382,8 @@ for (const select of [
     .forEach((c) => select.append(el("option", c)));
 $("#new-purchase").onclick = () => {
   if (!allowed()) return;
-  if (!financeCards.length) {
-    message("Cadastre um cartão primeiro.");
+  if (!financeCards.some((c) => !c.archived)) {
+    message("Cadastre ou reative um cartão primeiro.");
     return;
   }
   const f = $("#purchase-form");
@@ -364,7 +391,10 @@ $("#new-purchase").onclick = () => {
   f.elements.request_id.value = crypto.randomUUID();
   f.elements.date.value = today;
   f.elements.first_month.value = $("#month").value;
-  populate(f.elements.card_id, financeCards);
+  populate(
+    f.elements.card_id,
+    financeCards.filter((c) => !c.archived),
+  );
   openDialog("#purchase-dialog");
 };
 $("#purchase-form").onsubmit = (e) => {

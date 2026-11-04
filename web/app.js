@@ -346,7 +346,7 @@ function openEntry(t) {
   f.elements.category.value = t?.category || "Outros";
   f.elements.reviewed.checked = true;
   if (typeof populateAccounts === "function")
-    populateAccounts(f.elements.account_id, true);
+    populateAccounts(f.elements.account_id, true, t?.account_id);
   f.elements.account_id.value = t?.account_id || "";
   $("#entry-title").textContent = t ? "Revisar lançamento" : "Novo lançamento";
   openDialog("#entry-dialog");

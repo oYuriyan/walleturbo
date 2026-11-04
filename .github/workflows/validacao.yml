@@ -31,6 +31,7 @@ jobs:
           node --check web/pdf.js
           node --check web/planning.js
           node --check web/balances.js
+          node --check web/lifecycle.js
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
@@ -63,6 +64,10 @@ jobs:
           source .env.auth
           set +a
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e KEYCLOAK_ADMIN_USER -e KEYCLOAK_ADMIN_PASSWORD api python < tests/seed_oidc.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_oidc.cjs
+      - name: Validar ciclo de vida dos cadastros
+        run: |
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_lifecycle.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_lifecycle.cjs
       - name: Salvar evidências sintéticas de interface
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
@@ -72,6 +77,7 @@ jobs:
             artifacts/pdf-*.png
             artifacts/planning-*.png
             artifacts/balances-*.png
+            artifacts/lifecycle-*.png
       - name: Encerrar serviços de teste
         if: always()
         run: |

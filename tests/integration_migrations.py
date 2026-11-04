@@ -50,6 +50,11 @@ try:
             )
             conn.execute(
                 text(
+                    "INSERT INTO cards(id,owner,name,due_day) VALUES ('legacy-card','synthetic','Cartão preservado',10)"
+                )
+            )
+            conn.execute(
+                text(
                     "UPDATE transactions SET account_id='legacy-account' WHERE id='preserved'"
                 )
             )
@@ -63,7 +68,7 @@ try:
             )
         ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 4
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 5
         )
     with test_engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
@@ -73,12 +78,22 @@ try:
             ).scalar()
             == "Conta preservada"
         )
+    with test_engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT archived,version FROM accounts WHERE id='legacy-account'")
+        ).one() == (False, 0)
+    with test_engine.connect() as conn:
+        assert conn.execute(
+            text(
+                "SELECT name,due_day,archived,version FROM cards WHERE id='legacy-card'"
+            )
+        ).one() == ("Cartão preservado", 10, False, 0)
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as tmp:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "005_test_failure.sql"
+        broken = migrate.DIRECTORY / "006_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -96,7 +111,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 4
+                == 5
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

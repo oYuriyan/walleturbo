@@ -13,7 +13,7 @@ Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOM
 | Área | Entrega existente | Limite atual |
 | --- | --- | --- |
 | Fundação | FastAPI, PostgreSQL, Redis, Compose, migrações com checksum, CI, PR e documentação | Operação pública, recuperação de desastre e controles de volume incompletos |
-| Finanças | Lançamentos, categorias por regras, contas/cartões, parcelas, estornos, conferência e pagamentos parciais | Saldo inicial, saldo por conta e transferências com reversão entregues na 0.5; recorrências automáticas, ciclo de vida e alguns ciclos de crédito pendentes |
+| Finanças | Lançamentos, categorias por regras, contas/cartões, parcelas, estornos, conferência e pagamentos parciais | Saldo inicial, saldo por conta e transferências com reversão entregues na 0.5; recorrências automáticas, ciclo de vida de metas e alguns ciclos de crédito pendentes |
 | Importação | CSV definido e PDF textual genérico isolado, prévia/revisão e deduplicação | Documentos sintéticos; sem emissores homologados, OCR, OFX ou antivírus |
 | Planejamento | Metas, limites mensais, simulação conservadora e recorrências de assinaturas com evidências | Metas independentes das contas; sem projeção completa, perfil personalizado ou IA |
 | Interface | Web responsiva, claro/escuro, demonstração e formulários funcionais | Jornada completa, acessibilidade e revisão de design ainda não homologadas |
@@ -33,7 +33,7 @@ Dependência: base existente. Origem: completar o controle financeiro já inicia
 
 - **FIN-01 — concluído na 0.5:** definir saldo inicial por conta com data de referência, saldo calculado, ajustes explícitos e política para lançamentos anteriores à referência. Diferenciar saldo informado, saldo calculado, resultado e caixa.
 - **FIN-02 — concluído na 0.5:** transferências entre contas próprias, com débito/crédito atômicos, estorno, reenvio idempotente e proteção contra concorrência. Transferência não conta como receita/despesa.
-- **FIN-03:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
+- **FIN-03 — parcial na 0.6; contas/cartões implementados, aguardando CI; metas pendentes:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
 - **FIN-04:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
 - **FIN-05 — parcial; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
 
@@ -154,4 +154,6 @@ Integração bancária/Open Finance, aplicativo nativo de loja, sincronização 
 
 FIN-01 e FIN-02 foram implementados e homologados no incremento 0.5, com migração, interface, exportação/exclusão e testes de precisão/concorrência/isolamento. A parte correspondente de FIN-05 está em SALDOS.md; a revisão ampla de histórico e idempotência dos demais tipos de operação permanece pendente.
 
-Próxima entrega: FIN-03 (renomeação/arquivamento de contas e cartões e regras de exclusão preservando histórico/vínculos), seguida de FIN-04 e complementação de FIN-05. Depois, avançar para fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+Entrega 0.6: renomeação/arquivamento/reativação de contas e cartões, versão contra edição obsoleta e exclusão de cadastros vazios preservando vínculos (CADASTROS.md). A homologação completa depende do CI deste incremento.
+
+Próxima entrega: concluir FIN-03 para metas e suas regras de correção/exclusão; depois FIN-04 e complementação de FIN-05. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.

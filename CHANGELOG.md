@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 0.6.0 — em desenvolvimento
+
+- Renomeação, arquivamento e reativação de contas/cartões com versão para recusar edições obsoletas.
+- Novas operações exigem cadastro ativo; correções, saldos e quitação de faturas existentes preservados.
+- Exclusão restrita a cadastro arquivado sem vínculos; migração 005 preserva cadastros existentes.
+- Testes de concorrência, importações em andamento, isolamento, migração e gerenciamento no navegador.
+- Ciclo de vida de metas e histórico amplo de alterações permanecem pendentes no roadmap.
+
 ## 0.5.0 — em desenvolvimento
 
 - Saldo inicial por conta com data de referência, revisões preservadas e controle de versão.

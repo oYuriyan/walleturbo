@@ -115,3 +115,7 @@ Adicionados Keycloak 26.8.1 com banco exclusivo, realm versionado sem usuários/
 O teste inicial identificou que mutações após expiração/exclusão da sessão retornavam 403 de CSRF e não acionavam a limpeza da interface. A API passou a responder 401 para sessão ausente, após verificar a origem e antes de CSRF; teste de regressão adicionado. A verificação de origem e a exigência de token para sessões autenticadas permanecem ativas.
 
 Cenário combinado validado: saldos iniciais R$ 100,00 + R$ 5,00; receita R$ 50,00; despesa R$ 12,34; compra em cartão R$ 80,00; pagamento parcial R$ 25,00; transferência R$ 20,00. Saldo final das contas R$ 92,66 e R$ 25,00 (total R$ 117,66), resultado mensal −R$ 42,34 e variação de caixa R$ 12,66. Reverter a transferência redistribui para R$ 112,66 e R$ 5,00, sem alterar o total.
+
+## Incremento 0.6 — ciclo de vida de contas e cartões
+
+99 testes locais aprovados com avisos tratados como erro. As novas verificações cobrem versão obsoleta, arquivamento/reativação, bloqueio de novos vínculos, operações existentes, UUIDs idempotentes, PDF confirmado após arquivar, isolamento e privacidade. Migração 005 e roteiros PostgreSQL/navegador adicionados ao CI; resultado completo ainda pendente nesta revisão. Política e limites em CADASTROS.md. Metas permanecem pendentes em FIN-03.

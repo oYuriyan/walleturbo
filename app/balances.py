@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import Field, model_validator
 from sqlalchemy import select, func, case, union_all, and_
 from sqlalchemy.orm import Session
-from app.cards import Input, owned, public
+from app.cards import Input, owned, public, require_active
 from app.db import (
     Account,
     OpeningBalance,
@@ -87,6 +87,8 @@ def set_opening(
         )
         or 0
     )
+    if version == 0:
+        require_active(owned(db, Account, user, account_id))
     if body.expected_version != version:
         raise HTTPException(
             409, "Referência alterada em outra sessão. Atualize antes de corrigir."
@@ -121,6 +123,8 @@ def create_transfer(
         if existing.payload_hash != fingerprint:
             raise HTTPException(409, "Identificador já utilizado com outros dados")
         return public(existing)
+    for account_id in (body.source_account_id, body.destination_account_id):
+        require_active(owned(db, Account, user, account_id))
     row = Transfer(
         owner=user,
         payload_hash=fingerprint,
@@ -251,6 +255,7 @@ def balances(
         select(
             Account.id,
             Account.name,
+            Account.archived,
             opening.c.date,
             opening.c.amount_cents,
             opening.c.version,
@@ -271,6 +276,7 @@ def balances(
         .group_by(
             Account.id,
             Account.name,
+            Account.archived,
             opening.c.date,
             opening.c.amount_cents,
             opening.c.version,
@@ -285,6 +291,7 @@ def balances(
             {
                 "id": row.id,
                 "name": row.name,
+                "archived": row.archived,
                 "opening_date": row.date,
                 "opening_cents": row.amount_cents,
                 "version": row.version or 0,

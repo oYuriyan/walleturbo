@@ -27,3 +27,7 @@ O Compose continua sendo de desenvolvimento. Em produção, separe credenciais d
 ## Incremento 0.5
 
 A migração 004 cria `opening_balances` e `transfers`, preservando contas e lançamentos existentes. Não deduz saldo inicial nem atribui conta a registros sem vínculo. Contas antigas exibem saldo desconhecido até a definição explícita da referência. O teste de migração passa por um schema 003 com conta/lançamento vinculados e verifica a preservação na versão 004.
+
+## Migração 005 — ciclo de vida
+
+Adiciona estado ativo/arquivado e versão de metadados em contas/cartões. Registros existentes ficam ativos na versão 0; IDs, nomes, vencimentos e vínculos são preservados. Readiness exige as novas colunas. Política em [CADASTROS.md](CADASTROS.md).
