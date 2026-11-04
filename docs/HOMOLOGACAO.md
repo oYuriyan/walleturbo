@@ -30,7 +30,7 @@ docker run --rm --read-only --tmpfs /tmp --user 1000:1000 \
   walleturbo-api -m pytest -q -p no:cacheprovider
 ```
 
-Esta alternativa valida execução containerizada, mas não equivale a verificar o comando padrão da imagem de testes. O CI foi preparado para executar a imagem diretamente em runner com espaço suficiente; seu resultado deve ser conferido no GitHub.
+Esta alternativa valida execução containerizada, mas não equivale a verificar o comando padrão da imagem de testes. O GitHub Actions executou diretamente a imagem de testes: 26 testes aprovados no job 126309571600. A primeira auditoria do CI falhou ao tentar criar cache em diretório sem permissão; o workflow foi corrigido para usar `/tmp/pip-audit`. A validação de PostgreSQL/Redis com volume novo foi adicionada ao CI para resolver a limitação local.
 
 O volume local de PostgreSQL precisou da aplicação manual da migração inicial depois de falhas de permissão e espaço. O SQL foi envolvido em transação para evitar migração parcial em instalações futuras. Não houve dados reais. A inicialização automática em volume novo ainda precisa ser repetida em ambiente com espaço adequado.
 

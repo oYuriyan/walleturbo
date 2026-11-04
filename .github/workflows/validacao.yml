@@ -6,12 +6,20 @@ jobs:
   testes:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Construir ambiente de testes
         run: docker build --target test -t walleturbo-test .
       - name: Executar testes em container
         run: docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges walleturbo-test
       - name: Auditar dependências
-        run: docker run --rm --tmpfs /tmp --entrypoint pip-audit walleturbo-test --disable-pip --no-deps -r requirements.lock
+        run: docker run --rm --tmpfs /tmp --entrypoint pip-audit walleturbo-test --cache-dir /tmp/pip-audit --disable-pip --no-deps -r requirements.lock
       - name: Validar JavaScript
         run: node --check web/app.js
+      - name: Validar PostgreSQL e Redis reais em volume novo
+        run: |
+          cp .env.example .env
+          docker compose up --build -d --wait --wait-timeout 120
+          docker compose exec -T -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_real.py
+      - name: Encerrar serviços de teste
+        if: always()
+        run: docker compose down
