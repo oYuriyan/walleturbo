@@ -2,7 +2,7 @@
 
 Controle financeiro pessoal em português do Brasil. A proposta é reduzir o tempo de registro, tornar os gastos compreensíveis e ajudar a planejar metas sem depender de funcionalidades pagas de outros aplicativos.
 
-**Estado: fundação funcional em desenvolvimento, não liberada para produção.** A demonstração visual é independente do login e usa dados fictícios em memória. A operação real exige PostgreSQL, Redis e um provedor OpenID Connect configurado. Google, MFA real, OCR e formatos bancários específicos, agentes de IA e busca de ofertas não estão homologados. Contas, cartões, parcelas, conferência de fatura e pagamentos parciais já possuem fluxos funcionais.
+**Estado: fundação funcional em desenvolvimento, não liberada para produção.** A demonstração visual é independente do login e usa dados fictícios em memória. A operação real exige PostgreSQL, Redis e um provedor OpenID Connect configurado. Login local com Keycloak/TOTP foi homologado no CI. Google, recuperação de MFA, OCR, formatos bancários específicos, agentes de IA e busca de ofertas permanecem pendentes. Contas, cartões, parcelas, conferência de fatura e pagamentos parciais já possuem fluxos funcionais.
 
 ## Executar com Docker
 
@@ -23,15 +23,17 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 
 ## Recursos desta entrega
 
-- Visão mensal de entradas, saídas, saldo e distribuição por categoria.
+- Visão mensal de entradas, saídas, resultado e distribuição por categoria.
 - Lançamentos manuais, revisão, edição e exclusão; busca por descrição/categoria.
 - CSV UTF-8 com prévia, limites de tamanho, validação integral e deduplicação.
 - PDF com texto selecionável: leitor isolado sem rede e candidatos editáveis, com revisão obrigatória. Formato limitado, sem OCR.
 - Sugestões de categoria por regras, sempre pendentes de revisão.
 - Alertas de assinaturas e despesas acima das receitas; sem promessas de economia.
-- Metas com atualização da reserva e estimativa mensal sem rendimentos.
+- Metas com atualização versionada, arquivamento/reativação, exclusão protegida e estimativa mensal sem rendimentos.
 - Contas, cartões, parcelas exatas em centavos, estornos, conferência e pagamentos parciais sem duplicar despesas.
-- Visões separadas de resultado mensal e movimentação líquida de caixa.
+- Visões separadas de resultado mensal e movimentação líquida de caixa; saldos por conta com referência datada e transferências com reversão.
+- Contas/cartões com edição versionada e arquivamento preservando histórico.
+- Histórico privado de alterações financeiras, consulta paginada e exportação/expurgo.
 - Limites por categoria, cenário mensal e simulação conservadora de aportes; recorrências de assinaturas com evidências.
 - Exportação JSON e exclusão dos dados financeiros ativos.
 - Sessão opaca no Redis, CSRF, verificação OIDC/ACR, limites de requisição e corpo.
@@ -45,6 +47,9 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - [Privacidade e preparação LGPD](docs/PRIVACIDADE.md)
 - [Manual de utilização](docs/MANUAL.md)
 - [Contas e faturas](docs/FATURAS.md)
+- [Ciclo de vida dos cadastros e metas](docs/CADASTROS.md)
+- [Histórico financeiro e revisão técnica](docs/AUDITORIA.md)
+- [Matriz de requisitos e testes](docs/MATRIZ.md)
 - [Leitura assistida de PDF e limites](docs/PDF.md)
 - [Migrações preservando dados](docs/MIGRACOES.md)
 - [Planejamento, limites e recorrências](docs/PLANEJAMENTO.md)

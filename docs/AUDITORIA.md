@@ -28,7 +28,7 @@ O engine oculta parâmetros SQL nas mensagens de exceção. Isso reduz exposiç�
 
 | Achado / prioridade | Tratamento e estado |
 | --- | --- |
-| Perda do estado anterior em correções/exclusões — alta | Histórico transacional implementado para nove tipos de entidade na 0.8; aguardando CI |
+| Perda do estado anterior em correções/exclusões — alta | Histórico transacional implementado para nove tipos de entidade na 0.8; homologado no CI 41888034624 |
 | Atualização desatualizada de cadastros/metas — alta | Versão + lock implementados e homologados em 0.6/0.7 |
 | Concorrência em correções financeiras — alta | Lock de lançamento e recarga após lock de fatura adicionados; versão e revisão de conflitos amplas ainda pendentes em FIN-04 |
 | Reenvio após exclusão de pagamentos/compras — alta | Histórico preserva evidência, mas não substitui tombstones/chaves de idempotência; FIN-05 pendente |
@@ -36,8 +36,11 @@ O engine oculta parâmetros SQL nas mensagens de exceção. Isso reduz exposiç�
 | Histórico de cenário/orçamentos e escrita por SQL/jobs — média | Fora da cobertura deste incremento; tratar antes de introduzir novos escritores |
 | Proteção contra administrador do banco e acesso cruzado SQL — alta | Permissões mínimas/RLS/restauração continuam em REL-02/03; histórico não resolve esses controles |
 | Jornada completa e verificações de interface existentes fora do CI — média | Roteiros de cartões/demonstração e teste XSS persistido abrangente continuam em REL-07; a consulta de histórico recebe regressão HTML neste incremento |
+| Resposta atrasada após encerrar sessão — alta | Guardas de sessão em dashboard e cadastros adicionadas; navegador segura uma resposta anterior e verifica ausência de restauração após 401 |
 | Volume/armazenamento — média | Consulta de histórico paginada; exportação ainda carrega dados integralmente e precisa REL-04/08 |
 
 ## Evidências previstas
 
 `test_audit.py`: estados anteriores/posteriores, exclusão, defaults de metadados, ausência de duplicação, paginação, isolamento, exportação/expurgo e rollback com falha financeira ou do histórico. `integration_lifecycle.py`: JSON e rollback no PostgreSQL real. `integration_migrations.py`: preservação do legado sem inventar eventos. `browser_goals.cjs`: consulta mobile, valor anterior/posterior, texto HTML sem criar elementos e limpeza após expiração. O resultado aprovado deve constar em HOMOLOGACAO.md; testes adicionados não significam homologação antes de sua execução.
+
+**Evidência aprovada:** código `5b7b1b6`, [CI 41888034624](https://github.com/oYuriyan/walleturbo/actions/runs/41888034624). Confirmados 109 testes em container, integração PostgreSQL/Redis, migração 007, rollback/JSON privado e navegador com histórico, HTML literal e resposta atrasada após encerrar sessão. Capturas mobile inspecionadas visualmente. Isso valida os cenários declarados, com as limitações da tabela preservadas.
