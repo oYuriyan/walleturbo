@@ -53,6 +53,7 @@ jobs:
         run: |
           python scripts/setup_auth.py
           docker compose --env-file .env --env-file .env.auth -f compose.yaml -f compose.auth.yaml up --build -d --wait --wait-timeout 240
+          docker compose exec -T api python -c "import asyncio; from app.main import oauth, conf; data=asyncio.run(oauth.identity.load_server_metadata()); assert data['issuer'] == conf.oidc_issuer; print('PASS: descoberta OIDC real e issuer consistente')"
           set -a
           source .env.auth
           set +a
