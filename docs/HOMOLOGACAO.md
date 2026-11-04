@@ -65,3 +65,5 @@ A sessão do teste visual foi criada diretamente no Redis para usuário sintéti
 O ambiente local voltou a atingir seu limite de disco ao duplicar containers pelo driver VFS. A migração foi concluída, e a API nova foi validada usando a imagem de dependências existente com código montado somente para leitura. O CI executa builds completos, banco novo, concorrência e migração de legado. Não foram feitos testes volumétricos/DDoS, pentest nem backup/restore.
 
 As pendências citadas no relatório 0.1 devem ser lidas como estado daquela entrega; parcelas, estornos, cartões e conferência por total foram implementados neste incremento. Permanecem pendentes OCR/PDF/OFX, agentes de IA, preços/cupons, recorrência/orçamentos, integração bancária e homologação de produção/LGPD.
+
+**CI 0.2 aprovado:** [execução 41762142999](https://github.com/oYuriyan/walleturbo/actions/runs/41762142999), commit `166ad99`. Todas as etapas passaram: build completo, 49 testes pela imagem Docker padrão, auditoria de dependências, sintaxe JavaScript, banco novo, pagamentos/compras concorrentes, isolamento por FK e migração de legado com preservação/rollback/checksum.
