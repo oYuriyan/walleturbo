@@ -71,6 +71,7 @@ def monthly_figures(db, user, month):
     ).all()
     income, categories = 0, defaultdict(int)
     for kind, category, amount in rows:
+        amount = int(amount)
         if kind == "income":
             income += amount
         else:
@@ -86,6 +87,7 @@ def monthly_figures(db, user, month):
     ).all()
     card_expense = 0
     for kind, category, amount in card_rows:
+        amount = int(amount)
         signed = amount * (-1 if kind == "refund" else 1)
         categories[category] += signed
         card_expense += signed
@@ -96,6 +98,7 @@ def monthly_figures(db, user, month):
             StatementPayment.date < end,
         )
     )
+    paid = int(paid)
     pending = db.scalar(
         select(func.count())
         .select_from(Transaction)
