@@ -207,3 +207,58 @@ def test_same_account_and_pagination(client, login):
     transfer(client, b, a)
     assert client.get("/api/transfers?limit=1").json()["has_more"]
     assert not client.get("/api/transfers?limit=1&offset=1").json()["has_more"]
+
+
+def test_complete_cash_scenario_conserves_total_without_double_expense(client, login):
+    login()
+    a, b = account(client, "A"), account(client, "B")
+    opening(client, a, amount_cents=10000)
+    opening(client, b, amount_cents=500)
+    assert (
+        client.post(
+            "/api/transactions",
+            json={
+                **ENTRY,
+                "account_id": a,
+                "kind": "income",
+                "category": "Renda",
+                "amount_cents": 5000,
+            },
+        ).status_code
+        == 201
+    )
+    assert (
+        client.post("/api/transactions", json={**ENTRY, "account_id": a}).status_code
+        == 201
+    )
+    card = client.post("/api/cards", json={"name": "Cartão", "due_day": 10}).json()
+    buy(client, card, amount_cents=8000, installments=1)
+    bill = statement(client)
+    client.post(f"/api/statements/{bill['id']}/close", json={"expected_cents": 8000})
+    client.post(
+        f"/api/statements/{bill['id']}/payments",
+        json={
+            "request_id": str(uuid4()),
+            "account_id": a,
+            "date": "2026-11-10",
+            "amount_cents": 2500,
+        },
+    )
+    tr, _ = transfer(client, a, b, amount_cents=2000)
+    report = balances(client)
+    assert [row["balance_cents"] for row in report["accounts"]] == [9266, 2500]
+    assert report["total_cents"] == 11766
+    dashboard = client.get("/api/dashboard?month=2026-11").json()
+    assert dashboard["income_cents"] == 5000
+    assert dashboard["expense_cents"] == 9234
+    assert dashboard["balance_cents"] == -4234
+    assert dashboard["cash_balance_cents"] == 1266
+    assert report["total_cents"] == 10500 + dashboard["cash_balance_cents"]
+    client.post(
+        f"/api/transfers/{tr.json()['id']}/reverse", json={"date": "2026-11-20"}
+    )
+    assert [row["balance_cents"] for row in balances(client)["accounts"]] == [
+        11266,
+        500,
+    ]
+    assert balances(client)["total_cents"] == 11766
