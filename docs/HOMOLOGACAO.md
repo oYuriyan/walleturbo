@@ -133,3 +133,5 @@ Cenário combinado validado: saldos iniciais R$ 100,00 + R$ 5,00; receita R$ 50,
 ## Incremento 0.8 — histórico financeiro e revisão técnica
 
 109 testes locais aprovados com avisos tratados como erro. Estados anterior/posterior para nove tipos de entidade; gravação atômica e recusa da operação se o histórico falhar. Consulta paginada, isolamento, exportação/expurgo, no-op e idempotência testados. Roteiros PostgreSQL, migração e navegador foram ampliados; a homologação completa depende do CI deste incremento. AUDITORIA.md registra escopo, retenção local, achados e pendências. Não equivale à conclusão integral de FIN-04/05 ou revisão de segurança de produção.
+
+Revisão visual das capturas de 0.7: formulário mobile de metas funcional, com erro de exclusão por reserva visível. Identificada inconsistência no checkbox de arquivamento (estilo genérico de input); corrigida para usar o componente `.checkbox` existente e a cor da aplicação em 0.8. Captura atualizada será produzida pelo CI.

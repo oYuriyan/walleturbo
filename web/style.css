@@ -619,6 +619,7 @@ select {
   gap: 8px;
 }
 .checkbox input {
+  accent-color: var(--purple);
   width: 16px;
   min-height: 16px;
   margin: 0;
