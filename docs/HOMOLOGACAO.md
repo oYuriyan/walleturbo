@@ -77,3 +77,5 @@ As pendências citadas no relatório 0.1 devem ser lidas como estado daquela ent
 ## Incremento 0.4 — planejamento
 
 74 testes locais aprovados, incluindo isolamento de cenários/limites, estornos, capacidade de aporte, ausência de receita, invalidação por agregados e recorrência sem parcelas. O pipeline adiciona navegação de cenário e limite mensal, com capturas sintéticas. Não há análise por modelo de IA, certificação financeira ou garantia de economia. Ver PLANEJAMENTO.md.
+
+**CI 0.4 aprovado:** [execução 41830565715](https://github.com/oYuriyan/walleturbo/actions/runs/41830565715), código `af7fc62`: 74 testes em container, auditoria, sintaxe, migração 003 com preservação de legado, concorrência financeira, regressão de PDF e planejamento no Chromium desktop/mobile. O navegador verificou limite excedido, confirmação mensal, capacidade após margem e remoção de dados exibidos ao encerrar sessão. Capturas sintéticas de planejamento estão no artefato da execução. O teste inicial identificou ícones decorativos nos nomes acessíveis; eles foram ocultados de tecnologias assistivas antes da aprovação.
