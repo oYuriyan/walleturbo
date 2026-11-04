@@ -5,7 +5,8 @@ WORKDIR /app
 COPY --chown=10001:10001 requirements.lock ./
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export PIP_CERT=/run/secrets/proxy_ca; fi; \
-    pip install --require-hashes -r requirements.lock
+    pip install --require-hashes -r requirements.lock && \
+    mkdir -p /run/walleturbo-parser && chown 10001:10001 /run/walleturbo-parser
 COPY --chown=10001:10001 app ./app
 COPY --chown=10001:10001 web ./web
 USER 10001:10001
@@ -22,3 +23,6 @@ COPY --chown=10001:10001 tests ./tests
 COPY --chown=10001:10001 pyproject.toml ./
 USER 10001:10001
 CMD ["pytest", "-q", "-p", "no:cacheprovider"]
+
+FROM base AS parser
+CMD ["python", "-m", "app.pdf_worker"]

@@ -879,3 +879,30 @@ body.dark .brand-mark {
     flex-wrap: wrap;
   }
 }
+#pdf-dialog {
+  width: min(760px, calc(100% - 32px));
+}
+.pdf-row {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 20px 0;
+  min-width: 0;
+}
+.pdf-row legend {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 0 8px;
+}
+#pdf-warnings {
+  border-left: 3px solid var(--purple);
+  padding-left: 12px;
+}
+#pdf-warnings:empty {
+  display: none;
+}
+#pdf-totals {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}

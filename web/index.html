@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/assets/style.css" />
     <script src="/assets/app.js" defer></script>
     <script src="/assets/cards.js" defer></script>
+    <script src="/assets/pdf.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -493,6 +494,44 @@
           no banco e não cria uma segunda despesa.
         </p>
         <button class="button full">Salvar pagamento</button>
+      </form>
+    </dialog>
+    <dialog id="pdf-dialog">
+      <form id="pdf-form">
+        <div class="section-heading">
+          <h2>Revisar lançamentos do PDF</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <p>
+          Até 2 MB e 30 páginas, com texto selecionável. Esta versão reconhece
+          data completa, descrição e valor em reais na mesma linha. PDFs
+          escaneados, protegidos ou com conteúdo ativo não são aceitos.
+        </p>
+        <label
+          >Fatura em PDF<input
+            id="pdf-file"
+            type="file"
+            accept="application/pdf,.pdf"
+        /></label>
+        <p id="pdf-state" role="status" aria-live="polite"></p>
+        <div id="pdf-warnings"></div>
+        <div id="pdf-rows"></div>
+        <p id="pdf-totals"></p>
+        <label class="checkbox"
+          ><input id="pdf-reviewed" type="checkbox" required /> Revisei as
+          linhas selecionadas e conferi datas, descrições, valores e
+          estornos</label
+        >
+        <p>
+          A leitura pode omitir linhas. Após importar, confira o total da fatura
+          com o emissor. Cada linha entra somente nesta fatura; parcelas futuras
+          não são criadas a partir do PDF.
+        </p>
+        <button id="pdf-confirm" type="submit" class="button full" disabled>
+          Importar seleção revisada
+        </button>
       </form>
     </dialog>
     <dialog id="delete-dialog">

@@ -170,6 +170,7 @@ function renderFinance() {
       if (s.status === "open") {
         actions.append(
           button("Importar CSV", () => openImport(s.id)),
+          button("Ler PDF", () => openPdf(s.id)),
           button(
             "Conferir total",
             () => {

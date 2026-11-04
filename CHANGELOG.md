@@ -1,5 +1,12 @@
 # Histórico de alterações
 
+## 0.3.0 — em desenvolvimento
+
+- Leitura assistida de PDF textual com seleção, edição e confirmação de candidatos.
+- Leitor isolado sem rede/credenciais, limites de páginas, tamanho, memória, CPU e tempo.
+- Prévia temporária vinculada à sessão/fatura; deduplicação preserva ocorrências em seleções parciais.
+- Testes sintéticos de PDF e roteiro de navegador conectado à API; sem homologação de emissores específicos ou OCR.
+
 ## 0.2.0 — em desenvolvimento
 
 - Contas, cartões, parcelas exatas em centavos e estornos em faturas explícitas.

@@ -7,7 +7,7 @@ O pedido completo é um produto em várias etapas. Esta entrega inicia a base; n
 | 0 — Fundação | Repositório, decisões, domínio financeiro, interface, containers, CI | Build, testes e documentação reproduzíveis | Implementada; evidências no relatório |
 | 1 — Identidade e privacidade | Google, MFA, recuperação, direitos dos titulares e políticas | Login real e ataques de sessão testados; revisão LGPD | Parcial: integração OIDC e controles locais |
 | 2 — Controle financeiro | Contas, cartões, parcelas, estornos, recorrência, orçamento, conciliação | Faturas reconciliadas com precisão de centavos | Parcial: lançamentos, CSV, metas, contas, cartões, parcelas, estornos, conferência e pagamentos; recorrência/orçamento/transferências pendentes |
-| 3 — Ingestão documental | PDF/OFX/OCR, antivírus, sandbox, armazenamento temporário e filas | Corpus de emissores com exatidão medida e revisão | Pendente |
+| 3 — Ingestão documental | PDF/OFX/OCR, antivírus, sandbox, armazenamento temporário e filas | Corpus de emissores com exatidão medida e revisão | Parcial: PDF textual genérico isolado com revisão; OCR/OFX e corpus de emissores pendentes |
 | 4 — Agentes de IA | Classificação, perfil, explicações e identificação de desperdício | Avaliação anonimizada; confiança calibrada; aprovação humana | Pendente; regras determinísticas disponíveis |
 | 5 — Lista de desejos e ofertas | Catálogo, preço histórico, cupons com validade, links verificáveis | Fornecedores autorizados; transparência de afiliados; orçamento respeitado | Pendente |
 | 6 — Produção | Infra como código, observabilidade, WAF, backup/restore, RLS, carga | Metas de disponibilidade/custo aprovadas, teste de recuperação e pentest | Pendente |

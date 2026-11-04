@@ -2,7 +2,7 @@
 
 Controle financeiro pessoal em português do Brasil. A proposta é reduzir o tempo de registro, tornar os gastos compreensíveis e ajudar a planejar metas sem depender de funcionalidades pagas de outros aplicativos.
 
-**Estado: fundação funcional em desenvolvimento, não liberada para produção.** A demonstração visual é independente do login e usa dados fictícios em memória. A operação real exige PostgreSQL, Redis e um provedor OpenID Connect configurado. Google, MFA real, extração de PDF, agentes de IA e busca de ofertas não estão homologados. Contas, cartões, parcelas, conferência de fatura e pagamentos parciais já possuem fluxos funcionais.
+**Estado: fundação funcional em desenvolvimento, não liberada para produção.** A demonstração visual é independente do login e usa dados fictícios em memória. A operação real exige PostgreSQL, Redis e um provedor OpenID Connect configurado. Google, MFA real, OCR e formatos bancários específicos, agentes de IA e busca de ofertas não estão homologados. Contas, cartões, parcelas, conferência de fatura e pagamentos parciais já possuem fluxos funcionais.
 
 ## Executar com Docker
 
@@ -26,6 +26,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - Visão mensal de entradas, saídas, saldo e distribuição por categoria.
 - Lançamentos manuais, revisão, edição e exclusão; busca por descrição/categoria.
 - CSV UTF-8 com prévia, limites de tamanho, validação integral e deduplicação.
+- PDF com texto selecionável: leitor isolado sem rede e candidatos editáveis, com revisão obrigatória. Formato limitado, sem OCR.
 - Sugestões de categoria por regras, sempre pendentes de revisão.
 - Alertas de assinaturas e despesas acima das receitas; sem promessas de economia.
 - Metas com atualização da reserva e estimativa mensal sem rendimentos.
@@ -43,6 +44,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - [Privacidade e preparação LGPD](docs/PRIVACIDADE.md)
 - [Manual de utilização](docs/MANUAL.md)
 - [Contas e faturas](docs/FATURAS.md)
+- [Leitura assistida de PDF e limites](docs/PDF.md)
 - [Migrações preservando dados](docs/MIGRACOES.md)
 - [Plano de entrega e critérios de aceite](docs/ROADMAP.md)
 - [Homologação e evidências](docs/HOMOLOGACAO.md)

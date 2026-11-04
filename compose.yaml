@@ -6,9 +6,12 @@ services:
       target: base
     env_file: .env
     ports: ["127.0.0.1:8000:8000"]
+    volumes:
+      - parser_socket:/run/walleturbo-parser:ro
     depends_on:
       migrate: {condition: service_completed_successfully}
       redis: {condition: service_healthy}
+      parser: {condition: service_healthy}
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
       interval: 5s
@@ -20,6 +23,24 @@ services:
     security_opt: ["no-new-privileges:true"]
     mem_limit: 512m
     cpus: 1
+    restart: unless-stopped
+  parser:
+    build:
+      context: .
+      target: parser
+    network_mode: none
+    volumes:
+      - parser_socket:/run/walleturbo-parser
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 16
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: [CMD, python, -c, "import socket; s=socket.socket(socket.AF_UNIX); s.settimeout(2); s.connect('/run/walleturbo-parser/pdf.sock'); s.close()"]
+      interval: 5s
+      retries: 12
     restart: unless-stopped
   migrate:
     image: walleturbo-api
@@ -68,3 +89,4 @@ services:
     security_opt: ["no-new-privileges:true"]
 volumes:
   postgres_data:
+  parser_socket:

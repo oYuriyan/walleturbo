@@ -158,6 +158,17 @@ class BodyLimitMiddleware:
 
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
+        import re
+        from app.pdf_protocol import MAX_PDF_BYTES
+
+        limit = (
+            MAX_PDF_BYTES
+            if re.fullmatch(
+                r"/api/statements/[a-f0-9-]{36}/import/pdf/preview",
+                scope.get("path", ""),
+            )
+            else self.limit
+        )
         body = bytearray()
         try:
             async with asyncio.timeout(self.timeout_seconds):
@@ -166,9 +177,12 @@ class BodyLimitMiddleware:
                     if message["type"] == "http.disconnect":
                         return
                     chunk = message.get("body", b"")
-                    if len(body) + len(chunk) > self.limit:
+                    if len(body) + len(chunk) > limit:
                         return await JSONResponse(
-                            {"detail": "Corpo da requisição excede 300 KB"}, 413
+                            {
+                                "detail": "Corpo da requisição excede o limite deste endpoint"
+                            },
+                            413,
                         )(scope, receive, send)
                     body.extend(chunk)
                     if not message.get("more_body", False):

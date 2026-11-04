@@ -24,7 +24,7 @@ Data ISO, valor sem separador de milhar e com vírgula e dois decimais, tipo `re
 
 Reimportar as mesmas linhas ignora duplicados. Compras idênticas no mesmo arquivo são preservadas por contagem de ocorrência. **Limitação:** arquivos distintos com compras realmente diferentes, mas com mesma data/descrição/valor/tipo, podem colidir; registre manualmente o item após conferir. A próxima versão precisa incorporar identidade de conta/fatura e identificador bancário.
 
-PDF, imagens e OFX ainda não são suportados. Não inclua cartão completo, CVV, senha ou dados desnecessários nas descrições. A importação real exige conta conectada; o modo demonstração admite lançamentos manuais.
+Para PDF com texto selecionável, use **Ler PDF** na fatura e siga [Leitura assistida](PDF.md). Imagens, OCR e OFX ainda não são suportados. Não inclua cartão completo, CVV, senha ou dados desnecessários nas descrições. A importação real exige conta conectada; o modo demonstração admite lançamentos manuais.
 
 ## Metas
 
