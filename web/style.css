@@ -966,3 +966,8 @@ body.dark .brand-mark {
 }
 
 .account-management { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+.history-item { border-bottom: 1px solid var(--line); padding: 14px 0; overflow-wrap: anywhere; }
+.history-item summary { cursor: pointer; }
+.history-item dl { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(0, 3fr); gap: 8px 16px; }
+.history-item dd { margin: 0; }

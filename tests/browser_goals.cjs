@@ -132,6 +132,50 @@ const base = "http://localhost:8000";
       .locator("#goal-list")
       .getByText("Crie uma meta para começar a planejar.", { exact: true })
       .waitFor();
+    await page.locator('[data-view="finance"]').click();
+    const unsafe = "<img src=x onerror=alert(1)>";
+    assert.equal(
+      (
+        await context.request.post(base + "/api/transactions", {
+          headers,
+          data: {
+            date: "2026-11-03",
+            description: unsafe,
+            amount_cents: 1234,
+            kind: "expense",
+            category: "Outros",
+            reviewed: true,
+          },
+        })
+      ).status(),
+      201,
+    );
+    await page.locator("#refresh-history").click();
+    await page
+      .locator("#history-list")
+      .getByText(unsafe, { exact: false })
+      .first()
+      .waitFor();
+    assert.equal(await page.locator("#history-list img").count(), 0);
+    await page
+      .locator("#history-list details")
+      .first()
+      .locator("summary")
+      .click();
+    await page
+      .locator("#history-list")
+      .getByText("R$ 12,34", { exact: true })
+      .waitFor();
+    await page.screenshot({
+      path: "artifacts/history-mobile.png",
+      fullPage: true,
+    });
+    assert(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    await page.locator('[data-view="goals"]').click();
     await page.locator('#goals [data-action="new-goal"]').click();
     await form.locator('[name="name"]').fill("Não deve persistir na tela");
     await form.locator('[name="target"]').fill("10,00");
@@ -151,8 +195,9 @@ const base = "http://localhost:8000";
     await dialog.waitFor({ state: "hidden" });
     assert.equal(await form.locator('[name="name"]').inputValue(), "");
     assert.equal(await form.locator('[name="id"]').inputValue(), "");
+    assert.equal(await page.locator("#history-list").textContent(), "");
     console.log(
-      "PASS: metas no navegador: criação, conflito/recarga, arquivamento/reativação, exclusão protegida, planejamento e limpeza de sessão.",
+      "PASS: metas no navegador: criação, conflito/recarga, arquivamento/reativação, exclusão protegida, planejamento, histórico sem injeção HTML e limpeza de sessão.",
     );
   } finally {
     if (headers)

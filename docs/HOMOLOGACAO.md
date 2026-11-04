@@ -127,3 +127,9 @@ Cenário combinado validado: saldos iniciais R$ 100,00 + R$ 5,00; receita R$ 50,
 ## Incremento 0.7 — ciclo de vida de metas
 
 103 testes locais aprovados com avisos tratados como erro. Metas recebem versão, arquivamento/reativação e exclusão condicionada a arquivamento e reserva zero. Arquivadas permanecem no cadastro/exportação e saem da simulação; nenhum saldo financeiro é movimentado. O roteiro PostgreSQL disputa edição e exclusão versus correção da reserva; migração preserva valores legados; navegador cobre a jornada e expiração de sessão. A homologação completa depende do CI deste incremento.
+
+**CI 0.7 aprovado:** [execução 41886542300](https://github.com/oYuriyan/walleturbo/actions/runs/41886542300), commit `4153e22`: 103 testes em container, auditoria, PostgreSQL/Redis, migração 006 preservando valores de meta legada, concorrência de edição/exclusão versus reserva, navegador de metas e regressão OIDC/TOTP e financeira. FIN-03 homologado no escopo atual; aportes vinculados a contas permanecem em PLA-02.
+
+## Incremento 0.8 — histórico financeiro e revisão técnica
+
+109 testes locais aprovados com avisos tratados como erro. Estados anterior/posterior para nove tipos de entidade; gravação atômica e recusa da operação se o histórico falhar. Consulta paginada, isolamento, exportação/expurgo, no-op e idempotência testados. Roteiros PostgreSQL, migração e navegador foram ampliados; a homologação completa depende do CI deste incremento. AUDITORIA.md registra escopo, retenção local, achados e pendências. Não equivale à conclusão integral de FIN-04/05 ou revisão de segurança de produção.

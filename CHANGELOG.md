@@ -1,5 +1,12 @@
 # Histórico de alterações
 
+## 0.8.0 — em desenvolvimento
+
+- Histórico privado e transacional para nove tipos de registro financeiro, com estados anterior/posterior.
+- Consulta paginada na API/interface, exportação e expurgo de privacidade; migração 007 sem backfill fictício.
+- Lock na correção de lançamento, recarga de compras após lock e parâmetros SQL ocultos em exceções.
+- Revisão técnica e limitações em AUDITORIA.md; FIN-04/05 permanecem parciais.
+
 ## 0.7.0 — em desenvolvimento
 
 - Metas com edição versionada, arquivamento/reativação e exclusão protegida por reserva zero.

@@ -55,3 +55,7 @@ Se outra sessão tiver atualizado o cadastro, a gravação será recusada. **Rec
 Em **Metas → Gerenciar meta**, marque **Meta arquivada** e salve para pausar sua participação no planejamento. Valores e prazo continuam visíveis no cadastro; desmarque para reativar. Em conflito entre sessões, use **Recarregar meta** e revise novamente.
 
 **Excluir meta arquivada** aparece depois de salvar o arquivamento. Reserva positiva impede a exclusão. Se o valor informado precisar ser corrigido para zero, revise e salve essa alteração antes de excluir. Essas operações não movimentam dinheiro. A exportação e a exclusão integral de privacidade também abrangem metas arquivadas.
+
+## Histórico de alterações
+
+Em **Contas e cartões**, use **Consultar histórico** para ver criações, alterações e exclusões desde a versão 0.8, em todos os meses. Abra um registro para conferir os valores e use **Carregar mais alterações** para páginas anteriores. Atualize a consulta após novas operações. O histórico continua disponível após excluir uma operação isolada e integra a exportação. A exclusão integral de dados financeiros também o remove. Estados anteriores à implantação não são reconstruídos. Consulte [AUDITORIA.md](AUDITORIA.md) para cobertura e limitações.

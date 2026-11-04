@@ -2,7 +2,7 @@
 
 ## Contrato e preservação
 
-`PUT /api/accounts/{id}` e `PUT /api/cards/{id}` recebem `name`, `archived` (booleano) e `expected_version` (inteiro). Cadastros existentes começam ativos na versão 0; cada alteração efetiva incrementa a versão. A versão de cadastro é independente da versão da referência de saldo. Um envio sem alterações preserva a versão; envio obsoleto recebe 409 e exige recarga/revisão. Renomear preserva IDs e aplica o novo rótulo também às consultas históricas; ainda não há trilha de nomes anteriores (FIN-04).
+`PUT /api/accounts/{id}` e `PUT /api/cards/{id}` recebem `name`, `archived` (booleano) e `expected_version` (inteiro). Cadastros existentes começam ativos na versão 0; cada alteração efetiva incrementa a versão. A versão de cadastro é independente da versão da referência de saldo. Um envio sem alterações preserva a versão; envio obsoleto recebe 409 e exige recarga/revisão. Renomear preserva IDs e aplica o novo rótulo também às consultas históricas; nomes anteriores passam a integrar o histórico a partir da versão 0.8 (AUDITORIA.md).
 
 Arquivar é reversível e não elimina vínculos, saldos, parcelas ou dívidas. Listas, dashboard, exportação e cálculos incluem os arquivados. Não há movimentação bancária automática. O dia de vencimento não é editável nesta etapa; sua alteração exige uma política para faturas existentes (FAT-02).
 
@@ -42,4 +42,4 @@ Renomear e corrigir objetivo, reserva ou prazo preserva o ID. A reserva não pod
 
 Edição/exclusão bloqueiam a mesma linha no PostgreSQL, impedindo que uma exclusão desatualizada apague uma correção concorrente de reserva. IDs de terceiros retornam 404; exportação/exclusão de privacidade incluem ambos os estados. Após expiração da sessão, o formulário limpa valores/IDs e fecha.
 
-FIN-03 tem seu escopo atual implementado: contas, cartões, metas e política de lançamentos sem conta. FIN-04 ainda deve fechar histórico mínimo de alterações financeiras, retenção e acesso. Não há registro de versões anteriores de metas ou nomes neste incremento; a versão previne sobrescrita, mas não equivale a uma trilha de auditoria.
+FIN-03 tem seu escopo atual implementado: contas, cartões, metas e política de lançamentos sem conta. FIN-04 ainda deve fechar histórico mínimo de alterações financeiras, retenção e acesso. O incremento 0.7 previne sobrescrita por versão; a trilha com estados anteriores foi introduzida na 0.8, sem reconstruir mudanças anteriores à implantação.

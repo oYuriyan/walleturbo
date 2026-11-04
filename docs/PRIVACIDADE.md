@@ -36,3 +36,5 @@ Na leitura assistida de PDF, original e texto completo são processados transito
 Planejamento: renda de referência opcional, margem preservada, confirmação mensal e limites por categoria são usados para simulações determinísticas. Não são enviados a terceiros. Estão incluídos na exportação e exclusão financeira.
 
 Saldos e transferências: referências iniciais, motivos e versões de correção, contas de origem/destino e datas de reversão ficam no banco financeiro e integram exportação/exclusão. Não há envio dessas informações a bancos, modelos de IA ou outros fornecedores. Não coletar dados sensíveis desnecessários no motivo/descrição.
+
+Histórico financeiro: estados anteriores/posteriores de nove tipos de registro são mantidos no banco privado para conferência de alterações desde a versão 0.8. Eles podem conter descrições e motivos pessoais; não são logs gerais nem enviados a terceiros. Persistem após exclusão isolada, integram exportação e são removidos pela exclusão integral de dados financeiros. Retenção de produção/backups depende de LGPD-02. Escopo e controles em AUDITORIA.md.

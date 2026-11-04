@@ -35,3 +35,7 @@ Adiciona estado ativo/arquivado e versão de metadados em contas/cartões. Regis
 ## Migração 006 — metas
 
 Adiciona estado ativo/arquivado e versão em metas. Mantém nome, objetivo, reserva, prazo e ID. Readiness exige o novo schema; interface e API de edição devem ser atualizadas juntas, pois agora exigem `expected_version` e `archived`. O teste de upgrade preserva uma meta criada no schema inicial.
+
+## Migração 007 — histórico financeiro
+
+Cria financial_audit e índice por proprietário/instante/ID. Não altera valores existentes nem reconstrói estados anteriores. Atualizar a aplicação junto do schema habilita a instrumentação ORM. Readiness exige a tabela. Teste de upgrade verifica histórico inicialmente vazio e preservação de registros legados.

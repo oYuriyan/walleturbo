@@ -164,6 +164,42 @@ with httpx2.Client(**options) as client:
             deletion, correction = pool.submit(remove_goal), pool.submit(reserve_goal)
             statuses = (deletion.result().status_code, correction.result().status_code)
         assert statuses in ((204, 404), (409, 200)), statuses
+        from app import audit  # registra a mesma instrumentação usada pela API
+        from app.db import Session, Account, Transaction
+        from datetime import date
+        from sqlalchemy.exc import IntegrityError
+
+        with Session() as db:
+            temporary = Account(owner=owner, name="Rollback auditado")
+            db.add(temporary)
+            db.flush()
+            identifier = temporary.id
+            db.add(
+                Transaction(
+                    owner=owner,
+                    date=date(2026, 11, 3),
+                    description="Inválido",
+                    amount_cents=-1,
+                    kind="expense",
+                    category="Outros",
+                    reviewed=True,
+                )
+            )
+            try:
+                db.commit()
+                raise AssertionError("Constraint deveria impedir valor negativo")
+            except IntegrityError:
+                db.rollback()
+        assert (
+            client.get("/api/history", params={"entity_id": identifier}).json()["items"]
+            == []
+        )
+        history = client.get("/api/history", params={"entity": "goal"})
+        assert history.status_code == 200 and history.json()["items"]
+        assert any(e["before"] is not None for e in history.json()["items"])
+        print(
+            "PASS: histórico JSON privado no PostgreSQL e rollback atômico com a operação."
+        )
         print(
             "PASS: metas concorrentes recusam edição obsoleta e exclusão não perde reserva corrigida."
         )

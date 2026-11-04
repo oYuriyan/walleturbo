@@ -73,7 +73,7 @@ try:
             )
         ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 6
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 7
         )
     with test_engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
@@ -99,12 +99,14 @@ try:
                 "SELECT name,target_cents,saved_cents,archived,version FROM goals WHERE id='legacy-goal'"
             )
         ).one() == ("Meta preservada", 50000, 1000, False, 0)
+    with test_engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM financial_audit")).scalar() == 0
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as tmp:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "007_test_failure.sql"
+        broken = migrate.DIRECTORY / "008_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -122,7 +124,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 6
+                == 7
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

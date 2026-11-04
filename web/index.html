@@ -12,6 +12,7 @@
     <script src="/assets/planning.js" defer></script>
     <script src="/assets/balances.js" defer></script>
     <script src="/assets/lifecycle.js" defer></script>
+    <script src="/assets/history.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -42,7 +43,7 @@
           <p>Um passo de cada vez para cuidar do seu amanhã.</p>
         </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
-        ><span class="version">Walleturbo · versão em desenvolvimento 0.7</span>
+        ><span class="version">Walleturbo · versão em desenvolvimento 0.8</span>
       </div>
     </aside>
     <main>
@@ -228,6 +229,24 @@
         <div id="card-list" class="goals-grid"></div>
         <h2 class="statement-heading">Faturas do período</h2>
         <div id="statement-list"></div>
+        <article class="panel">
+          <div class="section-heading">
+            <h2>Histórico de alterações</h2>
+            <button id="refresh-history" class="ghost" type="button">
+              Consultar histórico
+            </button>
+          </div>
+          <p>
+            Criações, correções e exclusões registradas a partir da versão 0.8.
+            Inclui todos os meses. Atualize a consulta para ver novas
+            alterações.
+          </p>
+          <p id="history-notice" role="status"></p>
+          <div id="history-list"></div>
+          <button id="more-history" class="ghost" type="button" hidden>
+            Carregar mais alterações
+          </button>
+        </article>
       </section>
       <section id="planning" class="view" hidden>
         <div class="section-heading">

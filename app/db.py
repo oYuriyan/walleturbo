@@ -1,6 +1,7 @@
 from datetime import date, date as CivilDate
 from uuid import uuid4
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Date,
     String,
@@ -261,7 +262,27 @@ class Budget(Base):
     __table_args__ = (CheckConstraint("amount_cents BETWEEN 1 AND 99999999999"),)
 
 
-engine = create_engine(settings().database_url, pool_pre_ping=True)
+class FinancialAudit(Base):
+    __tablename__ = "financial_audit"
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid4())
+    )
+    owner: Mapped[str] = mapped_column(String(128))
+    entity: Mapped[str] = mapped_column(String(32))
+    entity_id: Mapped[str] = mapped_column(String(36))
+    action: Mapped[str] = mapped_column(String(16))
+    occurred_at: Mapped[str] = mapped_column(String(32))
+    before: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    after: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    __table_args__ = (
+        CheckConstraint("action IN ('created','updated','deleted')"),
+        Index("ix_financial_audit_owner_time", "owner", "occurred_at", "id"),
+    )
+
+
+engine = create_engine(
+    settings().database_url, pool_pre_ping=True, hide_parameters=True
+)
 Session = sessionmaker(engine)
 
 

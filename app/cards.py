@@ -331,7 +331,7 @@ def review(
 ):
     charge = owned(db, Charge, user, charge_id)
     require_open(lock_statement(db, user, charge.statement_id))
-    charge = owned(db, Charge, user, charge_id)
+    db.refresh(charge)
     charge.category, charge.reviewed = body.category, body.reviewed
     db.commit()
     return public(charge)
@@ -353,6 +353,7 @@ def delete_operation(
     for statement_id in sorted({c.statement_id for c in charges}):
         require_open(lock_statement(db, user, statement_id))
     for charge in charges:
+        db.refresh(charge)
         db.delete(charge)
     db.commit()
 

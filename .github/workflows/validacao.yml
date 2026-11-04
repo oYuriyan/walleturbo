@@ -32,6 +32,7 @@ jobs:
           node --check web/planning.js
           node --check web/balances.js
           node --check web/lifecycle.js
+          node --check web/history.js
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
@@ -84,6 +85,7 @@ jobs:
             artifacts/balances-*.png
             artifacts/lifecycle-*.png
             artifacts/goals-*.png
+            artifacts/history-*.png
       - name: Encerrar serviços de teste
         if: always()
         run: |
