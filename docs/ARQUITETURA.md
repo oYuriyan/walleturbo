@@ -49,7 +49,7 @@ Saldo, categorias agregadas e metas são determinísticos. Nesta etapa a classif
 
 ## Limites conhecidos
 
-Dashboard e exportação ainda carregam registros na memória; definir paginação, quotas e exportação assíncrona antes de alto volume. As chamadas ao cliente Redis síncrono são executadas no pool de threads, sem bloquear o loop HTTP. O limite atual é por IP direto; atrás de proxy compartilhado ele é agregado. Há cotas por usuário (90 req/min) e importação (10 req/min), além de 120 req/min por IP direto. A identificação de IP atrás de proxies confiáveis permanece pendente. Parcelas, estornos e conferência por total estão implementados; orçamento por categoria e recorrência permanecem pendentes.
+Dashboard e exportação ainda carregam registros na memória; definir paginação, quotas e exportação assíncrona antes de alto volume. As chamadas ao cliente Redis síncrono são executadas no pool de threads, sem bloquear o loop HTTP. O limite atual é por IP direto; atrás de proxy compartilhado ele é agregado. Há cotas por usuário (90 req/min) e importação (10 req/min), além de 120 req/min por IP direto. A identificação de IP atrás de proxies confiáveis permanece pendente. Parcelas, estornos e conferência por total estão implementados; limites por categoria e detecção de assinaturas estão implementados. Recorrências automáticas, saldo por conta e projeção completa permanecem pendentes; ver ROADMAP.md.
 
 ## ADR 005 — Consumo e caixa separados
 
