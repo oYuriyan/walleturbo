@@ -89,6 +89,25 @@ const fs = require("fs");
     )
       throw Error("Overflow mobile");
     if (errors.length) throw Error(errors.join("\n"));
+    const erased = await context.request.delete(base + "/api/privacy/data", {
+      headers: {
+        Origin: base,
+        "X-CSRF-Token": csrf,
+        "X-Confirm-Delete": "EXCLUIR",
+      },
+    });
+    if (erased.status() !== 200)
+      throw Error("Falha ao limpar dados sintéticos");
+    csrf = null;
+    await page
+      .getByRole("button", { name: "Planejamento", exact: true })
+      .click();
+    await page.getByText("Sessão encerrada", { exact: true }).waitFor();
+    if (
+      (await page.locator("#capacity").textContent()) ||
+      (await page.locator("#plan-form [name=income]").inputValue())
+    )
+      throw Error("Dados de planejamento permaneceram após encerrar a sessão");
     console.log(
       "PASS: orçamento excedido, cenário confirmado e capacidade conservadora no navegador desktop/mobile.",
     );

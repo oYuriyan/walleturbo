@@ -4,6 +4,24 @@ const budgetCategory = $("#budget-form").elements.category;
 categories
   .filter((c) => c !== "Renda")
   .forEach((c) => budgetCategory.append(el("option", c)));
+function clearPlanning() {
+  planningGeneration++;
+  $("#plan-form").reset();
+  $("#budget-form").reset();
+  for (const id of [
+    "budget-list",
+    "goal-plan-list",
+    "recurrence-list",
+    "planning-warnings",
+  ])
+    $("#" + id).replaceChildren();
+  for (const id of ["capacity", "planning-disclaimer", "planning-notice"])
+    $("#" + id).textContent = "";
+  for (const form of [$("#plan-form"), $("#budget-form")])
+    form
+      .querySelectorAll("input,select,button")
+      .forEach((n) => (n.disabled = true));
+}
 async function loadPlanning() {
   const generation = ++planningGeneration;
   const enabled = !!csrf && !demo;
@@ -21,6 +39,7 @@ async function loadPlanning() {
   $("#capacity").textContent = "";
   $("#planning-disclaimer").textContent = "";
   if (!enabled) {
+    clearPlanning();
     $("#planning-notice").textContent =
       "Conecte sua conta para configurar e analisar seu planejamento. A demonstração mantém somente os fluxos de lançamentos, cartões e metas.";
     return;

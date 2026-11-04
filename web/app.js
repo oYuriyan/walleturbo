@@ -72,6 +72,7 @@ async function api(path, method = "GET", body, headers = {}) {
       all = [];
       goals = [];
       if (typeof clearFinance === "function") clearFinance();
+      if (typeof clearPlanning === "function") clearPlanning();
       render(summary([]));
     }
     throw Error(
