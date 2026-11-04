@@ -1,12 +1,23 @@
 name: Validação técnica
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: validacao-${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
+defaults:
+  run:
+    shell: bash
 jobs:
   testes:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5, Node.js 24
       - name: Construir ambiente de testes
         run: docker build --target test -t walleturbo-test .
       - name: Executar testes em container
@@ -39,9 +50,10 @@ jobs:
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_planning.cjs
       - name: Salvar evidências sintéticas de interface
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
           name: revisao-pdf
+          if-no-files-found: error
           path: |
             artifacts/pdf-*.png
             artifacts/planning-*.png

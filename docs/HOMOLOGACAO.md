@@ -79,3 +79,17 @@ As pendências citadas no relatório 0.1 devem ser lidas como estado daquela ent
 74 testes locais aprovados, incluindo isolamento de cenários/limites, estornos, capacidade de aporte, ausência de receita, invalidação por agregados e recorrência sem parcelas. O pipeline adiciona navegação de cenário e limite mensal, com capturas sintéticas. Não há análise por modelo de IA, certificação financeira ou garantia de economia. Ver PLANEJAMENTO.md.
 
 **CI 0.4 aprovado:** [execução 41830565715](https://github.com/oYuriyan/walleturbo/actions/runs/41830565715), código `af7fc62`: 74 testes em container, auditoria, sintaxe, migração 003 com preservação de legado, concorrência financeira, regressão de PDF e planejamento no Chromium desktop/mobile. O navegador verificou limite excedido, confirmação mensal, capacidade após margem e remoção de dados exibidos ao encerrar sessão. Capturas sintéticas de planejamento estão no artefato da execução. O teste inicial identificou ícones decorativos nos nomes acessíveis; eles foram ocultados de tecnologias assistivas antes da aprovação.
+
+## Revisão do CI e notificações — 04/11/2026
+
+A análise dos logs confirmou que os e-mails `Run failed` correspondiam a falhas reais de versões intermediárias. O aviso de depreciação do Node.js 20 era independente dessas falhas.
+
+| Execução | Diagnóstico | Correção já incorporada |
+| --- | --- | --- |
+| [41826516838](https://github.com/oYuriyan/walleturbo/actions/runs/41826516838) | Playwright 1.58.2 recusou Ubuntu 26.04 durante instalação do navegador. | Runner fixado em Ubuntu 24.04, commit `e60ea41`. |
+| [41829938027](https://github.com/oYuriyan/walleturbo/actions/runs/41829938027) e [41830040265](https://github.com/oYuriyan/walleturbo/actions/runs/41830040265) | Timeout ao localizar botão com nome acessível exato `Planejamento`. | Ícones decorativos com `aria-hidden`, commit `fdab7b7`. |
+| [41830448894](https://github.com/oYuriyan/walleturbo/actions/runs/41830448894), [41830565715](https://github.com/oYuriyan/walleturbo/actions/runs/41830565715) e [41830975378](https://github.com/oYuriyan/walleturbo/actions/runs/41830975378) | Execuções posteriores concluídas com sucesso. | Evidência de regressão aprovada após as correções. |
+
+Nesta revisão, `upload-artifact` migrou de v4 para v6, cujo manifesto declara Node.js 24. Checkout v5 e upload v6 ficaram fixados por SHA. Os gatilhos passam a executar em pull requests, pushes na `main` e acionamento manual: branches de desenvolvimento devem possuir PR para validação automática. Isso elimina o par push/PR para a mesma alteração, preservando a validação da integração e do resultado na `main`. Novas alterações cancelam execuções obsoletas do mesmo PR; cancelamento não significa aprovação.
+
+O shell Bash explícito habilita `pipefail`, propagando falhas na criação da sessão sintética antes dos testes de navegador. O job tem limite de 20 minutos e ausência de capturas no upload é erro. Não foram desativados testes, auditoria nem notificações de falha. Execuções históricas continuam vermelhas e os e-mails já enviados não são alterados por uma correção posterior. A aprovação desta revisão deve ser conferida no check do próprio commit no PR #1.
