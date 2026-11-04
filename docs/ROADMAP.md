@@ -4,7 +4,7 @@
 
 Prioridade definida pelo responsável pelo produto: concluir o desenvolvimento e uma jornada end-to-end confiável em ambiente local antes de contratar serviços, adquirir domínio ou conectar Google. Não há autorização de publicação ou contratação nesta revisão. Desenvolvimento, testes e documentação seguem containerizados, em pt-BR, com BRL/centavos e privacidade desde a concepção.
 
-Base de código homologada: `2839514`, [CI 41837356697](https://github.com/oYuriyan/walleturbo/actions/runs/41837356697), com 77 testes, integração PostgreSQL/Redis, PDF/planejamento no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
+Base de código homologada: `4675ba8`, [CI 41875971563](https://github.com/oYuriyan/walleturbo/actions/runs/41875971563), com 91 testes, integração PostgreSQL/Redis, PDF/planejamento no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
 
 Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOMOLOGACAO.md são históricos. Uma tarefa só passa a concluída com comportamento implementado, critérios de aceite atendidos, evidências e documentação atualizada. As fases abaixo estão pendentes ou parciais; não são entregas prontas.
 
@@ -13,7 +13,7 @@ Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOM
 | Área | Entrega existente | Limite atual |
 | --- | --- | --- |
 | Fundação | FastAPI, PostgreSQL, Redis, Compose, migrações com checksum, CI, PR e documentação | Operação pública, recuperação de desastre e controles de volume incompletos |
-| Finanças | Lançamentos, categorias por regras, contas/cartões, parcelas, estornos, conferência e pagamentos parciais | Sem saldo inicial/saldo por conta, transferências, recorrências automáticas e alguns ciclos de crédito |
+| Finanças | Lançamentos, categorias por regras, contas/cartões, parcelas, estornos, conferência e pagamentos parciais | Saldo inicial, saldo por conta e transferências com reversão entregues na 0.5; recorrências automáticas, ciclo de vida e alguns ciclos de crédito pendentes |
 | Importação | CSV definido e PDF textual genérico isolado, prévia/revisão e deduplicação | Documentos sintéticos; sem emissores homologados, OCR, OFX ou antivírus |
 | Planejamento | Metas, limites mensais, simulação conservadora e recorrências de assinaturas com evidências | Metas independentes das contas; sem projeção completa, perfil personalizado ou IA |
 | Interface | Web responsiva, claro/escuro, demonstração e formulários funcionais | Jornada completa, acessibilidade e revisão de design ainda não homologadas |
@@ -27,15 +27,15 @@ Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOM
 - **B — Escopo funcional completo em homologação local:** marco A + fases 6–7, ingestão avançada e recuperação da fase 8. Engloba IA, perfil e desejos/ofertas do pedido original. Um simulador de provedor não equivale à integração real homologada. Conectores indisponíveis permanecem explicitamente pendentes.
 - **C — Publicação:** marco B + fase 8 integral e fase 9, decisões operacionais/jurídicas e autorização de publicação. Domínio, hospedagem e Google podem aguardar até essa preparação.
 
-## Fase 1 — Fechar o modelo financeiro e o saldo confiável (próxima implementação)
+## Fase 1 — Fechar o modelo financeiro e o saldo confiável (parcialmente concluída)
 
 Dependência: base existente. Origem: completar o controle financeiro já iniciado; alguns itens são requisitos técnicos derivados para viabilizar seu uso.
 
-- **FIN-01:** definir saldo inicial por conta com data de referência, saldo calculado, ajustes explícitos e política para lançamentos anteriores à referência. Diferenciar saldo informado, saldo calculado, resultado e caixa.
-- **FIN-02:** transferências entre contas próprias, com débito/crédito atômicos, estorno, reenvio idempotente e proteção contra concorrência. Transferência não conta como receita/despesa.
+- **FIN-01 — concluído na 0.5:** definir saldo inicial por conta com data de referência, saldo calculado, ajustes explícitos e política para lançamentos anteriores à referência. Diferenciar saldo informado, saldo calculado, resultado e caixa.
+- **FIN-02 — concluído na 0.5:** transferências entre contas próprias, com débito/crédito atômicos, estorno, reenvio idempotente e proteção contra concorrência. Transferência não conta como receita/despesa.
 - **FIN-03:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
 - **FIN-04:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
-- **FIN-05:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
+- **FIN-05 — parcial; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
 
 Aceite: cenário com duas contas, saldo inicial, receitas, despesas, transferência, compra parcelada, pagamento e reversão termina com valores esperados por conta/mês; nenhuma duplicação ou perda por reenvio, concorrência ou migração.
 
@@ -152,4 +152,6 @@ Integração bancária/Open Finance, aplicativo nativo de loja, sincronização 
 
 ## Próxima entrega concreta
 
-Implementar FIN-01, FIN-02 e a parte de FIN-05 necessária: saldo inicial por conta, saldo calculado e transferências próprias com reversão/idempotência, migração preservando dados e interface correspondente. Critérios e exemplos financeiros devem ser fechados antes do código; atualizar exportação/exclusão e testar precisão/concorrência/isolamento junto da entrega. Em seguida FIN-03/04 e fase 2. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+FIN-01 e FIN-02 foram implementados e homologados no incremento 0.5, com migração, interface, exportação/exclusão e testes de precisão/concorrência/isolamento. A parte correspondente de FIN-05 está em SALDOS.md; a revisão ampla de histórico e idempotência dos demais tipos de operação permanece pendente.
+
+Próxima entrega: FIN-03 (renomeação/arquivamento de contas e cartões e regras de exclusão preservando histórico/vínculos), seguida de FIN-04 e complementação de FIN-05. Depois, avançar para fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.

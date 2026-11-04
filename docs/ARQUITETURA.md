@@ -49,7 +49,7 @@ Saldo, categorias agregadas e metas são determinísticos. Nesta etapa a classif
 
 ## Limites conhecidos
 
-Dashboard e exportação ainda carregam registros na memória; definir paginação, quotas e exportação assíncrona antes de alto volume. As chamadas ao cliente Redis síncrono são executadas no pool de threads, sem bloquear o loop HTTP. O limite atual é por IP direto; atrás de proxy compartilhado ele é agregado. Há cotas por usuário (90 req/min) e importação (10 req/min), além de 120 req/min por IP direto. A identificação de IP atrás de proxies confiáveis permanece pendente. Parcelas, estornos e conferência por total estão implementados; limites por categoria e detecção de assinaturas estão implementados. Recorrências automáticas, saldo por conta e projeção completa permanecem pendentes; ver ROADMAP.md.
+Dashboard e exportação ainda carregam registros na memória; definir paginação, quotas e exportação assíncrona antes de alto volume. As chamadas ao cliente Redis síncrono são executadas no pool de threads, sem bloquear o loop HTTP. O limite atual é por IP direto; atrás de proxy compartilhado ele é agregado. Há cotas por usuário (90 req/min) e importação (10 req/min), além de 120 req/min por IP direto. A identificação de IP atrás de proxies confiáveis permanece pendente. Parcelas, estornos e conferência por total estão implementados; limites por categoria e detecção de assinaturas estão implementados. Saldo por conta e transferências estão implementados na 0.5. Recorrências automáticas e projeção completa permanecem pendentes; ver ROADMAP.md.
 
 ## ADR 005 — Consumo e caixa separados
 
@@ -58,3 +58,7 @@ Compras no cartão geram parcelas nas faturas de vencimento. O resultado mensal 
 ## ADR 006 — PDF em processo e container restritos
 
 O serviço parser recebe bytes por socket Unix, sem rede ou credenciais financeiras. Cada documento é extraído em processo com CPU/memória/tempo limitados. O texto segue transitoriamente para identificação de candidatos; somente seleção revisada vira lançamento. A prévia mantém metadados e hashes temporários no Redis, vinculados à sessão/fatura. Não há OCR nem interpretação por IA nesta etapa. Consulte PDF.md para formatos e limites.
+
+## ADR 007 — Referência de saldo e transferência preservada
+
+`balances.py` consulta posição acumulada com referência no início da data, incluindo pagamentos e as duas pontas de transferências/reversões na mesma instrução SQL. Referências desconhecidas não viram zero. Revisões usam controle de versão e chave de solicitação; transferências preservam identidade após reversão. Reversão tem data própria e não apaga histórico. Contrato, fronteiras e política de correção em SALDOS.md.
