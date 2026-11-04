@@ -5,7 +5,7 @@ import json
 import os
 import secrets
 import time
-import httpx
+import httpx2 as httpx
 from redis import Redis
 
 url = os.environ["SMOKE_BASE_URL"]

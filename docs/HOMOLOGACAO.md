@@ -93,3 +93,9 @@ A análise dos logs confirmou que os e-mails `Run failed` correspondiam a falhas
 Nesta revisão, `upload-artifact` migrou de v4 para v6, cujo manifesto declara Node.js 24. Checkout v5 e upload v6 ficaram fixados por SHA. Os gatilhos passam a executar em pull requests, pushes na `main` e acionamento manual: branches de desenvolvimento devem possuir PR para validação automática. Isso elimina o par push/PR para a mesma alteração, preservando a validação da integração e do resultado na `main`. Novas alterações cancelam execuções obsoletas do mesmo PR; cancelamento não significa aprovação.
 
 O shell Bash explícito habilita `pipefail`, propagando falhas na criação da sessão sintética antes dos testes de navegador. O job tem limite de 20 minutos e ausência de capturas no upload é erro. Não foram desativados testes, auditoria nem notificações de falha. Execuções históricas continuam vermelhas e os e-mails já enviados não são alterados por uma correção posterior. A aprovação desta revisão deve ser conferida no check do próprio commit no PR #1.
+
+## Migração do cliente HTTP — 04/11/2026
+
+Substituído httpx 0.28.1 por httpx2 2.16.0, suportado por Authlib 1.9.3 e Starlette 1.10.0. Locks de produção/testes regenerados com hashes; scripts de integração usam o novo cliente. A suíte local passou com 76 testes e `pytest -q -W error`, sem avisos. Dois cenários adicionais exercitam o transporte assíncrono real de Authlib com endpoint simulado: envio do verificador PKCE na troca de código e recusa de `invalid_grant`. Isso não homologa assinatura de ID token, Google, MFA ou provedor OIDC real. A validação containerizada completa permanece no check do commit correspondente no PR #1.
+
+O novo transporte usa truststore e certificados do sistema. A verificação TLS continua habilitada; ambientes com CA privada devem instalar essa CA no trust store do sistema. Não foram adicionadas exceções de certificado nem supressões de avisos.

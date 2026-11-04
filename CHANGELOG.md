@@ -2,6 +2,9 @@
 
 ## 0.4.0 — em desenvolvimento
 
+- Migração do transporte HTTP para httpx2, removendo avisos de depreciação de Starlette/Authlib.
+- Regressão da troca OAuth com PKCE e recusa de token inválido em transporte simulado.
+
 - Planejamento mensal e limites por categoria com conferência dos agregados.
 - Simulação de aportes limitada por receita, resultado, caixa e margem preservada.
 - Recorrências de assinaturas com evidências de meses distintos, excluindo parcelas.

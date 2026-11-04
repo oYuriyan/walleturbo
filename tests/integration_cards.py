@@ -7,7 +7,7 @@ import secrets
 import time
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
-import httpx
+import httpx2 as httpx
 from redis import Redis
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError

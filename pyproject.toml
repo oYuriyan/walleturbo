@@ -5,8 +5,8 @@ description = "Controle financeiro pessoal com privacidade desde a concepção"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115,<1", "uvicorn>=0.34,<1", "sqlalchemy>=2.0,<3",
-  "psycopg[binary]>=3.2,<4", "redis>=5,<7", "authlib>=1.6,<2",
-  "httpx>=0.28,<1", "pydantic-settings>=2.8,<3", "itsdangerous>=2.2,<3", "pypdf>=6,<7"
+  "psycopg[binary]>=3.2,<4", "redis>=5,<7", "authlib>=1.9.3,<2",
+  "httpx2>=2.16,<3", "pydantic-settings>=2.8,<3", "itsdangerous>=2.2,<3", "pypdf>=6,<7"
 ]
 [project.optional-dependencies]
 test = ["pytest>=8,<10", "fakeredis>=2.28,<3", "pip-audit>=2.9,<3"]

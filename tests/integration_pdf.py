@@ -52,7 +52,7 @@ def main():
     import os
     import secrets
     import time
-    import httpx
+    import httpx2 as httpx
     from redis import Redis
 
     if os.environ.get("WALLETURBO_INTEGRATION") != "1":
