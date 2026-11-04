@@ -6,7 +6,7 @@ Abra a aplicação. **Explorar demonstração** carrega exemplos fictícios na m
 
 ## Rotina mensal
 
-Selecione o mês no topo. O saldo é entradas menos despesas registradas naquele mês, não o saldo consultado no banco. Vá a Movimentações para adicionar uma receita ou despesa, informando valor positivo, data, descrição e categoria. Marque a revisão quando tiver conferido a classificação. Transferências entre contas, parcelas, estornos e fechamento de cartão ainda não têm modelagem própria; não importe esses casos como receitas/despesas sem conciliação manual.
+Selecione o mês no topo. O resultado mensal é receitas menos despesas diretas e parcelas no mês de vencimento, com estornos. A movimentação de caixa considera pagamentos de fatura na data registrada. Nenhum deles é saldo consultado no banco. Vá a Movimentações para adicionar uma receita ou despesa, informando valor positivo, data, descrição e categoria. Marque a revisão quando tiver conferido a classificação. Para parcelas, estornos e pagamento de cartão, use **Contas e cartões**, conforme [Faturas](FATURAS.md); não registre também o pagamento como despesa direta. Transferências entre contas ainda não são suportadas.
 
 A busca filtra descrição e categoria no mês selecionado. **Revisar** permite corrigir todos os campos. **Excluir** solicita confirmação antes de remover o lançamento.
 
@@ -32,6 +32,6 @@ Informe nome, valor alvo, valor já reservado e prazo. Atualize a reserva confor
 
 ## Privacidade
 
-Use **Baixar meus dados** para obter JSON. Para excluir lançamentos e metas ativos, digite `EXCLUIR`. A conta do provedor de identidade não é removida. A implantação final deverá informar prazos de retenção de backup e canal de atendimento ao titular.
+Use **Baixar meus dados** para obter JSON com lançamentos, metas, contas, cartões, faturas, parcelas e pagamentos. Para excluir lançamentos e metas ativos, digite `EXCLUIR`. A conta do provedor de identidade não é removida. A implantação final deverá informar prazos de retenção de backup e canal de atendimento ao titular.
 
 O tema é alternado pelo botão ◐. Somente essa preferência fica no localStorage. Navegação e formulários suportam teclado; use Escape para fechar diálogos.

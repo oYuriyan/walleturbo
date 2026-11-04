@@ -1,6 +1,6 @@
 [project]
 name = "walleturbo"
-version = "0.1.0"
+version = "0.2.0"
 description = "Controle financeiro pessoal com privacidade desde a concepção"
 requires-python = ">=3.12"
 dependencies = [
@@ -18,3 +18,5 @@ requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["app*"]
+[tool.setuptools.package-data]
+app = ["migrations/*.sql"]

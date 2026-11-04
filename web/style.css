@@ -824,3 +824,58 @@ footer {
     display: none;
   }
 }
+body.dark {
+  --purple: #b99af8;
+}
+body.dark .button,
+body.dark .brand-mark {
+  background: #7544d7;
+}
+.account-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+}
+.statement-heading {
+  margin: 30px 0 16px;
+}
+.statement {
+  margin-bottom: 20px;
+}
+.statement > .actions {
+  margin-bottom: 16px;
+}
+.statement .transaction {
+  flex-wrap: wrap;
+}
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+@media (max-width: 800px) {
+  nav {
+    overflow-x: auto;
+  }
+  .nav {
+    flex-shrink: 0;
+    width: auto;
+  }
+  .actions {
+    flex-wrap: wrap;
+  }
+  .payment-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .statement .row-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+}

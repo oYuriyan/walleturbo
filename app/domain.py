@@ -8,7 +8,18 @@ from decimal import Decimal, InvalidOperation
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-CATEGORIES = ("Moradia", "Alimentação", "Transporte", "Saúde", "Educação", "Lazer", "Assinaturas", "Compras", "Renda", "Outros")
+CATEGORIES = (
+    "Moradia",
+    "Alimentação",
+    "Transporte",
+    "Saúde",
+    "Educação",
+    "Lazer",
+    "Assinaturas",
+    "Compras",
+    "Renda",
+    "Outros",
+)
 
 
 class Entry(BaseModel):
@@ -19,6 +30,7 @@ class Entry(BaseModel):
     kind: Literal["income", "expense"] = "expense"
     category: str = "Outros"
     reviewed: bool = False
+    account_id: str | None = Field(default=None, min_length=1, max_length=36)
 
     @field_validator("category")
     @classmethod
@@ -71,10 +83,23 @@ def parse_csv(content: str):
                 raise ValueError()
             cents = int(Decimal(value.replace(",", ".")) * 100)
             kind = {"despesa": "expense", "receita": "income"}[row["tipo"].strip()]
-            entries.append(Entry(date=row["data"], description=row["descricao"], amount_cents=cents,
-                                 kind=kind, category="Renda" if kind == "income" else suggest_category(row["descricao"])))
+            entries.append(
+                Entry(
+                    date=row["data"],
+                    description=row["descricao"],
+                    amount_cents=cents,
+                    kind=kind,
+                    category=(
+                        "Renda"
+                        if kind == "income"
+                        else suggest_category(row["descricao"])
+                    ),
+                )
+            )
         except (ValueError, KeyError, TypeError, AttributeError, InvalidOperation):
-            raise ValueError(f"Linha {number} inválida; use data AAAA-MM-DD, valor 123,45 e tipo despesa/receita") from None
+            raise ValueError(
+                f"Linha {number} inválida; use data AAAA-MM-DD, valor 123,45 e tipo despesa/receita"
+            ) from None
     if not entries:
         raise ValueError("Arquivo sem lançamentos")
     return entries
@@ -87,7 +112,9 @@ def import_keys(entries):
     for entry in entries:
         canonical = f"{entry.date}|{entry.description.casefold()}|{entry.amount_cents}|{entry.kind}"
         occurrences[canonical] += 1
-        result.append(hashlib.sha256(f"{canonical}|{occurrences[canonical]}".encode()).hexdigest())
+        result.append(
+            hashlib.sha256(f"{canonical}|{occurrences[canonical]}".encode()).hexdigest()
+        )
     return result
 
 
@@ -101,8 +128,26 @@ def summarize(entries):
     insights = []
     subscriptions = categories.get("Assinaturas", 0)
     if subscriptions:
-        insights.append({"title": "Revise suas assinaturas", "description": "Confira quais serviços ainda são úteis. O valor indica gastos na categoria, não economia garantida.", "amount_cents": subscriptions})
+        insights.append(
+            {
+                "title": "Revise suas assinaturas",
+                "description": "Confira quais serviços ainda são úteis. O valor indica gastos na categoria, não economia garantida.",
+                "amount_cents": subscriptions,
+            }
+        )
     if expenses > income:
-        insights.append({"title": "Saídas acima das entradas", "description": "Neste mês, as despesas registradas superam as receitas. Confira se todas as entradas foram lançadas.", "amount_cents": expenses - income})
-    return {"income_cents": income, "expense_cents": expenses, "balance_cents": income-expenses,
-            "categories": dict(categories), "pending": sum(not e.reviewed for e in entries), "insights": insights}
+        insights.append(
+            {
+                "title": "Saídas acima das entradas",
+                "description": "Neste mês, as despesas registradas superam as receitas. Confira se todas as entradas foram lançadas.",
+                "amount_cents": expenses - income,
+            }
+        )
+    return {
+        "income_cents": income,
+        "expense_cents": expenses,
+        "balance_cents": income - expenses,
+        "categories": dict(categories),
+        "pending": sum(not e.reviewed for e in entries),
+        "insights": insights,
+    }

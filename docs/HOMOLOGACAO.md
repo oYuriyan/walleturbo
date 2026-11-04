@@ -49,3 +49,19 @@ O roteiro de navegador está em `tests/browser.cjs`. Requer Playwright e Chromiu
 Google/OIDC real, criptografia/token/state/nonce ponta a ponta, configuração MFA/recuperação, testes de carga/DoS, pentest externo, backup/restore, scanners de imagem, acessibilidade WCAG completa, LGPD jurídica/operacional, publicação e escalabilidade. Os testes de callback simulam a resposta do provedor e verificam somente a política local de ACR/issuer e rotação de sessão.
 
 Não foram implementados OCR/PDF/OFX, agentes de IA, ofertas/cupons, orçamento, contas/cartões/parcelas nem recomendações completas por perfil. Consulte os critérios de aceite no roadmap. A ausência de vulnerabilidades conhecidas no auditor não constitui garantia de ausência de falhas.
+
+## Incremento 0.2 — contas e faturas
+
+Validações locais realizadas com dados sintéticos:
+
+- 49 testes aprovados: suíte ampliada para parcelas, calendário, idempotência, estornos, conferência, imutabilidade, pagamentos, segregação, exclusão, envio lento e corpos chunked.
+- PostgreSQL/Redis reais: compras concorrentes idempotentes; pagamentos concorrentes limitados ao restante; diferença entre consumo e caixa; FK composta recusando vínculo entre proprietários.
+- Migrações: adoção explícita do banco 0.1, preservação de valores, execução repetida, rollback integral de SQL inválido e rejeição de checksum divergente.
+- Chromium autenticado com API real: cadastro de conta/cartão, compra parcelada, recusa de total divergente, conferência correta, pagamento parcial e próximo mês. Desktop/mobile escuro sem erros JavaScript.
+- Regressão dos fluxos anteriores de demonstração, lançamento, metas, busca e texto não interpretado como HTML.
+
+A sessão do teste visual foi criada diretamente no Redis para usuário sintético com TTL curto e removida com os dados ao final. Isso não homologa login Google/MFA real. Screenshots locais: `artifacts/cards-desktop.png` e `artifacts/cards-mobile-dark.png`.
+
+O ambiente local voltou a atingir seu limite de disco ao duplicar containers pelo driver VFS. A migração foi concluída, e a API nova foi validada usando a imagem de dependências existente com código montado somente para leitura. O CI executa builds completos, banco novo, concorrência e migração de legado. Não foram feitos testes volumétricos/DDoS, pentest nem backup/restore.
+
+As pendências citadas no relatório 0.1 devem ser lidas como estado daquela entrega; parcelas, estornos, cartões e conferência por total foram implementados neste incremento. Permanecem pendentes OCR/PDF/OFX, agentes de IA, preços/cupons, recorrência/orçamentos, integração bancária e homologação de produção/LGPD.

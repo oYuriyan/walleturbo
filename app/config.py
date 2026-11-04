@@ -15,7 +15,9 @@ class Settings(BaseSettings):
 
     def validate_auth(self):
         if self.app_env == "production":
-            if not self.base_url.startswith("https://") or not self.oidc_issuer.startswith("https://"):
+            if not self.base_url.startswith(
+                "https://"
+            ) or not self.oidc_issuer.startswith("https://"):
                 raise RuntimeError("Produção exige HTTPS e provedor OIDC")
             if not self.oidc_client_id or not self.oidc_client_secret:
                 raise RuntimeError("Produção exige credenciais OIDC")

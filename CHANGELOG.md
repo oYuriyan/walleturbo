@@ -1,5 +1,14 @@
 # Histórico de alterações
 
+## 0.2.0 — em desenvolvimento
+
+- Contas, cartões, parcelas exatas em centavos e estornos em faturas explícitas.
+- Conferência por total, revisão obrigatória, pagamento parcial e correção de registros sem duplicar despesas.
+- Idempotência de compras/pagamentos, locks de concorrência e relações protegidas por proprietário no banco.
+- Migrações transacionais com checksum e adoção explícita do schema legado.
+- Cotas por usuário/importação, timeout de upload, cabeçalhos em rejeições e prevenção de restauração de sessão revogada.
+- Exportação/exclusão ampliadas e fluxo de navegador autenticado com dados sintéticos.
+
 ## 0.1.0 — 03/11/2026 — em desenvolvimento
 
 - Fundação do Walleturbo com API FastAPI, PostgreSQL, Redis e interface responsiva em pt-BR.

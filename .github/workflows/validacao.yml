@@ -14,12 +14,16 @@ jobs:
       - name: Auditar dependências
         run: docker run --rm --tmpfs /tmp --entrypoint pip-audit walleturbo-test --cache-dir /tmp/pip-audit --disable-pip --no-deps -r requirements.lock
       - name: Validar JavaScript
-        run: node --check web/app.js
+        run: |
+          node --check web/app.js
+          node --check web/cards.js
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
           docker compose up --build -d --wait --wait-timeout 120
           docker compose exec -T -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_real.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_cards.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/integration_migrations.py
       - name: Encerrar serviços de teste
         if: always()
         run: docker compose down

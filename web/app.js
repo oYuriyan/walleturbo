@@ -25,7 +25,8 @@ let demo = false,
   all = [],
   goals = [],
   csvContent = "",
-  view = "overview";
+  view = "overview",
+  importStatementId = null;
 $("#month").value = today.slice(0, 7);
 // Apenas preferência visual fica no navegador. Dados financeiros da demonstração ficam em memória.
 try {
@@ -68,6 +69,10 @@ async function api(path, method = "GET", body, headers = {}) {
       $("#login").hidden = false;
       $("#logout").hidden = true;
       $("#mode").textContent = "Sessão encerrada";
+      all = [];
+      goals = [];
+      if (typeof clearFinance === "function") clearFinance();
+      render(summary([]));
     }
     throw Error(
       typeof detail === "string"
@@ -142,9 +147,16 @@ async function refresh() {
   } else {
     data = summary(all.filter((t) => t.date.startsWith($("#month").value)));
   }
+  if (typeof loadFinance === "function") await loadFinance();
+  if (demo && typeof applyDemoCards === "function") applyDemoCards(data);
   render(data);
 }
 function render(data) {
+  $("#cash-result").textContent =
+    "Movimentação líquida de caixa: " +
+    money(data.cash_balance_cents ?? data.balance_cents);
+  $("#card-result").textContent =
+    "Pagamentos de fatura no mês: " + money(data.card_payment_cents || 0);
   $("#balance").textContent = money(data.balance_cents);
   $("#income").textContent = money(data.income_cents);
   $("#expense").textContent = money(data.expense_cents);
@@ -178,6 +190,7 @@ function render(data) {
   });
   renderTransactions();
   renderGoals();
+  if (typeof renderFinance === "function") renderFinance();
 }
 function progress(value, max, label) {
   const wrap = el("div", undefined, "track"),
@@ -327,6 +340,9 @@ function openEntry(t) {
   f.elements.kind.value = t?.kind || "expense";
   f.elements.category.value = t?.category || "Outros";
   f.elements.reviewed.checked = true;
+  if (typeof populateAccounts === "function")
+    populateAccounts(f.elements.account_id, true);
+  f.elements.account_id.value = t?.account_id || "";
   $("#entry-title").textContent = t ? "Revisar lançamento" : "Novo lançamento";
   openDialog("#entry-dialog");
 }
@@ -427,6 +443,7 @@ $("#demo").onclick = () => {
   $("#notice").firstElementChild.textContent =
     "Dados fictícios, somente nesta aba. Alterações serão descartadas ao recarregar.";
   $("#demo").hidden = true;
+  seedFinance();
   action(refresh);
 };
 $("#entry-form").onsubmit = (e) => {
@@ -441,6 +458,7 @@ $("#entry-form").onsubmit = (e) => {
         kind: f.elements.kind.value,
         category: f.elements.category.value,
         reviewed: f.elements.reviewed.checked,
+        account_id: f.elements.account_id.value || null,
       };
     if (body.amount_cents <= 0 || !body.description)
       throw Error("Informe uma descrição e um valor maior que zero.");
@@ -489,7 +507,12 @@ $("#goal-form").onsubmit = (e) => {
     message("Meta atualizada.");
   });
 };
-$("#import-button").onclick = () => {
+$("#import-button").onclick = () => openImport();
+function openImport(statementId = null) {
+  importStatementId = statementId;
+  $("#import-account-label").hidden = !!statementId;
+  populateAccounts($("#import-account"), true);
+  importVersion++;
   if (!allowed()) return;
   if (demo) {
     message(
@@ -502,7 +525,7 @@ $("#import-button").onclick = () => {
   $("#import-preview").replaceChildren();
   $("#confirm-import").disabled = true;
   openDialog("#import-dialog");
-};
+}
 let importVersion = 0;
 $("#csv-file").onchange = () =>
   action(async () => {
@@ -514,7 +537,18 @@ $("#csv-file").onchange = () =>
     if (!file) return;
     if (file.size > 256000) throw Error("Arquivo excede 256 KB.");
     const content = await file.text(),
-      result = await api("/api/import/preview", "POST", { content });
+      result = await api(
+        importStatementId
+          ? `/api/statements/${importStatementId}/import/preview`
+          : "/api/import/preview",
+        "POST",
+        {
+          content,
+          ...(!importStatementId
+            ? { account_id: $("#import-account").value || null }
+            : {}),
+        },
+      );
     if (version !== importVersion) return;
     csvContent = content;
     $("#import-preview").append(
@@ -532,9 +566,18 @@ $("#confirm-import").onclick = () =>
   action(async () => {
     $("#confirm-import").disabled = true;
     try {
-      const result = await api("/api/import/confirm", "POST", {
-        content: csvContent,
-      });
+      const result = await api(
+        importStatementId
+          ? `/api/statements/${importStatementId}/import/confirm`
+          : "/api/import/confirm",
+        "POST",
+        {
+          content: csvContent,
+          ...(!importStatementId
+            ? { account_id: $("#import-account").value || null }
+            : {}),
+        },
+      );
       $("#import-dialog").close();
       await refresh();
       message(
@@ -553,7 +596,7 @@ $("#export").onclick = () =>
   action(async () => {
     if (!allowed()) return;
     const data = demo
-        ? { transactions: all, goals }
+        ? { transactions: all, goals, ...exportDemoFinance() }
         : await api("/api/privacy/export"),
       url = URL.createObjectURL(
         new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
@@ -578,6 +621,7 @@ $("#delete-form").onsubmit = (e) => {
       });
     all = [];
     goals = [];
+    clearFinance();
     csrf = "";
     $("#delete-dialog").close();
     await refresh();

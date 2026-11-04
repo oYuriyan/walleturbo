@@ -7,6 +7,7 @@
     <title>Walleturbo · Seu dinheiro, com direção</title>
     <link rel="stylesheet" href="/assets/style.css" />
     <script src="/assets/app.js" defer></script>
+    <script src="/assets/cards.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -20,6 +21,8 @@
           <span>◫</span> Visão geral</button
         ><button class="nav" data-view="transactions">
           <span>⇄</span> Movimentações</button
+        ><button class="nav" data-view="finance">
+          <span>▤</span> Contas e cartões</button
         ><button class="nav" data-view="goals">
           <span>◎</span> Minhas metas</button
         ><button class="nav" data-view="privacy">
@@ -33,7 +36,7 @@
           <p>Um passo de cada vez para cuidar do seu amanhã.</p>
         </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
-        ><span class="version">Walleturbo · versão inicial 0.1</span>
+        ><span class="version">Walleturbo · versão em desenvolvimento 0.2</span>
       </div>
     </aside>
     <main>
@@ -66,9 +69,13 @@
       <section id="overview" class="view">
         <div class="summary-grid">
           <article class="balance-card">
-            <div class="card-top"><span>Saldo do mês</span><span>↑</span></div>
+            <div class="card-top">
+              <span>Resultado do mês</span><span>↑</span>
+            </div>
             <strong id="balance">R$ 0,00</strong
-            ><span class="muted-light">Entradas menos saídas registradas</span>
+            ><span class="muted-light"
+              >Receitas menos despesas, incluindo parcelas a vencer</span
+            >
             <div class="balance-bottom">
               <span>Um olhar mais leve para suas finanças</span><span>✳</span>
             </div>
@@ -80,9 +87,15 @@
           </article>
           <article class="metric">
             <div class="icon-circle expense">↑</div>
-            <span>Saídas</span><strong id="expense">R$ 0,00</strong
-            ><small>Despesas no período</small>
+            <span>Despesas líquidas</span><strong id="expense">R$ 0,00</strong
+            ><small>Cartões pelo mês de vencimento</small>
           </article>
+        </div>
+        <div class="notice">
+          <span id="cash-result">Movimentação de caixa: R$ 0,00</span
+          ><span id="card-result"
+            >Pagamentos de fatura não duplicam despesas.</span
+          >
         </div>
         <div class="content-grid">
           <article class="panel">
@@ -160,6 +173,29 @@
           <div id="transaction-list"></div>
         </div>
       </section>
+      <section id="finance" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Contas e cartões</h2>
+            <p>Das compras ao pagamento, sem contar o gasto duas vezes.</p>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="new-account">+ Conta</button
+            ><button class="ghost" id="new-card">+ Cartão</button
+            ><button class="button" id="new-purchase">
+              + Compra ou estorno
+            </button>
+          </div>
+        </div>
+        <div class="notice">
+          As faturas abaixo vencem no mês selecionado. Informe a primeira fatura
+          conforme o emissor; datas de fechamento não são presumidas.
+        </div>
+        <div id="account-list" class="account-list"></div>
+        <div id="card-list" class="goals-grid"></div>
+        <h2 class="statement-heading">Faturas do período</h2>
+        <div id="statement-list"></div>
+      </section>
       <section id="goals" class="view" hidden>
         <div class="section-heading">
           <div>
@@ -184,13 +220,16 @@
             de ofertas. Os alertas são calculados por regras locais à aplicação.
           </p>
           <h3>Portabilidade</h3>
-          <p>Exporte seus lançamentos e metas em JSON.</p>
+          <p>
+            Exporte lançamentos, metas, contas, cartões, faturas e pagamentos em
+            JSON.
+          </p>
           <button id="export" class="ghost">Baixar meus dados ↓</button>
           <h3>Excluir dados financeiros</h3>
           <p>
-            A exclusão remove lançamentos e metas ativos. Não exclui sua conta
-            no provedor de identidade. Prazos de backups e política legal
-            precisam ser definidos antes do lançamento público.
+            A exclusão remove todos os registros financeiros ativos. Não exclui
+            sua conta no provedor de identidade. Prazos de backups e política
+            legal precisam ser definidos antes do lançamento público.
           </p>
           <button id="erase" class="danger">Excluir meus dados</button>
         </article>
@@ -233,6 +272,11 @@
             >Categoria<select name="category" id="category-options"></select
           ></label>
         </div>
+        <label
+          >Conta (opcional)<select name="account_id" id="entry-account">
+            <option value="">Sem conta vinculada</option>
+          </select></label
+        >
         <label class="checkbox"
           ><input type="checkbox" name="reviewed" checked /> Categoria revisada
           por mim</label
@@ -295,16 +339,167 @@
       <p>
         PDF, OFX e leitura de imagens serão adicionados em uma próxima etapa.
       </p>
+      <label id="import-account-label"
+        >Conta de origem (opcional)<select id="import-account"></select
+      ></label>
       <div id="import-preview"></div>
       <button id="confirm-import" class="button full" disabled>
         Confirmar importação
       </button>
     </dialog>
+    <dialog id="setup-dialog">
+      <form id="setup-form">
+        <div class="section-heading">
+          <h2 id="setup-title">Cadastrar conta</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="type" type="hidden" /><label
+          >Apelido<input
+            name="name"
+            required
+            maxlength="80"
+            placeholder="Ex.: Conta principal" /></label
+        ><label id="due-day-label"
+          >Dia do vencimento<input
+            name="due_day"
+            type="number"
+            min="1"
+            max="31"
+            value="10"
+        /></label>
+        <p>
+          Use somente um apelido. Não informe número completo do cartão, CVV,
+          senha ou dados de acesso bancário.
+        </p>
+        <button class="button full">Cadastrar</button>
+      </form>
+    </dialog>
+    <dialog id="purchase-dialog">
+      <form id="purchase-form">
+        <div class="section-heading">
+          <h2>Compra ou estorno no cartão</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="request_id" type="hidden" /><label
+          >Cartão<select name="card_id" required></select></label
+        ><label
+          >Descrição<input name="description" required maxlength="160"
+        /></label>
+        <div class="form-grid">
+          <label
+            >Valor total (R$)<input
+              name="amount"
+              required
+              inputmode="decimal"
+              pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+          ><label
+            >Quantidade de parcelas<input
+              name="installments"
+              type="number"
+              min="1"
+              max="36"
+              required
+              value="1" /></label
+          ><label
+            >Data da compra / crédito<input
+              name="date"
+              type="date"
+              required /></label
+          ><label
+            >Primeiro vencimento (mês)<input
+              name="first_month"
+              type="month"
+              required /></label
+          ><label
+            >Tipo<select name="kind">
+              <option value="expense">Compra / encargo</option>
+              <option value="refund">Estorno creditado</option>
+            </select></label
+          ><label>Categoria<select name="category"></select></label>
+        </div>
+        <p>
+          O valor total será dividido entre as parcelas, preservando cada
+          centavo. Estornos devem ser informados em uma única fatura.
+        </p>
+        <label class="checkbox"
+          ><input type="checkbox" name="reviewed" checked /> Categoria revisada
+          por mim</label
+        ><button class="button full">Registrar no cartão</button>
+      </form>
+    </dialog>
+    <dialog id="review-charge-dialog">
+      <form id="review-charge-form">
+        <div class="section-heading">
+          <h2>Revisar categoria</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" /><label
+          >Categoria<select name="category"></select></label
+        ><button class="button full">Confirmar revisão</button>
+      </form>
+    </dialog>
+    <dialog id="reconcile-dialog">
+      <form id="reconcile-form">
+        <div class="section-heading">
+          <h2>Conferir fatura</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" />
+        <p>
+          Digite o total cobrado pelo emissor. Para concluir, as categorias
+          precisam estar revisadas e o total deve coincidir com os lançamentos.
+        </p>
+        <label
+          >Total da fatura (R$)<input
+            name="amount"
+            required
+            inputmode="decimal"
+            pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+        ><button class="button full">Conferir e fechar</button>
+      </form>
+    </dialog>
+    <dialog id="payment-dialog">
+      <form id="payment-form">
+        <div class="section-heading">
+          <h2>Registrar pagamento</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" /><input
+          name="request_id"
+          type="hidden"
+        /><label
+          >Conta de origem<select name="account_id" required></select></label
+        ><label
+          >Data do pagamento<input name="date" type="date" required /></label
+        ><label
+          >Valor pago (R$)<input
+            name="amount"
+            required
+            inputmode="decimal"
+            pattern="[0-9]+([,.][0-9]{1,2})?"
+        /></label>
+        <p>
+          Apenas registra um pagamento que você realizou. Não movimenta dinheiro
+          no banco e não cria uma segunda despesa.
+        </p>
+        <button class="button full">Salvar pagamento</button>
+      </form>
+    </dialog>
     <dialog id="delete-dialog">
       <form id="delete-form">
         <h2>Excluir seus dados financeiros?</h2>
         <p>
-          Essa ação remove todos os seus lançamentos e metas. Digite EXCLUIR
+          Essa ação remove todos os seus registros financeiros. Digite EXCLUIR
           para confirmar.
         </p>
         <label

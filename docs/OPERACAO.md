@@ -8,7 +8,7 @@ Não versionar segredos, dados de usuários, exports ou screenshots com dados re
 
 ## Desenvolvimento containerizado
 
-`docker compose up --build -d` inicia API, PostgreSQL e Redis. Porta da aplicação vinculada ao loopback; banco e Redis sem portas públicas. `docker compose logs api` auxilia diagnóstico; não habilitar logs de corpo ou código OAuth. `docker compose down` preserva o volume; **não usar `down -v` com dados que devam ser mantidos**.
+`docker compose up --build -d` inicia PostgreSQL/Redis, executa o serviço de migração e inicia a API. Consulte MIGRACOES.md antes de atualizar um volume 0.1. Porta da aplicação vinculada ao loopback; banco e Redis sem portas públicas. `docker compose logs api` auxilia diagnóstico; não habilitar logs de corpo ou código OAuth. `docker compose down` preserva o volume; **não usar `down -v` com dados que devam ser mantidos**.
 
 A API usa usuário sem privilégios, filesystem somente leitura, capabilities removidas e tmpfs limitado. Banco requer volume persistente. Os serviços usam imagens versionadas por tag; fixação de digest e scanner de imagens são pendências antes da produção.
 

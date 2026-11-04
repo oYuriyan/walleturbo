@@ -6,6 +6,7 @@ Esta documentação orienta privacidade desde a concepção, mas não representa
 |---|---|---|
 | Identificador pseudônimo derivado de issuer/sub | Separar contas | PostgreSQL e Redis |
 | Descrição, data, valor, categoria e revisão | Controle financeiro | PostgreSQL |
+| Apelidos de conta/cartão, vencimentos, parcelas, estornos e pagamentos | Organizar e conferir faturas sem duplicar despesas | PostgreSQL |
 | Nome, valor e prazo de meta | Planejamento | PostgreSQL |
 | State/nonce/verificador OAuth e sessão | Autenticação e segurança | Redis temporário |
 | Hash do IP direto | Contagem de requisições | Redis por 60 segundos |
@@ -15,7 +16,7 @@ Não coletar CVV, PAN completo, senha bancária ou documentos de identidade. Des
 
 ## Direitos e controles implementados
 
-Exportação dos dados financeiros próprios; correção por edição; exclusão dos registros ativos; revisão humana de categorias. A exclusão não remove a identidade no provedor e não estabelece por si só o prazo de remoção de cópias de segurança. Demonstração sem persistência financeira no navegador. Não há envio a IA ou afiliados.
+Exportação dos dados financeiros próprios, incluindo contas, cartões, parcelas e pagamentos; correção por edição; exclusão dos registros ativos; revisão humana de categorias. A exclusão não remove a identidade no provedor e não estabelece por si só o prazo de remoção de cópias de segurança. Demonstração sem persistência financeira no navegador. Não há envio a IA ou afiliados.
 
 ## Decisões obrigatórias antes da produção
 

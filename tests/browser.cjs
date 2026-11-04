@@ -17,8 +17,10 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     .getByRole("button", { name: "Movimentações", exact: false })
     .click();
   await page.getByRole("button", { name: "Novo lançamento" }).click();
-  await page.locator("[name=description]").fill("<img src=x onerror=alert(1)>");
-  await page.locator("[name=amount]").fill("19,99");
+  await page
+    .locator("#entry-form [name=description]")
+    .fill("<img src=x onerror=alert(1)>");
+  await page.locator("#entry-form [name=amount]").fill("19,99");
   await page.getByRole("button", { name: "Salvar lançamento" }).click();
   await page.locator("#search").fill("<img");
   if (await page.locator("#transaction-list img").count())
@@ -26,14 +28,14 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
   if ((await page.locator("#transaction-list .transaction").count()) !== 1)
     throw Error("Lançamento não encontrado");
   await page.getByRole("button", { name: "Revisar", exact: true }).click();
-  await page.locator("[name=amount]").fill("29,99");
+  await page.locator("#entry-form [name=amount]").fill("29,99");
   await page.getByRole("button", { name: "Salvar lançamento" }).click();
   await page.getByRole("button", { name: "Minhas metas" }).click();
   await page.getByRole("button", { name: "Criar meta", exact: false }).click();
-  await page.locator("[name=name]").fill("Notebook");
-  await page.locator("[name=target]").fill("5000");
-  await page.locator("[name=saved]").fill("1000");
-  await page.locator("[name=deadline]").fill("2027-12-01");
+  await page.locator("#goal-form [name=name]").fill("Notebook");
+  await page.locator("#goal-form [name=target]").fill("5000");
+  await page.locator("#goal-form [name=saved]").fill("1000");
+  await page.locator("#goal-form [name=deadline]").fill("2027-12-01");
   await page.getByRole("button", { name: "Salvar meta" }).click();
   if (!(await page.locator("#goal-list").textContent()).includes("Notebook"))
     throw Error("Meta ausente");
@@ -45,6 +47,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
   )
     throw Error("Overflow mobile");
   await page.locator('.topbar button[aria-label="Alternar tema"]').click();
+  await page.waitForTimeout(200);
   await page.screenshot({ path: "artifacts/mobile-dark.png", fullPage: true });
   if (errors.length) throw Error(errors.join("\n"));
   console.log(

@@ -1,12 +1,13 @@
 services:
   api:
+    image: walleturbo-api
     build:
       context: .
       target: base
     env_file: .env
     ports: ["127.0.0.1:8000:8000"]
     depends_on:
-      db: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
       redis: {condition: service_healthy}
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
@@ -20,6 +21,19 @@ services:
     mem_limit: 512m
     cpus: 1
     restart: unless-stopped
+  migrate:
+    image: walleturbo-api
+    build:
+      context: .
+      target: base
+    env_file: .env
+    command: [python, -m, app.migrate]
+    depends_on:
+      db: {condition: service_healthy}
+    read_only: true
+    tmpfs: ["/tmp:size=16m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
   db:
     image: postgres:17-alpine
     environment:
@@ -28,7 +42,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql:ro
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U walleturbo -d walleturbo"]
       interval: 5s
