@@ -30,4 +30,6 @@ As rotas filtram proprietário antes de consultar/alterar; IDs de terceiros reto
 
 A migração 005 adiciona `archived=false` e `version=0` sem recriar ou apagar contas/cartões. `integration_migrations.py` verifica valores, IDs e vínculos anteriores. `test_lifecycle.py` cobre regras, isolamento, exportação/exclusão e importação de PDF confirmada depois de arquivar. `integration_lifecycle.py` disputa gravações em PostgreSQL real. `browser_lifecycle.cjs` verifica conflito/recarregamento, renomeação, arquivamento/reativação, exclusão, tela mobile e limpeza na expiração da sessão.
 
+As mutações exigem sessão autenticada, origem válida e token CSRF. As cotas de requisições existentes continuam aplicadas; o gerenciamento de cadastros não possui exceção de limite.
+
 FIN-03 continua parcial: metas ainda precisam de ciclo de vida, critérios de exclusão e revisão da edição. FIN-04 deve fechar histórico mínimo de alterações financeiras, retenção e acesso; esta entrega não substitui esse trabalho.
