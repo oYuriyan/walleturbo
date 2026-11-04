@@ -32,4 +32,14 @@ A migração 005 adiciona `archived=false` e `version=0` sem recriar ou apagar c
 
 As mutações exigem sessão autenticada, origem válida e token CSRF. As cotas de requisições existentes continuam aplicadas; o gerenciamento de cadastros não possui exceção de limite.
 
-FIN-03 continua parcial: metas ainda precisam de ciclo de vida, critérios de exclusão e revisão da edição. FIN-04 deve fechar histórico mínimo de alterações financeiras, retenção e acesso; esta entrega não substitui esse trabalho.
+## Metas — incremento 0.7
+
+Metas existentes recebem `archived=false` e `version=0` pela migração 006, preservando valores/prazos. Criação continua recebendo `GoalInput`; edição `PUT /api/goals/{id}` exige os mesmos campos mais `archived` e `expected_version`. O contrato anterior de edição sem versão é recusado com 422. Alteração efetiva incrementa a versão; envio obsoleto recebe 409. A interface oferece **Recarregar meta** para descartar o formulário e revisar a versão atual.
+
+Renomear e corrigir objetivo, reserva ou prazo preserva o ID. A reserva não pode ultrapassar o objetivo. Arquivar é reversível, preserva valores e remove a meta da simulação e da prévia da página inicial. O cadastro e a exportação continuam incluindo arquivadas. Reativar inclui novamente na simulação com os valores atuais. A simulação de meses passados também usa o estado atual, conforme PLANEJAMENTO.md.
+
+`DELETE /api/goals/{id}?expected_version=N` exige versão atual, meta arquivada e `saved_cents=0`. Reserva positiva impede exclusão (409); zerar exige correção explícita. O valor informado não representa depósito, saque ou vínculo bancário. Quando aportes e vínculos forem introduzidos em PLA-02, a exclusão deverá verificar o histórico desses vínculos antes de ser habilitada. Hoje não existem tais entidades.
+
+Edição/exclusão bloqueiam a mesma linha no PostgreSQL, impedindo que uma exclusão desatualizada apague uma correção concorrente de reserva. IDs de terceiros retornam 404; exportação/exclusão de privacidade incluem ambos os estados. Após expiração da sessão, o formulário limpa valores/IDs e fecha.
+
+FIN-03 tem seu escopo atual implementado: contas, cartões, metas e política de lançamentos sem conta. FIN-04 ainda deve fechar histórico mínimo de alterações financeiras, retenção e acesso. Não há registro de versões anteriores de metas ou nomes neste incremento; a versão previne sobrescrita, mas não equivale a uma trilha de auditoria.

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.cards import AccountInput, owned, public
 from app.db import (
     Account,
+    Goal,
     Card,
     OpeningBalance,
     Transfer,
@@ -16,6 +17,7 @@ from app.db import (
     db_session,
 )
 from app.security import current_user
+from app.domain import GoalInput
 
 router = APIRouter(prefix="/api")
 
@@ -114,3 +116,46 @@ def delete_card(
     db: Session = Depends(db_session),
 ):
     remove_empty(db, Card, user, card_id, expected_version)
+
+
+class GoalUpdate(GoalInput):
+    archived: bool = Field(strict=True)
+    expected_version: int = Field(strict=True, ge=0, le=2147483646)
+
+
+@router.put("/goals/{goal_id}")
+def update_goal(
+    goal_id: str,
+    body: GoalUpdate,
+    user=Depends(current_user),
+    db: Session = Depends(db_session),
+):
+    row = owned(db, Goal, user, goal_id, lock=True)
+    check_version(row, body.expected_version)
+    values = body.model_dump(exclude={"expected_version"})
+    if any(getattr(row, key) != value for key, value in values.items()):
+        for key, value in values.items():
+            setattr(row, key, value)
+        row.version += 1
+    db.commit()
+    return public(row)
+
+
+@router.delete("/goals/{goal_id}", status_code=204)
+def delete_goal(
+    goal_id: str,
+    expected_version: int = Query(ge=0),
+    user=Depends(current_user),
+    db: Session = Depends(db_session),
+):
+    row = owned(db, Goal, user, goal_id, lock=True)
+    check_version(row, expected_version)
+    if not row.archived:
+        raise HTTPException(409, "Arquive a meta antes de excluir.")
+    if row.saved_cents:
+        raise HTTPException(
+            409,
+            "Meta possui reserva informada. Mantenha arquivada ou revise a reserva antes de excluir.",
+        )
+    db.delete(row)
+    db.commit()

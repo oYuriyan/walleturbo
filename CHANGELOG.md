@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 0.7.0 — em desenvolvimento
+
+- Metas com edição versionada, arquivamento/reativação e exclusão protegida por reserva zero.
+- Metas arquivadas saem da simulação de aportes e permanecem no cadastro/exportação.
+- Migração 006 preserva metas legadas; interface limpa formulário na expiração da sessão.
+- Testes de concorrência, isolamento, migração e jornada de metas no navegador.
+- CI 0.6 aprovado no commit 790e362; evidências em HOMOLOGACAO.md.
+
 ## 0.6.0 — em desenvolvimento
 
 - Renomeação, arquivamento e reativação de contas/cartões com versão para recusar edições obsoletas.

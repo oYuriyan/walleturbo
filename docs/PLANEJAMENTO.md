@@ -16,6 +16,8 @@ Só há sugestão de aporte quando o usuário confirmou a completude, não há c
 
 Sem renda de referência, a simulação usa a receita registrada. O cálculo é conservador em relação a esses registros, mas não conhece saldo inicial, obrigações ausentes, gastos futuros ou a disponibilidade real de uma conta bancária. Portanto não comprova que o dinheiro pode ser gasto ou investido.
 
+Somente metas ativas participam da simulação; arquivar preserva seus valores no cadastro/exportação e reativar volta a incluí-las. A versão de cadastro evita sobrescrever outra edição, sem reservar dinheiro.
+
 Metas são ordenadas pelo prazo (e identificador em empate). O valor restante é dividido pelos meses civis até o prazo, incluindo o mês de referência; centavos são arredondados para cima. A capacidade é distribuída nessa ordem, sem superar sua soma. Metas vencidas exigem revisão do prazo; metas alcançadas recebem zero. Não há promessa de atingir o objetivo nem movimentação automática.
 
 A referência temporal é o maior entre o início do mês escolhido e a data atual em America/Sao_Paulo. Meses passados mostram simulação com o estado atual das metas, não uma reconstrução histórica de planos.

@@ -9,9 +9,6 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 import httpx2
 from redis import Redis
-from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError
-from app.db import engine
 
 if os.environ.get("WALLETURBO_INTEGRATION") != "1":
     raise RuntimeError("Exige ambiente de integração")
@@ -96,6 +93,80 @@ with httpx2.Client(**options) as client:
                     r for r in client.get("/api/" + kind).json() if r["id"] == row["id"]
                 )
                 assert persisted["archived"] and persisted["version"] == 2
+        row = client.post(
+            "/api/goals",
+            json={
+                "name": "Meta concorrente",
+                "target_cents": 10000,
+                "saved_cents": 1000,
+                "deadline": "2027-12-01",
+            },
+        ).json()
+        path = "/api/goals/" + row["id"]
+        body = {
+            k: row[k]
+            for k in ("name", "target_cents", "saved_cents", "deadline", "archived")
+        }
+        responses = concurrent(
+            "PUT",
+            path,
+            [
+                {**body, "expected_version": 0, "saved_cents": amount}
+                for amount in (2000, 3000)
+            ],
+        )
+        assert sorted(r.status_code for r in responses) == [200, 409]
+        saved = next(r.json()["saved_cents"] for r in responses if r.status_code == 200)
+        assert (
+            client.put(
+                path,
+                json={
+                    **body,
+                    "saved_cents": saved,
+                    "archived": True,
+                    "expected_version": 1,
+                },
+            ).status_code
+            == 200
+        )
+        assert client.delete(path + "?expected_version=2").status_code == 409
+        # Exclusão e correção de reserva disputam a mesma linha: sem perda silenciosa.
+        assert (
+            client.put(
+                path,
+                json={
+                    **body,
+                    "saved_cents": 0,
+                    "archived": True,
+                    "expected_version": 2,
+                },
+            ).status_code
+            == 200
+        )
+
+        def remove_goal():
+            with httpx2.Client(**options) as worker:
+                return worker.delete(path + "?expected_version=3")
+
+        def reserve_goal():
+            with httpx2.Client(**options) as worker:
+                return worker.put(
+                    path,
+                    json={
+                        **body,
+                        "saved_cents": 500,
+                        "archived": True,
+                        "expected_version": 3,
+                    },
+                )
+
+        with ThreadPoolExecutor(2) as pool:
+            deletion, correction = pool.submit(remove_goal), pool.submit(reserve_goal)
+            statuses = (deletion.result().status_code, correction.result().status_code)
+        assert statuses in ((204, 404), (409, 200)), statuses
+        print(
+            "PASS: metas concorrentes recusam edição obsoleta e exclusão não perde reserva corrigida."
+        )
         print(
             "PASS: edição concorrente rejeita versão obsoleta; arquivamento serializa novos vínculos e exclusão preserva registros."
         )

@@ -28,7 +28,7 @@ Para PDF com texto selecionável, use **Ler PDF** na fatura e siga [Leitura assi
 
 ## Metas
 
-Informe nome, valor alvo, valor já reservado e prazo. Atualize a reserva conforme economiza. A sugestão mensal divide o valor restante pelos meses civis até a data, incluindo o mês atual; não inclui rendimentos nem verifica sua capacidade de poupança. Prazos vencidos aparecem como revisão necessária.
+Informe nome, valor alvo, valor já reservado e prazo. Use **Gerenciar meta** para corrigir nome, objetivo, reserva ou prazo. Atualize a reserva conforme economiza. A sugestão mensal divide o valor restante pelos meses civis até a data, incluindo o mês atual; não inclui rendimentos nem verifica sua capacidade de poupança. Prazos vencidos aparecem como revisão necessária.
 
 ## Privacidade
 
@@ -49,3 +49,9 @@ Em **Contas e cartões**, use **Gerenciar conta** ou **Gerenciar cartão**. Alte
 O arquivamento não zera saldos nem oculta dívidas. Faturas existentes ainda podem ser conferidas e pagas usando uma conta ativa. Correções de lançamentos já vinculados à conta e reversões continuam disponíveis. Para importar CSV/PDF no cartão, reative-o primeiro.
 
 Se outra sessão tiver atualizado o cadastro, a gravação será recusada. **Recarregar cadastro** descarta o formulário atual e busca a versão mais recente; revise antes de salvar novamente. **Excluir cadastro vazio** aparece após salvar o arquivamento; a exclusão é recusada se houver vínculos, inclusive fatura vazia, referência de saldo ou transferência revertida. Consulte [Ciclo de vida](CADASTROS.md) para a política completa.
+
+### Arquivar ou excluir metas
+
+Em **Metas → Gerenciar meta**, marque **Meta arquivada** e salve para pausar sua participação no planejamento. Valores e prazo continuam visíveis no cadastro; desmarque para reativar. Em conflito entre sessões, use **Recarregar meta** e revise novamente.
+
+**Excluir meta arquivada** aparece depois de salvar o arquivamento. Reserva positiva impede a exclusão. Se o valor informado precisar ser corrigido para zero, revise e salve essa alteração antes de excluir. Essas operações não movimentam dinheiro. A exportação e a exclusão integral de privacidade também abrangem metas arquivadas.

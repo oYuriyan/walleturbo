@@ -42,7 +42,7 @@
           <p>Um passo de cada vez para cuidar do seu amanhã.</p>
         </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
-        ><span class="version">Walleturbo · versão em desenvolvimento 0.4</span>
+        ><span class="version">Walleturbo · versão em desenvolvimento 0.7</span>
       </div>
     </aside>
     <main>
@@ -394,7 +394,10 @@
             ×
           </button>
         </div>
-        <input name="id" type="hidden" /><label
+        <input name="id" type="hidden" /><input
+          name="version"
+          type="hidden"
+        /><label
           >O que você quer conquistar?<input
             name="name"
             required
@@ -418,8 +421,28 @@
           /></label>
         </div>
         <label
-          >Data desejada<input name="deadline" type="date" required /></label
-        ><button class="button full" type="submit">Salvar meta</button>
+          >Data desejada<input name="deadline" type="date" required
+        /></label>
+        <label id="goal-archive-label" class="check" hidden
+          ><input name="archived" type="checkbox" />Meta arquivada</label
+        >
+        <p>
+          Arquivar preserva os valores e retira a meta da simulação de aportes.
+          A reserva é informativa e não movimenta suas contas.
+        </p>
+        <div class="actions">
+          <button class="button" type="submit">Salvar meta</button
+          ><button id="reload-goal" class="ghost" type="button" hidden>
+            Recarregar meta
+          </button>
+        </div>
+        <button id="delete-goal" class="ghost" type="button" hidden>
+          Excluir meta arquivada
+        </button>
+        <p class="subtle">
+          A exclusão exige meta arquivada com reserva informada igual a zero.
+          Revise a reserva antes de zerá-la.
+        </p>
       </form>
     </dialog>
     <dialog id="import-dialog">

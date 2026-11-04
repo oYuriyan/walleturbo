@@ -27,6 +27,11 @@ try:
         )
         conn.execute(
             text(
+                "INSERT INTO goals(id,owner,name,target_cents,saved_cents,deadline) VALUES ('legacy-goal','synthetic','Meta preservada',50000,1000,'2027-01-01')"
+            )
+        )
+        conn.execute(
+            text(
                 "INSERT INTO transactions(id,owner,date,description,amount_cents,kind,category,reviewed) VALUES ('preserved','synthetic','2026-11-01','Legado',1234,'expense','Outros',true)"
             )
         )
@@ -68,7 +73,7 @@ try:
             )
         ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 5
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 6
         )
     with test_engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
@@ -88,12 +93,18 @@ try:
                 "SELECT name,due_day,archived,version FROM cards WHERE id='legacy-card'"
             )
         ).one() == ("Cartão preservado", 10, False, 0)
+    with test_engine.connect() as conn:
+        assert conn.execute(
+            text(
+                "SELECT name,target_cents,saved_cents,archived,version FROM goals WHERE id='legacy-goal'"
+            )
+        ).one() == ("Meta preservada", 50000, 1000, False, 0)
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as tmp:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "006_test_failure.sql"
+        broken = migrate.DIRECTORY / "007_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -111,7 +122,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 5
+                == 6
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

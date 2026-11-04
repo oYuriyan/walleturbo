@@ -70,7 +70,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.6.0",
+    version="0.7.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -119,6 +119,7 @@ def ready(db: DBSession = Depends(db_session)):
     try:
         db.execute(select(Statement.id).limit(1))
         db.execute(select(Transaction.account_id).limit(1))
+        db.execute(select(Goal.archived, Goal.version).limit(1))
         db.execute(select(Account.archived, Account.version).limit(1))
         db.execute(select(Card.archived, Card.version).limit(1))
         db.execute(select(OpeningBalance.id).limit(1))
@@ -184,9 +185,9 @@ def me(request: Request, user=Depends(current_user)):
 
 
 def serialized(row):
-    fields = (
-        Entry.model_fields if isinstance(row, Transaction) else GoalInput.model_fields
-    )
+    if isinstance(row, Goal):
+        return public(row)
+    fields = Entry.model_fields
     return {"id": row.id, **{key: getattr(row, key) for key in fields}}
 
 
@@ -352,22 +353,6 @@ def create_goal(
 ):
     goal = Goal(owner=user, **body.model_dump())
     db.add(goal)
-    db.commit()
-    return serialized(goal)
-
-
-@app.put("/api/goals/{goal_id}")
-def update_goal(
-    goal_id: str,
-    body: GoalInput,
-    user=Depends(current_user),
-    db: DBSession = Depends(db_session),
-):
-    goal = db.scalar(select(Goal).where(Goal.id == goal_id, Goal.owner == user))
-    if not goal:
-        raise HTTPException(404, "Meta não encontrada")
-    for key, value in body.model_dump().items():
-        setattr(goal, key, value)
     db.commit()
     return serialized(goal)
 

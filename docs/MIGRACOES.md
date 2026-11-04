@@ -31,3 +31,7 @@ A migração 004 cria `opening_balances` e `transfers`, preservando contas e lan
 ## Migração 005 — ciclo de vida
 
 Adiciona estado ativo/arquivado e versão de metadados em contas/cartões. Registros existentes ficam ativos na versão 0; IDs, nomes, vencimentos e vínculos são preservados. Readiness exige as novas colunas. Política em [CADASTROS.md](CADASTROS.md).
+
+## Migração 006 — metas
+
+Adiciona estado ativo/arquivado e versão em metas. Mantém nome, objetivo, reserva, prazo e ID. Readiness exige o novo schema; interface e API de edição devem ser atualizadas juntas, pois agora exigem `expected_version` e `archived`. O teste de upgrade preserva uma meta criada no schema inicial.

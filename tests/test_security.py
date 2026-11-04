@@ -30,7 +30,13 @@ def test_isolation_across_users(client, login):
     assert client.get("/api/dashboard?month=2026-11").json()["transactions"] == []
     assert client.put("/api/transactions/" + row["id"], json=ENTRY).status_code == 404
     assert client.delete("/api/transactions/" + row["id"]).status_code == 404
-    assert client.put("/api/goals/" + goal_id, json=goal).status_code == 404
+    assert (
+        client.put(
+            "/api/goals/" + goal_id,
+            json={**goal, "archived": False, "expected_version": 0},
+        ).status_code
+        == 404
+    )
     assert all(not rows for rows in client.get("/api/privacy/export").json().values())
     login("alice")
     assert len(client.get("/api/privacy/export").json()["transactions"]) == 1

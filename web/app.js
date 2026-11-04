@@ -265,10 +265,23 @@ function renderTransactions() {
   if (!filtered.length)
     empty(list, "Nenhum lançamento encontrado neste período.");
 }
+let goalGeneration = 0;
+function clearGoalForm() {
+  goalGeneration++;
+  const form = $("#goal-form");
+  form.reset();
+  form.querySelectorAll('input[type="hidden"]').forEach((n) => (n.value = ""));
+  form.querySelectorAll("input,button").forEach((n) => (n.disabled = true));
+  $("#goal-dialog").querySelector(".dialog-error")?.remove();
+  if ($("#goal-dialog").open) $("#goal-dialog").close();
+}
 function goalNode(g, editable) {
   const box = el("div", undefined, editable ? "panel goal" : "goal"),
     head = el("div", undefined, "goal-head"),
     label = el("div");
+  box.dataset.goalId = g.id;
+  if (g.archived)
+    box.append(el("p", "Meta arquivada · fora da simulação", "badge"));
   label.append(
     el("strong", g.name),
     el("small", "Até " + g.deadline.split("-").reverse().join("/")),
@@ -291,16 +304,18 @@ function goalNode(g, editable) {
   box.append(
     el(
       "p",
-      g.saved_cents >= g.target_cents
-        ? "Meta alcançada. Celebre essa conquista!"
-        : g.deadline < today
-          ? "Prazo encerrado. Revise seu plano."
-          : `${money(Math.ceil((g.target_cents - g.saved_cents) / months))}/mês para chegar lá, sem considerar rendimentos.`,
+      g.archived
+        ? "Valores preservados. Reative para incluir no planejamento."
+        : g.saved_cents >= g.target_cents
+          ? "Meta alcançada. Celebre essa conquista!"
+          : g.deadline < today
+            ? "Prazo encerrado. Revise seu plano."
+            : `${money(Math.ceil((g.target_cents - g.saved_cents) / months))}/mês para chegar lá, sem considerar rendimentos.`,
       "goal-plan",
     ),
   );
   if (editable) {
-    const button = el("button", "Atualizar reserva", "text-button");
+    const button = el("button", "Gerenciar meta", "text-button");
     button.onclick = () => openGoal(g);
     box.append(button);
   }
@@ -311,10 +326,11 @@ function renderGoals() {
     list = $("#goal-list");
   preview.replaceChildren();
   list.replaceChildren();
-  goals.slice(0, 2).forEach((g) => preview.append(goalNode(g, false)));
+  const active = goals.filter((g) => !g.archived);
+  active.slice(0, 2).forEach((g) => preview.append(goalNode(g, false)));
+  if (!active.length) empty(preview, "Crie ou reative uma meta para planejar.");
   goals.forEach((g) => list.append(goalNode(g, true)));
   if (!goals.length) {
-    empty(preview, "Dê um nome ao seu próximo sonho.");
     empty(list, "Crie uma meta para começar a planejar.");
   }
 }
@@ -353,8 +369,15 @@ function openEntry(t) {
 }
 function openGoal(g) {
   if (!allowed()) return;
+  goalGeneration++;
   const f = $("#goal-form");
   f.reset();
+  f.querySelectorAll("input,button").forEach((n) => (n.disabled = false));
+  f.elements.version.value = g?.version || 0;
+  f.elements.archived.checked = !!g?.archived;
+  $("#goal-archive-label").hidden = !g;
+  $("#reload-goal").hidden = !g;
+  $("#delete-goal").hidden = !g?.archived;
   f.elements.id.value = g?.id || "";
   f.elements.name.value = g?.name || "";
   f.elements.target.value = g
@@ -487,13 +510,16 @@ $("#goal-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
     const f = e.target,
-      id = f.elements.id.value,
-      body = {
-        name: f.elements.name.value.trim(),
-        target_cents: cents(f.elements.target.value),
-        saved_cents: cents(f.elements.saved.value),
-        deadline: f.elements.deadline.value,
-      };
+      submit = f.querySelector('button[type="submit"]');
+    if (submit.disabled) return;
+    const generation = goalGeneration,
+      id = f.elements.id.value;
+    const body = {
+      name: f.elements.name.value.trim(),
+      target_cents: cents(f.elements.target.value),
+      saved_cents: cents(f.elements.saved.value),
+      deadline: f.elements.deadline.value,
+    };
     if (
       !body.name ||
       body.target_cents <= 0 ||
@@ -502,16 +528,89 @@ $("#goal-form").onsubmit = (e) => {
       throw Error(
         "Informe uma meta positiva e uma reserva que não ultrapasse o objetivo.",
       );
-    if (demo) {
-      if (id) goals = goals.map((g) => (g.id === id ? { id, ...body } : g));
-      else goals.push({ id: crypto.randomUUID(), ...body });
-    } else
-      await api("/api/goals" + (id ? "/" + id : ""), id ? "PUT" : "POST", body);
-    $("#goal-dialog").close();
-    await refresh();
-    message("Meta atualizada.");
+    if (id)
+      Object.assign(body, {
+        archived: f.elements.archived.checked,
+        expected_version: Number(f.elements.version.value),
+      });
+    submit.disabled = true;
+    try {
+      if (demo) {
+        const { expected_version, ...values } = body;
+        if (id)
+          goals = goals.map((g) =>
+            g.id === id ? { id, ...values, version: (g.version || 0) + 1 } : g,
+          );
+        else
+          goals.push({
+            id: crypto.randomUUID(),
+            ...values,
+            archived: false,
+            version: 0,
+          });
+      } else
+        await api(
+          "/api/goals" + (id ? "/" + id : ""),
+          id ? "PUT" : "POST",
+          body,
+        );
+      if (generation !== goalGeneration) return;
+      $("#goal-dialog").close();
+      await refresh();
+      message(
+        "Meta salva. A reserva informada não movimenta dinheiro entre contas.",
+      );
+    } finally {
+      if (generation === goalGeneration) submit.disabled = !csrf && !demo;
+    }
   });
 };
+$("#reload-goal").onclick = () =>
+  action(async () => {
+    const id = $("#goal-form").elements.id.value,
+      generation = goalGeneration;
+    await refresh();
+    if (generation !== goalGeneration || (!csrf && !demo)) return;
+    const row = goals.find((g) => g.id === id);
+    if (!row) {
+      clearGoalForm();
+      throw Error("Meta não encontrada. A lista foi atualizada.");
+    }
+    openGoal(row);
+  });
+$("#delete-goal").onclick = () =>
+  action(async () => {
+    const f = $("#goal-form"),
+      id = f.elements.id.value,
+      generation = goalGeneration;
+    if (
+      !confirm(
+        "Excluir a meta arquivada? A exclusão exige reserva informada igual a zero.",
+      )
+    )
+      return;
+    const button = $("#delete-goal");
+    if (button.disabled) return;
+    button.disabled = true;
+    try {
+      if (demo) {
+        const row = goals.find((g) => g.id === id);
+        if (!row?.archived || row.saved_cents)
+          throw Error("Arquive a meta e revise a reserva antes de excluir.");
+        goals = goals.filter((g) => g.id !== id);
+      } else
+        await api(
+          `/api/goals/${id}?expected_version=${f.elements.version.value}`,
+          "DELETE",
+        );
+      if (generation !== goalGeneration) return;
+      $("#goal-dialog").close();
+      await refresh();
+      message("Meta excluída.");
+    } finally {
+      if (generation === goalGeneration) button.disabled = !csrf && !demo;
+    }
+  });
 $("#import-button").onclick = () => openImport();
 function openImport(statementId = null) {
   importStatementId = statementId;

@@ -52,6 +52,10 @@ class Goal(Base):
     )
     owner: Mapped[str] = mapped_column(String(128), index=True)
     name: Mapped[str] = mapped_column(String(100))
+    archived: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+    version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     target_cents: Mapped[int] = mapped_column(BigInteger)
     saved_cents: Mapped[int] = mapped_column(BigInteger)
     deadline: Mapped[date] = mapped_column(Date)

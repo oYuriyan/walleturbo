@@ -4,7 +4,7 @@
 
 Prioridade definida pelo responsável pelo produto: concluir o desenvolvimento e uma jornada end-to-end confiável em ambiente local antes de contratar serviços, adquirir domínio ou conectar Google. Não há autorização de publicação ou contratação nesta revisão. Desenvolvimento, testes e documentação seguem containerizados, em pt-BR, com BRL/centavos e privacidade desde a concepção.
 
-Base de código homologada: `4675ba8`, [CI 41875971563](https://github.com/oYuriyan/walleturbo/actions/runs/41875971563), com 91 testes, integração PostgreSQL/Redis, PDF/planejamento no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
+Base de código homologada: `790e362`, [CI 41882396599](https://github.com/oYuriyan/walleturbo/actions/runs/41882396599), com 99 testes, integração PostgreSQL/Redis, PDF/planejamento no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
 
 Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOMOLOGACAO.md são históricos. Uma tarefa só passa a concluída com comportamento implementado, critérios de aceite atendidos, evidências e documentação atualizada. As fases abaixo estão pendentes ou parciais; não são entregas prontas.
 
@@ -13,7 +13,7 @@ Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOM
 | Área | Entrega existente | Limite atual |
 | --- | --- | --- |
 | Fundação | FastAPI, PostgreSQL, Redis, Compose, migrações com checksum, CI, PR e documentação | Operação pública, recuperação de desastre e controles de volume incompletos |
-| Finanças | Lançamentos, categorias por regras, contas/cartões, parcelas, estornos, conferência e pagamentos parciais | Saldo inicial, saldo por conta e transferências com reversão entregues na 0.5; recorrências automáticas, ciclo de vida de metas e alguns ciclos de crédito pendentes |
+| Finanças | Lançamentos, categorias por regras, contas/cartões, parcelas, estornos, conferência e pagamentos parciais | Saldo inicial, saldo por conta e transferências com reversão entregues na 0.5; recorrências automáticas, ciclo de vida de metas implementado na 0.7 aguardando CI; alguns ciclos de crédito pendentes |
 | Importação | CSV definido e PDF textual genérico isolado, prévia/revisão e deduplicação | Documentos sintéticos; sem emissores homologados, OCR, OFX ou antivírus |
 | Planejamento | Metas, limites mensais, simulação conservadora e recorrências de assinaturas com evidências | Metas independentes das contas; sem projeção completa, perfil personalizado ou IA |
 | Interface | Web responsiva, claro/escuro, demonstração e formulários funcionais | Jornada completa, acessibilidade e revisão de design ainda não homologadas |
@@ -33,7 +33,7 @@ Dependência: base existente. Origem: completar o controle financeiro já inicia
 
 - **FIN-01 — concluído na 0.5:** definir saldo inicial por conta com data de referência, saldo calculado, ajustes explícitos e política para lançamentos anteriores à referência. Diferenciar saldo informado, saldo calculado, resultado e caixa.
 - **FIN-02 — concluído na 0.5:** transferências entre contas próprias, com débito/crédito atômicos, estorno, reenvio idempotente e proteção contra concorrência. Transferência não conta como receita/despesa.
-- **FIN-03 — parcial na 0.6; contas/cartões implementados, aguardando CI; metas pendentes:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
+- **FIN-03 — implementado na 0.7, aguardando CI para metas; contas/cartões homologados na 0.6:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
 - **FIN-04:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
 - **FIN-05 — parcial; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
 
@@ -154,6 +154,8 @@ Integração bancária/Open Finance, aplicativo nativo de loja, sincronização 
 
 FIN-01 e FIN-02 foram implementados e homologados no incremento 0.5, com migração, interface, exportação/exclusão e testes de precisão/concorrência/isolamento. A parte correspondente de FIN-05 está em SALDOS.md; a revisão ampla de histórico e idempotência dos demais tipos de operação permanece pendente.
 
-Entrega 0.6: renomeação/arquivamento/reativação de contas e cartões, versão contra edição obsoleta e exclusão de cadastros vazios preservando vínculos (CADASTROS.md). A homologação completa depende do CI deste incremento.
+Entrega 0.6: renomeação/arquivamento/reativação de contas e cartões, versão contra edição obsoleta e exclusão de cadastros vazios preservando vínculos (CADASTROS.md). CI aprovado: 41882396599, commit 790e362.
 
-Próxima entrega: concluir FIN-03 para metas e suas regras de correção/exclusão; depois FIN-04 e complementação de FIN-05. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+Entrega 0.7: metas com versão, arquivamento/reativação, exclusão condicionada e planejamento apenas com ativas. Homologação completa pendente do CI.
+
+Próxima entrega: FIN-04 e complementação de FIN-05. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.

@@ -354,7 +354,9 @@ def report(month: str, user=Depends(current_user), db: Session = Depends(db_sess
     subscriptions, extra = recurrence(db, user, month)
     today = datetime.now(ZoneInfo("America/Sao_Paulo")).date()
     reference = max(start, today)
-    goals = list(db.scalars(select(Goal).where(Goal.owner == user)))
+    goals = list(
+        db.scalars(select(Goal).where(Goal.owner == user, Goal.archived.is_(False)))
+    )
     return {
         "month": month,
         "as_of": reference,

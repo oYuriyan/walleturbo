@@ -68,6 +68,11 @@ jobs:
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_lifecycle.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_lifecycle.cjs
+      - name: Validar ciclo de vida de metas no navegador
+        run: |
+          # Respeitar a janela de 120 requisições/IP sem relaxar os limites da aplicação.
+          sleep 60
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_goals.cjs
       - name: Salvar evidências sintéticas de interface
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
@@ -78,6 +83,7 @@ jobs:
             artifacts/planning-*.png
             artifacts/balances-*.png
             artifacts/lifecycle-*.png
+            artifacts/goals-*.png
       - name: Encerrar serviços de teste
         if: always()
         run: |

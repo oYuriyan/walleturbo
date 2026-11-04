@@ -102,7 +102,13 @@ def test_goal_validation_and_update(client, login):
     assert result.status_code == 201
     assert (
         client.put(
-            "/api/goals/" + result.json()["id"], json={**goal, "saved_cents": 2000}
+            "/api/goals/" + result.json()["id"],
+            json={
+                **goal,
+                "saved_cents": 2000,
+                "archived": False,
+                "expected_version": 0,
+            },
         ).json()["saved_cents"]
         == 2000
     )
