@@ -39,6 +39,7 @@ const historyFields = {
   installment: "Parcela",
   installments: "Total de parcelas",
   reason: "Motivo",
+  correction_reason: "Motivo da correção",
 };
 function historyValue(key, value) {
   if (value === null || value === undefined) return "Não informado";

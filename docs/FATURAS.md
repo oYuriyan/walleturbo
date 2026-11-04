@@ -22,7 +22,7 @@ A exclusão de uma compra remove todas as suas parcelas atomicamente. Se alguma 
 
 ## Integridade e concorrência
 
-- Compras/pagamentos exigem UUID de solicitação. Reenvio idêntico enquanto o registro existir retorna o registro anterior; reuso com conteúdo diferente retorna 409. Não é um registro permanente de idempotência: após exclusão, o mesmo identificador pode ser reutilizado. Clientes devem sempre gerar identificadores novos para novas operações.
+- Compras/pagamentos exigem UUID de solicitação. Reenvio idêntico retorna o estado atual; reuso com conteúdo diferente retorna 409. Desde 0.9, recibos preservam UUIDs de compras manuais e pagamentos após exclusão, recusando reenvios cancelados. Novas operações exigem novos UUIDs. A proteção de importações após exclusão permanece pendente; ver CORRECOES.md.
 - Escritores bloqueiam o cartão e a fatura na mesma ordem no PostgreSQL. Isso serializa fechamento, edição e pagamentos; duas solicitações não conseguem pagar mais que o saldo restante.
 - Chaves estrangeiras compostas com `owner` impedem associar conta/cartão/fatura de outra pessoa também no banco.
 - Importação é atômica. A deduplicação de cartão considera proprietário, fatura e ocorrência da linha; a de movimentações diretas pode ser vinculada a uma conta. Arquivos distintos com compras realmente diferentes, mas com dados idênticos na mesma fatura, ainda podem colidir; revisar com o emissor.
@@ -33,3 +33,7 @@ A exclusão de uma compra remove todas as suas parcelas atomicamente. Se alguma 
 A conferência compara totais digitados; não autentica um documento do banco. Existe leitura assistida limitada de PDF textual (ver PDF.md). Não há OCR, OFX, sincronização bancária, juros/rotativo automáticos, fechamento por regra do emissor, limite de crédito ou carregamento de crédito negativo entre faturas. Faturas com total negativo podem permanecer em revisão, mas não são fechadas ou pagas nesta etapa. Metas continuam independentes das contas. Renomeação/exclusão individual de contas/cartões será tratada com política de histórico; a exclusão global já os inclui.
 
 Saldos por conta e transferências próprias passaram a ser implementados no incremento 0.5; ver SALDOS.md. Pagamentos de fatura reduzem o saldo da conta desde a referência aplicável, enquanto compras e estornos na fatura continuam afetando o consumo.
+
+## Correção integral de compra manual — 0.9
+
+**Corrigir compra** carrega todas as parcelas, permite corrigir valor/data/primeira fatura/quantidade e exige conferir a prévia dos totais mensais. A confirmação é atômica, mantém o cartão original ativo e recusa qualquer fatura de origem/destino conferida. O motivo e os valores anteriores/posteriores ficam no histórico. Revisão desatualizada exige recarga e nova conferência. Contrato, migração e limites em [CORRECOES.md](CORRECOES.md).

@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session as DBSession
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.config import settings
 from app.audit import router as audit_router
+from app.operations import router as operations_router
 from app.lifecycle import router as lifecycle_router
 from app.balances import router as balances_router
 from app.planning import router as planning_router
@@ -23,6 +24,7 @@ from app.db import (
     Transaction,
     Goal,
     FinancialAudit,
+    RequestReceipt,
     MonthPlan,
     OpeningBalance,
     Transfer,
@@ -72,7 +74,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.8.0",
+    version="0.9.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -93,6 +95,7 @@ app.include_router(cards_router)
 app.include_router(balances_router)
 app.include_router(lifecycle_router)
 app.include_router(audit_router)
+app.include_router(operations_router)
 app.include_router(pdf_router)
 app.include_router(planning_router)
 
@@ -122,6 +125,8 @@ def ready(db: DBSession = Depends(db_session)):
     try:
         db.execute(select(Statement.id).limit(1))
         db.execute(select(Transaction.account_id).limit(1))
+        db.execute(select(RequestReceipt.request_id).limit(1))
+        db.execute(select(Charge.correction_reason).limit(1))
         db.execute(select(FinancialAudit.id).limit(1))
         db.execute(select(Goal.archived, Goal.version).limit(1))
         db.execute(select(Account.archived, Account.version).limit(1))
@@ -370,6 +375,7 @@ def export(user=Depends(current_user), db: DBSession = Depends(db_session)):
                 for row in db.scalars(select(model).where(model.owner == user))
             ]
             for name, model in [
+                ("request_receipts", RequestReceipt),
                 ("financial_history", FinancialAudit),
                 ("accounts", Account),
                 ("opening_balances", OpeningBalance),
@@ -397,6 +403,7 @@ def erase(
     db.execute(delete(Goal).where(Goal.owner == user))
     for model in (Card, Account, MonthPlan, Budget):
         db.execute(delete(model).where(model.owner == user))
+    db.execute(delete(RequestReceipt).where(RequestReceipt.owner == user))
     db.execute(delete(FinancialAudit).where(FinancialAudit.owner == user))
     db.commit()
     request.session.clear()

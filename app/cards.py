@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session
 from app.db import Account, Card, Statement, Charge, StatementPayment, db_session
 from app.domain import CATEGORIES, parse_csv, import_keys
 from app.security import current_user
+from app.receipts import claim
+from app.db import RequestReceipt
 
 router = APIRouter(prefix="/api")
 MONTH_PATTERN = r"^(19\d{2}|[2-9]\d{3})-(0[1-9]|1[0-2])$"
@@ -107,11 +109,14 @@ def split_cents(total, count):
 
 
 def public(row):
-    return {
+    fields = {
         column.name: getattr(row, column.name)
         for column in row.__table__.columns
         if column.name not in {"owner", "payload_hash", "import_key"}
     }
+    if isinstance(row, Charge):
+        fields["imported"] = row.import_key is not None
+    return fields
 
 
 def fingerprint(body):
@@ -121,7 +126,7 @@ def fingerprint(body):
 def owned(db, model, user, identifier, lock=False):
     query = select(model).where(model.id == identifier, model.owner == user)
     if lock:
-        query = query.with_for_update()
+        query = query.with_for_update().execution_options(populate_existing=True)
     row = db.scalar(query)
     if not row:
         raise HTTPException(404, "Registro não encontrado")
@@ -284,6 +289,8 @@ def create_statement(
 def purchase(
     body: PurchaseInput, user=Depends(current_user), db: Session = Depends(db_session)
 ):
+    owned(db, Card, user, body.card_id)
+    receipt = claim(db, user, "purchase", body.request_id, fingerprint(body))
     card = owned(db, Card, user, body.card_id, lock=True)
     previous = list(
         db.scalars(
@@ -297,6 +304,10 @@ def purchase(
         if previous[0].payload_hash != digest:
             raise HTTPException(409, "Identificador de envio já usado com outros dados")
         return [public(c) for c in previous]
+    if receipt.resource_id:
+        raise HTTPException(
+            409, "Operação não está mais disponível. Atualize os dados."
+        )
     require_active(card)
     result = []
     for i, amount in enumerate(split_cents(body.amount_cents, body.installments)):
@@ -318,6 +329,7 @@ def purchase(
         )
         db.add(charge)
         result.append(charge)
+    receipt.resource_id = str(body.request_id)
     db.commit()
     return [public(c) for c in result]
 
@@ -330,8 +342,9 @@ def review(
     db: Session = Depends(db_session),
 ):
     charge = owned(db, Charge, user, charge_id)
+    lock_statement(db, user, charge.statement_id)
+    charge = owned(db, Charge, user, charge_id, lock=True)
     require_open(lock_statement(db, user, charge.statement_id))
-    db.refresh(charge)
     charge.category, charge.reviewed = body.category, body.reviewed
     db.commit()
     return public(charge)
@@ -349,12 +362,33 @@ def delete_operation(
         )
     )
     if not charges:
+        cancelled = db.get(RequestReceipt, (user, "purchase", str(operation_id)))
+        if cancelled and cancelled.cancelled:
+            return
         raise HTTPException(404, "Compra não encontrada")
+    receipt = claim(db, user, "purchase", operation_id, charges[0].payload_hash)
+    card_ids = set(
+        db.scalars(
+            select(Statement.card_id).where(
+                Statement.owner == user,
+                Statement.id.in_([c.statement_id for c in charges]),
+            )
+        )
+    )
+    for card_id in sorted(card_ids):
+        owned(db, Card, user, card_id, lock=True)
+    charges = list(
+        db.scalars(
+            select(Charge)
+            .where(Charge.owner == user, Charge.operation_id == str(operation_id))
+            .execution_options(populate_existing=True)
+        )
+    )
     for statement_id in sorted({c.statement_id for c in charges}):
         require_open(lock_statement(db, user, statement_id))
     for charge in charges:
-        db.refresh(charge)
         db.delete(charge)
+    receipt.cancelled, receipt.resource_id = True, str(operation_id)
     db.commit()
 
 
@@ -409,9 +443,12 @@ def pay(
     user=Depends(current_user),
     db: Session = Depends(db_session),
 ):
+    owned(db, Statement, user, statement_id)
+    owned(db, Account, user, body.account_id)
+    digest = hashlib.sha256((statement_id + fingerprint(body)).encode()).hexdigest()
+    receipt = claim(db, user, "payment", body.request_id, digest)
     statement = lock_statement(db, user, statement_id)
     account = owned(db, Account, user, body.account_id, lock=True)
-    digest = hashlib.sha256((statement_id + fingerprint(body)).encode()).hexdigest()
     previous = db.scalar(
         select(StatementPayment).where(
             StatementPayment.owner == user,
@@ -422,6 +459,10 @@ def pay(
         if previous.payload_hash != digest:
             raise HTTPException(409, "Identificador de envio já usado com outros dados")
         return public(previous)
+    if receipt.resource_id:
+        raise HTTPException(
+            409, "Pagamento não está mais disponível. Atualize os dados."
+        )
     require_active(account)
     if statement.status != "closed":
         raise HTTPException(
@@ -437,6 +478,8 @@ def pay(
         request_id=str(body.request_id),
     )
     db.add(payment)
+    db.flush()
+    receipt.resource_id = payment.id
     db.commit()
     return public(payment)
 
@@ -445,10 +488,27 @@ def pay(
 def reverse_payment(
     payment_id: str, user=Depends(current_user), db: Session = Depends(db_session)
 ):
-    payment = owned(db, StatementPayment, user, payment_id)
+    payment = db.scalar(
+        select(StatementPayment).where(
+            StatementPayment.owner == user, StatementPayment.id == payment_id
+        )
+    )
+    if payment is None:
+        if db.scalar(
+            select(RequestReceipt).where(
+                RequestReceipt.owner == user,
+                RequestReceipt.scope == "payment",
+                RequestReceipt.resource_id == payment_id,
+                RequestReceipt.cancelled.is_(True),
+            )
+        ):
+            return
+        raise HTTPException(404, "Registro não encontrado")
+    receipt = claim(db, user, "payment", payment.request_id, payment.payload_hash)
     lock_statement(db, user, payment.statement_id)
-    payment = owned(db, StatementPayment, user, payment_id)
+    db.refresh(payment)
     db.delete(payment)
+    receipt.cancelled = True
     db.commit()
 
 

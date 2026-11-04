@@ -1,6 +1,7 @@
 """Somente em banco de desenvolvimento: cria e remove um banco temporário próprio."""
 
 import os
+import json
 import tempfile
 from pathlib import Path
 from uuid import uuid4
@@ -44,7 +45,7 @@ try:
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as legacy_dir:
         migrate.DIRECTORY = Path(legacy_dir)
-        for file in sorted(original.glob("*.sql"))[:3]:
+        for file in sorted(original.glob("*.sql"))[:7]:
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
         migrate.migrate(adopt_initial=True)
         with test_engine.begin() as conn:
@@ -63,6 +64,53 @@ try:
                     "UPDATE transactions SET account_id='legacy-account' WHERE id='preserved'"
                 )
             )
+        with test_engine.begin() as conn:
+            conn.execute(
+                text(
+                    "INSERT INTO statements(id,owner,card_id,month,due_date,status) VALUES ('legacy-statement','synthetic','legacy-card','2026-11','2026-11-10','open')"
+                )
+            )
+            conn.execute(
+                text(
+                    "INSERT INTO card_charges(id,owner,statement_id,date,description,amount_cents,kind,category,reviewed,operation_id,payload_hash,installment,installments) VALUES ('legacy-charge','synthetic','legacy-statement','2026-11-01','Preservada',1234,'expense','Outros',true,'11111111-1111-4111-8111-111111111111',repeat('a',64),1,1)"
+                )
+            )
+            conn.execute(
+                text(
+                    "INSERT INTO statement_payments(id,owner,statement_id,account_id,date,amount_cents,request_id,payload_hash) VALUES ('legacy-payment','synthetic','legacy-statement','legacy-account','2026-11-02',100,'22222222-2222-4222-8222-222222222222',repeat('b',64))"
+                )
+            )
+            for entity, state in (
+                (
+                    "card_charge",
+                    {"operation_id": "33333333-3333-4333-8333-333333333333"},
+                ),
+                (
+                    "statement_payment",
+                    {
+                        "id": "deleted-payment",
+                        "request_id": "44444444-4444-4444-8444-444444444444",
+                    },
+                ),
+                (
+                    "card_charge",
+                    {"operation_id": "11111111-1111-4111-8111-111111111111"},
+                ),
+            ):
+                conn.execute(
+                    text(
+                        'INSERT INTO financial_audit(id,owner,entity,entity_id,action,occurred_at,"before") VALUES (:id,:owner,:entity,:entity_id,:action,:at,CAST(:state AS JSON))'
+                    ),
+                    {
+                        "id": str(uuid4()),
+                        "owner": "synthetic",
+                        "entity": entity,
+                        "entity_id": "legacy",
+                        "action": "deleted",
+                        "at": "2026-11-01T00:00:00.000000+00:00",
+                        "state": json.dumps(state),
+                    },
+                )
         migrate.DIRECTORY = original
     migrate.migrate()
     migrate.migrate()
@@ -73,7 +121,7 @@ try:
             )
         ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 7
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 8
         )
     with test_engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
@@ -100,13 +148,29 @@ try:
             )
         ).one() == ("Meta preservada", 50000, 1000, False, 0)
     with test_engine.connect() as conn:
-        assert conn.execute(text("SELECT count(*) FROM financial_audit")).scalar() == 0
+        assert conn.execute(text("SELECT count(*) FROM financial_audit")).scalar() == 3
+        receipts = conn.execute(
+            text(
+                "SELECT request_id,cancelled,payload_hash FROM request_receipts ORDER BY request_id"
+            )
+        ).all()
+        assert len(receipts) == 4
+        assert [r.cancelled for r in receipts] == [False, False, True, True]
+        assert (
+            receipts[0].payload_hash == "a" * 64
+            and receipts[1].payload_hash == "b" * 64
+        )
+        assert conn.execute(
+            text(
+                "SELECT amount_cents,version,correction_reason FROM card_charges WHERE id='legacy-charge'"
+            )
+        ).one() == (1234, 1, None)
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as tmp:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "008_test_failure.sql"
+        broken = migrate.DIRECTORY / "009_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -124,7 +188,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 7
+                == 8
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

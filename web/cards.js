@@ -3,6 +3,7 @@ let financeAccounts = [],
   financeCards = [],
   financeStatements = [];
 function clearFinance() {
+  if (typeof clearCorrection === "function") clearCorrection();
   if (typeof clearHistory === "function") clearHistory();
   if (typeof clearGoalForm === "function") clearGoalForm();
   if (typeof clearLifecycle === "function") clearLifecycle();
@@ -269,6 +270,10 @@ function renderFinance() {
         );
         if (s.status === "open") {
           const tools = el("div", undefined, "row-actions");
+          if (!demo && csrf && !c.imported)
+            tools.append(
+              button("Corrigir compra", () => openCorrection(c.operation_id)),
+            );
           tools.append(
             button("Revisar categoria", () => {
               const f = $("#review-charge-form");

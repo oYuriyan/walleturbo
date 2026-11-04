@@ -13,6 +13,7 @@
     <script src="/assets/balances.js" defer></script>
     <script src="/assets/lifecycle.js" defer></script>
     <script src="/assets/history.js" defer></script>
+    <script src="/assets/corrections.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -43,7 +44,7 @@
           <p>Um passo de cada vez para cuidar do seu amanhã.</p>
         </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
-        ><span class="version">Walleturbo · versão em desenvolvimento 0.8</span>
+        ><span class="version">Walleturbo · versão em desenvolvimento 0.9</span>
       </div>
     </aside>
     <main>
@@ -403,6 +404,85 @@
           ><input type="checkbox" name="reviewed" checked /> Categoria revisada
           por mim</label
         ><button class="button full" type="submit">Salvar lançamento</button>
+      </form>
+    </dialog>
+
+    <dialog id="correction-dialog">
+      <form id="correction-form">
+        <div class="section-heading">
+          <h2>Corrigir compra completa</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="operation_id" type="hidden" /><input
+          name="card_id"
+          type="hidden"
+        /><input name="request_id" type="hidden" /><input
+          name="revision"
+          type="hidden"
+        />
+        <p id="correction-card"></p>
+        <p>
+          Todas as parcelas serão recalculadas. O cartão original será mantido.
+          Faturas afetadas precisam estar abertas; confira a prévia antes de
+          confirmar.
+        </p>
+        <label
+          >Descrição<input name="description" required maxlength="160"
+        /></label>
+        <div class="form-grid">
+          <label>Data da compra<input name="date" type="date" required /></label
+          ><label
+            >Primeira fatura<input name="first_month" type="month" required
+          /></label>
+        </div>
+        <div class="form-grid">
+          <label
+            >Valor total (R$)<input
+              name="amount"
+              inputmode="decimal"
+              required
+              pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+          ><label
+            >Parcelas<input
+              name="installments"
+              type="number"
+              min="1"
+              max="36"
+              required
+          /></label>
+        </div>
+        <div class="form-grid">
+          <label
+            >Tipo<select name="kind">
+              <option value="expense">Compra</option>
+              <option value="refund">Estorno</option>
+            </select></label
+          ><label>Categoria<select name="category"></select></label>
+        </div>
+        <label class="checkbox"
+          ><input name="reviewed" type="checkbox" />Categoria conferida para
+          todas as parcelas</label
+        >
+        <label
+          >Motivo da correção<input name="reason" required maxlength="160"
+        /></label>
+        <div class="actions">
+          <button class="button" type="submit">Conferir alterações</button
+          ><button id="reload-correction" class="ghost" type="button">
+            Recarregar compra
+          </button>
+        </div>
+        <div id="correction-effects" aria-live="polite"></div>
+        <button
+          id="confirm-correction"
+          class="button full"
+          type="button"
+          disabled
+        >
+          Confirmar correção
+        </button>
       </form>
     </dialog>
     <dialog id="goal-dialog">

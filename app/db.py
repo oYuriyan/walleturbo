@@ -190,6 +190,9 @@ class Charge(Base):
     kind: Mapped[str] = mapped_column(String(10))
     category: Mapped[str] = mapped_column(String(40))
     reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    __mapper_args__ = {"version_id_col": version}
+    correction_reason: Mapped[str | None] = mapped_column(String(160), nullable=True)
     operation_id: Mapped[str] = mapped_column(String(36))
     payload_hash: Mapped[str] = mapped_column(String(64))
     installment: Mapped[int] = mapped_column(Integer)
@@ -260,6 +263,18 @@ class Budget(Base):
     category: Mapped[str] = mapped_column(String(40), primary_key=True)
     amount_cents: Mapped[int] = mapped_column(BigInteger)
     __table_args__ = (CheckConstraint("amount_cents BETWEEN 1 AND 99999999999"),)
+
+
+class RequestReceipt(Base):
+    __tablename__ = "request_receipts"
+    owner: Mapped[str] = mapped_column(String(128), primary_key=True)
+    scope: Mapped[str] = mapped_column(String(24), primary_key=True)
+    request_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    cancelled: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
 
 
 class FinancialAudit(Base):

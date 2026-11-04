@@ -94,6 +94,99 @@ with httpx.Client(
         ]
         data = client.get("/api/dashboard?month=2028-02").json()
         assert data["expense_cents"] == 10000 and data["cash_balance_cents"] == -7000
+        # O UUID permanece reservado mesmo depois de remover o registro de pagamento.
+        winner = next(r for r in payments if r.status_code == 201)
+        payment_body = json.loads(winner.request.content)
+        assert (
+            client.delete("/api/statement-payments/" + winner.json()["id"]).status_code
+            == 204
+        )
+        assert (
+            client.post(
+                f"/api/statements/{s['id']}/payments", json=payment_body
+            ).status_code
+            == 409
+        )
+        original = {
+            **body,
+            "request_id": str(uuid4()),
+            "first_month": "2028-04",
+            "installments": 3,
+        }
+        assert client.post("/api/card-purchases", json=original).status_code == 201
+        path = "/api/card-operations/" + original["request_id"]
+        revision = client.get(path).json()["revision"]
+        edits = [
+            {
+                **original,
+                "request_id": str(uuid4()),
+                "expected_revision": revision,
+                "reason": "Conferência concorrente",
+                "amount_cents": value,
+            }
+            for value in (20000, 30000)
+        ]
+
+        def edit(payload):
+            with httpx.Client(
+                base_url=url,
+                trust_env=False,
+                headers=headers,
+                cookies=cookies,
+                timeout=15,
+            ) as worker:
+                return worker.put(path, json=payload)
+
+        with ThreadPoolExecutor(2) as pool:
+            results = list(pool.map(edit, edits))
+        assert sorted(r.status_code for r in results) == [200, 409], [
+            (r.status_code, r.text) for r in results
+        ]
+        final = client.get(path).json()
+        assert sum(c["amount_cents"] for c in final["charges"]) in (20000, 30000)
+
+        def delete_or_replay(delete):
+            with httpx.Client(
+                base_url=url,
+                trust_env=False,
+                headers=headers,
+                cookies=cookies,
+                timeout=15,
+            ) as worker:
+                return (
+                    worker.delete(path)
+                    if delete
+                    else worker.post("/api/card-purchases", json=original)
+                )
+
+        with ThreadPoolExecutor(2) as pool:
+            removed, replayed = list(pool.map(delete_or_replay, [True, False]))
+        assert removed.status_code == 204 and replayed.status_code in (201, 409)
+        assert client.get(path).status_code == 404
+        assert client.post("/api/card-purchases", json=original).status_code == 409
+        other = client.post("/api/cards", json={"name": "Outro", "due_day": 10}).json()
+        shared = {**body, "request_id": str(uuid4()), "first_month": "2028-08"}
+
+        def cross_card(card_id):
+            with httpx.Client(
+                base_url=url,
+                trust_env=False,
+                headers=headers,
+                cookies=cookies,
+                timeout=15,
+            ) as worker:
+                return worker.post(
+                    "/api/card-purchases", json={**shared, "card_id": card_id}
+                )
+
+        with ThreadPoolExecutor(2) as pool:
+            results = list(pool.map(cross_card, [card["id"], other["id"]]))
+        assert sorted(r.status_code for r in results) == [201, 409], [
+            (r.status_code, r.text) for r in results
+        ]
+        print(
+            "PASS: correção concorrente, exclusão versus reenvio, reserva após pagamento removido e UUID entre cartões."
+        )
         # A FK composta recusa associação cruzada até por um escritor que ignore a API.
         try:
             with engine.begin() as conn:

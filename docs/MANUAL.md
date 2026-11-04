@@ -59,3 +59,9 @@ Em **Metas → Gerenciar meta**, marque **Meta arquivada** e salve para pausar s
 ## Histórico de alterações
 
 Em **Contas e cartões**, use **Consultar histórico** para ver criações, alterações e exclusões desde a versão 0.8, em todos os meses. Abra um registro para conferir os valores e use **Carregar mais alterações** para páginas anteriores. Atualize a consulta após novas operações. O histórico continua disponível após excluir uma operação isolada e integra a exportação. A exclusão integral de dados financeiros também o remove. Estados anteriores à implantação não são reconstruídos. Consulte [AUDITORIA.md](AUDITORIA.md) para cobertura e limitações.
+
+## Corrigir uma compra completa
+
+Em uma fatura aberta, escolha **Corrigir compra** em uma compra manual. Todos os meses da operação serão considerados. Corrija os campos, informe o motivo e selecione **Conferir alterações**. Revise os totais por fatura antes de **Confirmar correção**. Se outra sessão mudar a compra, use **Recarregar compra** e confira novamente. Cartão arquivado precisa ser reativado; faturas conferidas precisam de revisão/reabertura explícita. A correção integral de linhas importadas ainda não está disponível.
+
+Excluir uma compra ou remover um pagamento mantém seu identificador de envio reservado. Um reenvio antigo não recria o registro. Para uma operação nova, use um novo cadastro pelo formulário. Consulte [CORRECOES.md](CORRECOES.md).

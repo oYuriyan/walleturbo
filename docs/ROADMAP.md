@@ -34,8 +34,8 @@ Dependência: base existente. Origem: completar o controle financeiro já inicia
 - **FIN-01 — concluído na 0.5:** definir saldo inicial por conta com data de referência, saldo calculado, ajustes explícitos e política para lançamentos anteriores à referência. Diferenciar saldo informado, saldo calculado, resultado e caixa.
 - **FIN-02 — concluído na 0.5:** transferências entre contas próprias, com débito/crédito atômicos, estorno, reenvio idempotente e proteção contra concorrência. Transferência não conta como receita/despesa.
 - **FIN-03 — concluído na 0.7:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
-- **FIN-04 — parcial na 0.8; histórico homologado:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
-- **FIN-05 — parcial; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
+- **FIN-04 — parcial; histórico homologado na 0.8, correção integral manual implementada na 0.9 aguardando CI:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
+- **FIN-05 — parcial; recibos para compras/pagamentos após exclusão implementados na 0.9 aguardando CI; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
 
 Aceite: cenário com duas contas, saldo inicial, receitas, despesas, transferência, compra parcelada, pagamento e reversão termina com valores esperados por conta/mês; nenhuma duplicação ou perda por reenvio, concorrência ou migração.
 
@@ -160,4 +160,6 @@ Entrega 0.7: metas com versão, arquivamento/reativação, exclusão condicionad
 
 Entrega 0.8: histórico privado para nove tipos de registro, consulta paginada, exportação/expurgo e revisão de concorrência (AUDITORIA.md), homologado no CI 41888034624.
 
-Próxima entrega: concluir FIN-04 (edição atômica de operações parceladas/pagamentos, versão e revisão de efeitos em faturas conferidas) e FIN-05 (idempotência após exclusão e contrato financeiro amplo). Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+Entrega 0.9: correção atômica de compras manuais com prévia, motivo e revisão; recibos de criação/pagamento/correção que preservam UUIDs após exclusão isolada. Migração 008 e testes; homologação pendente do CI (CORRECOES.md).
+
+Próxima entrega: FIN-04 para edição de pagamentos, versão ampla de lançamentos e correção de importados; FIN-05 para importações após exclusão, idempotência entre formatos e contrato financeiro amplo. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.

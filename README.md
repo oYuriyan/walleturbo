@@ -49,6 +49,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - [Contas e faturas](docs/FATURAS.md)
 - [Ciclo de vida dos cadastros e metas](docs/CADASTROS.md)
 - [Histórico financeiro e revisão técnica](docs/AUDITORIA.md)
+- [Correções integrais e recibos de envio](docs/CORRECOES.md)
 - [Matriz de requisitos e testes](docs/MATRIZ.md)
 - [Leitura assistida de PDF e limites](docs/PDF.md)
 - [Migrações preservando dados](docs/MIGRACOES.md)

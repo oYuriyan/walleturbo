@@ -39,3 +39,7 @@ Adiciona estado ativo/arquivado e versão em metas. Mantém nome, objetivo, rese
 ## Migração 007 — histórico financeiro
 
 Cria financial_audit e índice por proprietário/instante/ID. Não altera valores existentes nem reconstrói estados anteriores. Atualizar a aplicação junto do schema habilita a instrumentação ORM. Readiness exige a tabela. Teste de upgrade verifica histórico inicialmente vazio e preservação de registros legados.
+
+## Migração 008 — parcelas e recibos de envio
+
+Adiciona versão (inicial 1) e motivo nullable às parcelas e cria request_receipts. Preserva IDs/valores e preenche recibos de compras manuais/pagamentos ativos. Reserva UUIDs de exclusões encontradas no histórico 0.8, sem inventar hashes originais; recibos ativos têm precedência. Exclusões sem histórico não são reconstruídas. O roteiro de migração simula upgrade de 007 para 008, com registros ativos e excluídos, repetição e rollback. Readiness exige a nova tabela/colunas; aplicar junto da aplicação.

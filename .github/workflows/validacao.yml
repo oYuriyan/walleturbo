@@ -33,6 +33,7 @@ jobs:
           node --check web/balances.js
           node --check web/lifecycle.js
           node --check web/history.js
+          node --check web/corrections.js
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
@@ -74,6 +75,9 @@ jobs:
           # Respeitar a janela de 120 requisições/IP sem relaxar os limites da aplicação.
           sleep 60
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_goals.cjs
+      - name: Validar correção integral de compras no navegador
+        run: |
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_corrections.cjs
       - name: Salvar evidências sintéticas de interface
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
@@ -86,6 +90,7 @@ jobs:
             artifacts/lifecycle-*.png
             artifacts/goals-*.png
             artifacts/history-*.png
+            artifacts/corrections-*.png
       - name: Encerrar serviços de teste
         if: always()
         run: |

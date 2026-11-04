@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 0.9.0 — em desenvolvimento
+
+- Correção integral de compras manuais com prévia dos totais por mês, motivo e versão contra sobreposição entre sessões.
+- Recalcula parcelas atomicamente, preservando IDs sobreviventes; bloqueia faturas de origem/destino conferidas.
+- Recibos de envio preservados após exclusão de compra/pagamento, recusando reenvios antigos sem recriar registros.
+- Migração 008 preserva valores legados e reserva UUIDs de exclusões auditadas desde 0.8; exportação/expurgo incluem recibos.
+- Interface e testes de rollback, concorrência, migração e navegador ampliados. Limites em CORRECOES.md; FIN-04/05 permanecem parciais.
+
 ## 0.8.0 — em desenvolvimento
 
 - Histórico privado e transacional para nove tipos de registro financeiro, com estados anterior/posterior.

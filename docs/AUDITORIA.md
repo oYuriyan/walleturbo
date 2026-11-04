@@ -31,8 +31,8 @@ O engine oculta parâmetros SQL nas mensagens de exceção. Isso reduz exposiç�
 | Perda do estado anterior em correções/exclusões — alta | Histórico transacional implementado para nove tipos de entidade na 0.8; homologado no CI 41888034624 |
 | Atualização desatualizada de cadastros/metas — alta | Versão + lock implementados e homologados em 0.6/0.7 |
 | Concorrência em correções financeiras — alta | Lock de lançamento e recarga após lock de fatura adicionados; versão e revisão de conflitos amplas ainda pendentes em FIN-04 |
-| Reenvio após exclusão de pagamentos/compras — alta | Histórico preserva evidência, mas não substitui tombstones/chaves de idempotência; FIN-05 pendente |
-| Alterar valor/data/parcelamento de uma compra existente — alta | Política de meses conferidos e correção atômica ainda pendente em FIN-04; não habilitar edição parcial silenciosa |
+| Reenvio após exclusão de pagamentos/compras — alta | Recibos implementados na 0.9 para compras manuais/pagamentos e exclusões auditadas; aguardando CI. Importações após exclusão ainda pendentes |
+| Alterar valor/data/parcelamento de uma compra existente — alta | Correção integral de compra manual implementada na 0.9, com prévia, revisão e bloqueio de faturas conferidas; aguardando CI. Pagamentos/importados ainda pendentes |
 | Histórico de cenário/orçamentos e escrita por SQL/jobs — média | Fora da cobertura deste incremento; tratar antes de introduzir novos escritores |
 | Proteção contra administrador do banco e acesso cruzado SQL — alta | Permissões mínimas/RLS/restauração continuam em REL-02/03; histórico não resolve esses controles |
 | Jornada completa e verificações de interface existentes fora do CI — média | Roteiros de cartões/demonstração e teste XSS persistido abrangente continuam em REL-07; a consulta de histórico recebe regressão HTML neste incremento |
