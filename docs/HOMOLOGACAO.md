@@ -100,6 +100,8 @@ Substituído httpx 0.28.1 por httpx2 2.16.0, suportado por Authlib 1.9.3 e Starl
 
 O novo transporte usa truststore e certificados do sistema. A verificação TLS continua habilitada; ambientes com CA privada devem instalar essa CA no trust store do sistema. Não foram adicionadas exceções de certificado nem supressões de avisos.
 
-## Infraestrutura de identidade local — em validação
+## Infraestrutura de identidade local — validada no CI
 
 Adicionados Keycloak 26.8.1 com banco exclusivo, realm versionado sem usuários/credenciais e gerador de segredos locais. A configuração Compose foi validada sem iniciar serviços locais, devido ao limite de disco. Os 76 testes existentes passaram sem avisos. O CI recebeu um fluxo adicional com provedor real e cadastro TOTP no Chromium; a aprovação depende do resultado do check deste incremento. Google, recuperação e operação pública não são homologados por esse teste local. Roteiro em KEYCLOAK.md.
+
+**OIDC/TOTP real aprovado:** [execução 41837356697](https://github.com/oYuriyan/walleturbo/actions/runs/41837356697), código `2839514`. Todas as etapas passaram: 77 testes em container sem avisos, auditoria, regressão financeira/PDF/planejamento e navegador com Keycloak real. Foram verificados discovery/issuer, PKCE S256, cadastro TOTP, recusa de código incorreto e acesso antes da conclusão, ID token assinado aceito pela aplicação, rotação com invalidação da sessão anterior, logout e state inválido. O realm inclui os escopos profile e acr. Os seletores do teste acompanham o tema atual do provedor. Não foram homologados Google, recuperação, rotação de JWKS, ataques criptográficos abrangentes ou produção.

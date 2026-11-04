@@ -16,7 +16,7 @@ O backend valida o retorno com Authlib (assinatura, emissor, audiência, nonce e
 6. Preencher `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` pelo gerenciador de segredos. Produção exige HTTPS em issuer e aplicação.
 7. Validar login Google, recusa sem MFA, state/nonce inválidos, rotação de JWKS, token expirado, sessão expirada, recuperação e revogação.
 
-Os testes automatizados do callback usam claims simuladas para verificar a política local. Eles não certificam o comportamento do provedor, o login Google ou a validação criptográfica ponta a ponta.
+Os testes unitários do callback usam claims simuladas para verificar a política local. Há também teste de navegador com Keycloak real, cadastro TOTP e ID token assinado (evidência em HOMOLOGACAO.md). O login Google, a recuperação e a cobertura de ataques criptográficos permanecem pendentes.
 
 ## Sessões
 
