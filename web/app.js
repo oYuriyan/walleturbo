@@ -141,15 +141,19 @@ function summary(entries) {
   return sums;
 }
 async function refresh() {
+  const expectedCsrf = csrf,
+    expectedDemo = demo;
   let data;
   if (csrf && !demo) {
     data = await api("/api/dashboard?month=" + $("#month").value);
+    if (csrf !== expectedCsrf || demo !== expectedDemo) return;
     all = data.transactions;
     goals = data.goals;
   } else {
     data = summary(all.filter((t) => t.date.startsWith($("#month").value)));
   }
   if (typeof loadFinance === "function") await loadFinance();
+  if (csrf !== expectedCsrf || demo !== expectedDemo) return;
   if (demo && typeof applyDemoCards === "function") applyDemoCards(data);
   render(data);
   if (typeof loadBalances === "function") await loadBalances();

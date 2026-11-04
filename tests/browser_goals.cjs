@@ -180,6 +180,17 @@ const base = "http://localhost:8000";
     await form.locator('[name="name"]').fill("Não deve persistir na tela");
     await form.locator('[name="target"]').fill("10,00");
     await form.locator('[name="deadline"]').fill("2027-01-01");
+    let release, received;
+    const held = new Promise((resolve) => (release = resolve));
+    const ready = new Promise((resolve) => (received = resolve));
+    await page.route("**/api/dashboard?*", async (route) => {
+      const response = await route.fetch();
+      received();
+      await held;
+      await route.fulfill({ response });
+    });
+    const delayed = page.evaluate(() => refresh());
+    await ready;
     assert.equal(
       (
         await context.request.delete(base + "/api/privacy/data", {
@@ -193,6 +204,13 @@ const base = "http://localhost:8000";
       .getByRole("button", { name: "Salvar meta", exact: true })
       .click();
     await dialog.waitFor({ state: "hidden" });
+    release();
+    await delayed;
+    assert.equal(
+      await page.locator("#transaction-list .transaction").count(),
+      0,
+    );
+    assert.equal(await page.locator("#goal-list [data-goal-id]").count(), 0);
     assert.equal(await form.locator('[name="name"]').inputValue(), "");
     assert.equal(await form.locator('[name="id"]').inputValue(), "");
     assert.equal(await page.locator("#history-list").textContent(), "");

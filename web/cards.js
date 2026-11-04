@@ -26,12 +26,15 @@ function seedFinance() {
   financeStatements = [];
 }
 async function loadFinance() {
-  if (!demo && csrf)
-    [financeAccounts, financeCards, financeStatements] = await Promise.all([
-      api("/api/accounts"),
-      api("/api/cards"),
-      api("/api/statements?month=" + $("#month").value),
-    ]);
+  if (demo || !csrf) return;
+  const expectedCsrf = csrf;
+  const data = await Promise.all([
+    api("/api/accounts"),
+    api("/api/cards"),
+    api("/api/statements?month=" + $("#month").value),
+  ]);
+  if (csrf !== expectedCsrf || demo) return;
+  [financeAccounts, financeCards, financeStatements] = data;
 }
 function totals(statement) {
   if (!demo) return statement;
