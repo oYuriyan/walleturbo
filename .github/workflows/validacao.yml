@@ -1,0 +1,17 @@
+name: Validação técnica
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir ambiente de testes
+        run: docker build --target test -t walleturbo-test .
+      - name: Executar testes em container
+        run: docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges walleturbo-test
+      - name: Auditar dependências
+        run: docker run --rm --tmpfs /tmp --entrypoint pip-audit walleturbo-test --disable-pip --no-deps -r requirements.lock
+      - name: Validar JavaScript
+        run: node --check web/app.js
