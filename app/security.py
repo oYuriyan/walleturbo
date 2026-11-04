@@ -89,6 +89,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             if request.method not in ("GET", "HEAD", "OPTIONS"):
                 if request.headers.get("origin") != conf.base_url:
                     return JSONResponse({"detail": "Origem não autorizada"}, 403)
+                if path.startswith("/api") and not session.get("user"):
+                    return JSONResponse(
+                        {"detail": "Sessão encerrada. Entre novamente."}, 401
+                    )
                 if path.startswith("/api") and not secrets.compare_digest(
                     request.headers.get("x-csrf-token", ""),
                     session.get("csrf", secrets.token_hex(32)),

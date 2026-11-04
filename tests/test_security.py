@@ -242,3 +242,13 @@ def test_chunked_body_is_limited_without_content_length():
         )
     )
     assert messages[0]["status"] == 413
+
+
+def test_expired_session_mutation_returns_401_before_csrf(client, login):
+    login()
+    client.redis.delete(session_key("a" * 64))
+    response = client.post("/api/transactions", json=ENTRY)
+    assert response.status_code == 401
+    assert response.headers["Cache-Control"] == "no-store"
+    login()
+    assert client.get("/api/privacy/export").json()["transactions"] == []
