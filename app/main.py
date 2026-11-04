@@ -14,12 +14,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DBSession
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.config import settings
+from app.balances import router as balances_router
 from app.planning import router as planning_router
 from app.pdf_import import router as pdf_router
 from app.db import (
     Transaction,
     Goal,
     MonthPlan,
+    OpeningBalance,
+    Transfer,
     Budget,
     Account,
     Card,
@@ -60,7 +63,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.4.0",
+    version="0.5.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -78,6 +81,7 @@ app.add_middleware(
 )
 app.add_middleware(ResponseHeadersMiddleware)
 app.include_router(cards_router)
+app.include_router(balances_router)
 app.include_router(pdf_router)
 app.include_router(planning_router)
 
@@ -107,6 +111,8 @@ def ready(db: DBSession = Depends(db_session)):
     try:
         db.execute(select(Statement.id).limit(1))
         db.execute(select(Transaction.account_id).limit(1))
+        db.execute(select(OpeningBalance.id).limit(1))
+        db.execute(select(Transfer.id).limit(1))
         store.ping()
     except Exception:
         raise HTTPException(503, "Dependências indisponíveis") from None
@@ -371,6 +377,8 @@ def export(user=Depends(current_user), db: DBSession = Depends(db_session)):
             ]
             for name, model in [
                 ("accounts", Account),
+                ("opening_balances", OpeningBalance),
+                ("transfers", Transfer),
                 ("cards", Card),
                 ("statements", Statement),
                 ("card_charges", Charge),
@@ -388,7 +396,7 @@ def erase(
 ):
     if request.headers.get("x-confirm-delete") != "EXCLUIR":
         raise HTTPException(400, "Confirmação explícita necessária")
-    for model in (StatementPayment, Charge, Statement):
+    for model in (Transfer, OpeningBalance, StatementPayment, Charge, Statement):
         db.execute(delete(model).where(model.owner == user))
     db.execute(delete(Transaction).where(Transaction.owner == user))
     db.execute(delete(Goal).where(Goal.owner == user))

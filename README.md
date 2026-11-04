@@ -68,3 +68,5 @@ Os testes isolados usam SQLite e fakeredis. Eles não substituem validação em 
 Licença: [GPL-3.0](LICENSE), preservada do repositório original.
 
 Para configurar login local com Keycloak e TOTP, consulte [Identidade local](docs/KEYCLOAK.md).
+
+Saldos iniciais, posição por conta e transferências com reversão: [contrato financeiro](docs/SALDOS.md).

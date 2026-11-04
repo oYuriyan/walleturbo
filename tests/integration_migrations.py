@@ -36,23 +36,49 @@ try:
         raise AssertionError("Adoção implícita indevida")
     except RuntimeError as exc:
         assert "legado" in str(exc)
-    migrate.migrate(adopt_initial=True)
+    original = migrate.DIRECTORY
+    with tempfile.TemporaryDirectory() as legacy_dir:
+        migrate.DIRECTORY = Path(legacy_dir)
+        for file in sorted(original.glob("*.sql"))[:3]:
+            (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
+        migrate.migrate(adopt_initial=True)
+        with test_engine.begin() as conn:
+            conn.execute(
+                text(
+                    "INSERT INTO accounts(id,owner,name) VALUES ('legacy-account','synthetic','Conta preservada')"
+                )
+            )
+            conn.execute(
+                text(
+                    "UPDATE transactions SET account_id='legacy-account' WHERE id='preserved'"
+                )
+            )
+        migrate.DIRECTORY = original
+    migrate.migrate()
     migrate.migrate()
     with test_engine.connect() as conn:
         assert conn.execute(
             text(
                 "SELECT amount_cents,account_id FROM transactions WHERE id='preserved'"
             )
-        ).one() == (1234, None)
+        ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 3
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 4
+        )
+    with test_engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
+        assert (
+            conn.execute(
+                text("SELECT name FROM accounts WHERE id='legacy-account'")
+            ).scalar()
+            == "Conta preservada"
         )
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as tmp:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "004_test_failure.sql"
+        broken = migrate.DIRECTORY / "005_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -70,7 +96,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 3
+                == 4
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

@@ -1,5 +1,12 @@
 # Histórico de alterações
 
+## 0.5.0 — em desenvolvimento
+
+- Saldo inicial por conta com data de referência, revisões preservadas e controle de versão.
+- Saldos calculados por data, com indicação de referências ausentes e registros sem conta.
+- Transferências próprias e reversão datada, sem duplicar receitas/despesas e com idempotência preservada.
+- Migração 004, exportação/exclusão e interface de contas ampliadas; testes de concorrência e navegador.
+
 ## 0.4.0 — em desenvolvimento
 
 - Infraestrutura local Keycloak/PostgreSQL com realm versionado, TOTP e níveis ACR.

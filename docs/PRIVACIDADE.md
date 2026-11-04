@@ -34,3 +34,5 @@ Não habilitar cookies analíticos/marketing ou integrações de oferta automati
 Na leitura assistida de PDF, original e texto completo são processados transitoriamente em memória pelo serviço isolado. O Redis retém metadados pseudônimos e hashes de linhas da prévia por até dez minutos. Não há envio a IA. Consulte PDF.md para limites e retenção.
 
 Planejamento: renda de referência opcional, margem preservada, confirmação mensal e limites por categoria são usados para simulações determinísticas. Não são enviados a terceiros. Estão incluídos na exportação e exclusão financeira.
+
+Saldos e transferências: referências iniciais, motivos e versões de correção, contas de origem/destino e datas de reversão ficam no banco financeiro e integram exportação/exclusão. Não há envio dessas informações a bancos, modelos de IA ou outros fornecedores. Não coletar dados sensíveis desnecessários no motivo/descrição.

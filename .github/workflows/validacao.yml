@@ -30,12 +30,14 @@ jobs:
           node --check web/cards.js
           node --check web/pdf.js
           node --check web/planning.js
+          node --check web/balances.js
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
           docker compose up --build -d --wait --wait-timeout 120
           docker compose exec -T -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_real.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_cards.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_balances.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/integration_migrations.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_pdf.py
           test "$(docker inspect --format '{{.HostConfig.NetworkMode}}' "$(docker compose ps -q parser)")" = "none"
@@ -49,6 +51,9 @@ jobs:
       - name: Validar planejamento no navegador
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_planning.cjs
+      - name: Validar saldos e transferências no navegador
+        run: |
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_balances.cjs
       - name: Validar OIDC e TOTP com Keycloak real
         run: |
           python scripts/setup_auth.py
@@ -66,6 +71,7 @@ jobs:
           path: |
             artifacts/pdf-*.png
             artifacts/planning-*.png
+            artifacts/balances-*.png
       - name: Encerrar serviços de teste
         if: always()
         run: |

@@ -73,6 +73,7 @@ async function api(path, method = "GET", body, headers = {}) {
       goals = [];
       if (typeof clearFinance === "function") clearFinance();
       if (typeof clearPlanning === "function") clearPlanning();
+      if (typeof clearBalances === "function") clearBalances();
       render(summary([]));
     }
     throw Error(
@@ -151,6 +152,7 @@ async function refresh() {
   if (typeof loadFinance === "function") await loadFinance();
   if (demo && typeof applyDemoCards === "function") applyDemoCards(data);
   render(data);
+  if (typeof loadBalances === "function") await loadBalances();
   if (view === "planning" && typeof loadPlanning === "function")
     await loadPlanning();
 }

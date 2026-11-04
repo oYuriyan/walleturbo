@@ -12,7 +12,7 @@ Arquivos SQL imutáveis em `app/migrations/`, com ordem numérica, SHA-256 regis
 2. Construa a nova imagem: `docker compose build api migrate`.
 3. Em janela de manutenção, interrompa escritores e execute `docker compose run --rm migrate python -m app.migrate --adopt-initial`.
 4. A adoção exige exatamente os conjuntos de colunas do schema inicial em `transactions` e `goals`. Isso não substitui uma revisão de constraints/permissões de uma instalação modificada manualmente.
-5. O runner registra o baseline e aplica a versão 002, preservando lançamentos e metas. `account_id` legado fica nulo. Execute `docker compose up -d` e confira a prontidão.
+5. O runner registra o baseline e aplica as migrações pendentes, preservando lançamentos e metas. `account_id` legado fica nulo. Execute `docker compose up -d` e confira a prontidão.
 
 Não remova volumes nem apague dados para atualizar o schema. Não edite migrações já aplicadas: crie o próximo arquivo. Em versões posteriores, `python -m app.migrate` aplica somente as pendências. O flag de adoção deixa de ter efeito após o baseline estar registrado.
 
@@ -23,3 +23,7 @@ O Compose continua sendo de desenvolvimento. Em produção, separe credenciais d
 ## Evidência
 
 `tests/integration_migrations.py` cria um banco temporário próprio para testar atualização de legado, preservação de valores, repetição, rollback de um lote inválido e rejeição de checksum alterado. Exige `WALLETURBO_INTEGRATION=1`, privilégios de criação de banco e ambiente de testes. Nunca execute esse roteiro em produção. O banco temporário é removido ao final.
+
+## Incremento 0.5
+
+A migração 004 cria `opening_balances` e `transfers`, preservando contas e lançamentos existentes. Não deduz saldo inicial nem atribui conta a registros sem vínculo. Contas antigas exibem saldo desconhecido até a definição explícita da referência. O teste de migração passa por um schema 003 com conta/lançamento vinculados e verifica a preservação na versão 004.

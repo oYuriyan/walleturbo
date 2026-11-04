@@ -10,6 +10,7 @@
     <script src="/assets/cards.js" defer></script>
     <script src="/assets/pdf.js" defer></script>
     <script src="/assets/planning.js" defer></script>
+    <script src="/assets/balances.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -196,6 +197,33 @@
           conforme o emissor; datas de fechamento não são presumidas.
         </div>
         <div id="account-list" class="account-list"></div>
+        <article class="panel balance-panel">
+          <div class="section-heading">
+            <h2>Saldos por conta</h2>
+            <button id="new-transfer" class="button" type="button" disabled>
+              Registrar transferência
+            </button>
+          </div>
+          <label
+            >Consultar até a data<input
+              id="balance-date"
+              type="date"
+              min="1900-01-01"
+              max="9998-12-31"
+              required
+          /></label>
+          <p id="balance-notice" role="status"></p>
+          <div id="balance-list" class="goals-grid"></div>
+          <h3>Transferências registradas</h3>
+          <p>
+            Movimentos entre suas contas, sem gerar receita ou despesa. Este
+            registro não movimenta dinheiro no banco.
+          </p>
+          <div id="transfer-list"></div>
+          <button id="more-transfers" class="ghost" type="button" hidden>
+            Carregar mais transferências
+          </button>
+        </article>
         <div id="card-list" class="goals-grid"></div>
         <h2 class="statement-heading">Faturas do período</h2>
         <div id="statement-list"></div>
@@ -605,6 +633,111 @@
         <button id="pdf-confirm" type="submit" class="button full" disabled>
           Importar seleção revisada
         </button>
+      </form>
+    </dialog>
+    <dialog id="opening-dialog">
+      <form id="opening-form">
+        <div class="section-heading">
+          <h2 id="opening-title">Referência de saldo</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <p>
+          Informe o saldo no início da data. Os movimentos desse dia serão
+          somados; os anteriores ficam apenas no histórico. Corrigir esta
+          referência recalcula as consultas, preservando as revisões anteriores.
+        </p>
+        <input name="account_id" type="hidden" /><input
+          name="request_id"
+          type="hidden"
+        /><input name="expected_version" type="hidden" />
+        <label
+          >Data de referência<input
+            name="date"
+            type="date"
+            min="1900-01-01"
+            max="9998-12-31"
+            required
+        /></label>
+        <label
+          >Saldo inicial (R$)<input
+            name="amount"
+            type="text"
+            inputmode="text"
+            placeholder="Ex.: -120,50 ou 1000,00"
+            required
+        /></label>
+        <label
+          >Motivo da referência ou correção<input
+            name="reason"
+            maxlength="160"
+            required
+        /></label>
+        <button class="button full" type="submit">Salvar referência</button>
+      </form>
+    </dialog>
+    <dialog id="transfer-dialog">
+      <form id="transfer-form">
+        <div class="section-heading">
+          <h2>Registrar transferência</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="request_id" type="hidden" />
+        <label
+          >Conta de origem<select name="source_account_id" required></select
+        ></label>
+        <label
+          >Conta de destino<select
+            name="destination_account_id"
+            required
+          ></select
+        ></label>
+        <label
+          >Data realizada<input
+            name="date"
+            type="date"
+            min="1900-01-01"
+            max="9998-12-31"
+            required
+        /></label>
+        <label
+          >Valor (R$)<input name="amount" inputmode="decimal" required
+        /></label>
+        <label
+          >Descrição<input name="description" maxlength="160" required
+        /></label>
+        <p>
+          Registre apenas a movimentação realizada. Taxas devem ser lançadas
+          separadamente como despesa. O saldo calculado pode ficar negativo.
+        </p>
+        <button class="button full" type="submit">Salvar transferência</button>
+      </form>
+    </dialog>
+    <dialog id="reverse-transfer-dialog">
+      <form id="reverse-transfer-form">
+        <div class="section-heading">
+          <h2>Reverter transferência</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" />
+        <p>
+          A transferência será preservada e os valores retornarão às contas na
+          data informada. Para corrigir um registro que não ocorreu, use a data
+          original.
+        </p>
+        <label
+          >Data da reversão<input
+            name="date"
+            type="date"
+            max="9998-12-31"
+            required
+        /></label>
+        <button class="button full" type="submit">Confirmar reversão</button>
       </form>
     </dialog>
     <dialog id="delete-dialog">

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, date as CivilDate
 from uuid import uuid4
 from sqlalchemy import (
     BigInteger,
@@ -73,6 +73,59 @@ class Account(Base):
     owner: Mapped[str] = mapped_column(String(128), index=True)
     name: Mapped[str] = mapped_column(String(80))
     __table_args__ = (UniqueConstraint("owner", "id"),)
+
+
+class OpeningBalance(Base):
+    __tablename__ = "opening_balances"
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid4())
+    )
+    owner: Mapped[str] = mapped_column(String(128))
+    account_id: Mapped[str] = mapped_column(String(36))
+    date: Mapped[date] = mapped_column(Date)
+    amount_cents: Mapped[int] = mapped_column(BigInteger)
+    version: Mapped[int] = mapped_column(Integer)
+    reason: Mapped[str] = mapped_column(String(160))
+    request_id: Mapped[str] = mapped_column(String(36))
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["owner", "account_id"], ["accounts.owner", "accounts.id"]
+        ),
+        UniqueConstraint("owner", "request_id"),
+        UniqueConstraint("owner", "account_id", "version"),
+        CheckConstraint("amount_cents BETWEEN -99999999999 AND 99999999999"),
+        CheckConstraint("version > 0"),
+    )
+
+
+class Transfer(Base):
+    __tablename__ = "transfers"
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid4())
+    )
+    owner: Mapped[str] = mapped_column(String(128))
+    source_account_id: Mapped[str] = mapped_column(String(36))
+    destination_account_id: Mapped[str] = mapped_column(String(36))
+    date: Mapped[date] = mapped_column(Date)
+    amount_cents: Mapped[int] = mapped_column(BigInteger)
+    description: Mapped[str] = mapped_column(String(160))
+    request_id: Mapped[str] = mapped_column(String(36))
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    reversed_date: Mapped[CivilDate | None] = mapped_column(Date, nullable=True)
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["owner", "source_account_id"], ["accounts.owner", "accounts.id"]
+        ),
+        ForeignKeyConstraint(
+            ["owner", "destination_account_id"], ["accounts.owner", "accounts.id"]
+        ),
+        UniqueConstraint("owner", "request_id"),
+        CheckConstraint("amount_cents BETWEEN 1 AND 99999999999"),
+        CheckConstraint("source_account_id <> destination_account_id"),
+        CheckConstraint("reversed_date IS NULL OR reversed_date >= date"),
+        Index("ix_transfer_owner_date", "owner", "date"),
+    )
 
 
 class Card(Base):

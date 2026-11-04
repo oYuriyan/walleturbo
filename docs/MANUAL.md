@@ -35,3 +35,9 @@ Informe nome, valor alvo, valor já reservado e prazo. Atualize a reserva confor
 Use **Baixar meus dados** para obter JSON com lançamentos, metas, contas, cartões, faturas, parcelas e pagamentos. Para excluir lançamentos e metas ativos, digite `EXCLUIR`. A conta do provedor de identidade não é removida. A implantação final deverá informar prazos de retenção de backup e canal de atendimento ao titular.
 
 O tema é alternado pelo botão ◐. Somente essa preferência fica no localStorage. Navegação e formulários suportam teclado; use Escape para fechar diálogos.
+
+## Saldos e transferências
+
+Em **Contas e cartões**, cadastre as contas e use **Definir saldo inicial**. Informe o saldo no início da data escolhida; movimentos desse dia entram no cálculo. Use **Consultar até a data** para uma posição acumulada independente do mês de faturas. Sem referência, o saldo é desconhecido; registros sem conta impedem afirmar um consolidado completo.
+
+**Corrigir referência** registra nova versão e motivo, preservando as anteriores na exportação. A correção redefine a base do cálculo, não representa receita. **Registrar transferência** exige origem/destino distintos, data, valor e descrição; registra uma operação já realizada fora da aplicação. **Reverter transferência** preserva a original e compensa as contas na data informada. Na mesma data, corrige um registro indevido; em data posterior, representa devolução. Consulte [SALDOS.md](SALDOS.md) para regras e exemplos.

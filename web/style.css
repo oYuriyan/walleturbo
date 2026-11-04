@@ -950,3 +950,17 @@ body.dark .brand-mark {
     flex-direction: column;
   }
 }
+
+.balance-panel {
+  margin: 24px 0;
+}
+.balance-panel > label {
+  max-width: 240px;
+}
+.account-balance {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.account-balance-value {
+  font-size: 24px;
+}

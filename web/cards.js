@@ -3,6 +3,7 @@ let financeAccounts = [],
   financeCards = [],
   financeStatements = [];
 function clearFinance() {
+  if (typeof clearBalances === "function") clearBalances();
   financeAccounts = [];
   financeCards = [];
   financeStatements = [];
