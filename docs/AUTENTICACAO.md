@@ -23,3 +23,7 @@ Os testes automatizados do callback usam claims simuladas para verificar a polí
 Cookie HttpOnly, SameSite=Lax, Secure quando BASE_URL usa HTTPS. Identificador aleatório de 256 bits; apenas seu hash é usado como chave de Redis. TTL ocioso de 30 minutos, absoluto de oito horas. Redis indisponível bloqueia acesso. Logout encerra a sessão Walleturbo; não encerra a sessão Google/provedor. O próximo login solicita `prompt=login`.
 
 Antes da produção: revogação de todas as sessões por usuário, step-up recente para exclusão/exportação, logout federado, cookies com prefixo `__Host-`, detecção de sessões concorrentes e testes de recuperação do segundo fator.
+
+## Ambiente reproduzível
+
+A infraestrutura local Keycloak/PostgreSQL, os fluxos TOTP/ACR e o roteiro de conexão Google estão em [KEYCLOAK.md](KEYCLOAK.md). Use `compose.auth.yaml` em conjunto com o Compose principal. O teste de navegador OIDC usa um provedor real e valida um ID token assinado; login Google e recuperação permanecem dependentes da configuração e homologação descritas no roteiro.

@@ -2,6 +2,9 @@
 
 ## 0.4.0 — em desenvolvimento
 
+- Infraestrutura local Keycloak/PostgreSQL com realm versionado, TOTP e níveis ACR.
+- Teste OIDC com provedor real no navegador e roteiro para conexão Google.
+
 - Migração do transporte HTTP para httpx2, removendo avisos de depreciação de Starlette/Authlib.
 - Regressão da troca OAuth com PKCE e recusa de token inválido em transporte simulado.
 

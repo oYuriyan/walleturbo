@@ -1,0 +1,58 @@
+# Desenvolvimento/homologação local. Não publicar start-dev na Internet.
+services:
+  api:
+    environment:
+      OIDC_ISSUER: http://auth.walleturbo.localhost:8080/realms/walleturbo
+      OIDC_CLIENT_ID: walleturbo-web
+      OIDC_CLIENT_SECRET: ${WALLETURBO_OIDC_SECRET:?Execute scripts/setup_auth.py}
+      REQUIRED_ACR: '2'
+    depends_on:
+      keycloak: {condition: service_healthy}
+  auth-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Execute scripts/setup_auth.py}
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U keycloak -d keycloak']
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command: [start-dev, --import-realm]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://auth-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Execute scripts/setup_auth.py}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?Execute scripts/setup_auth.py}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Execute scripts/setup_auth.py}
+      KC_HOSTNAME: http://auth.walleturbo.localhost:8080
+      KC_HEALTH_ENABLED: 'true'
+      WALLETURBO_OIDC_SECRET: ${WALLETURBO_OIDC_SECRET:?Execute scripts/setup_auth.py}
+    ports: ['127.0.0.1:8080:8080']
+    networks:
+      default:
+        aliases: [auth.walleturbo.localhost]
+    volumes:
+      - ./infra/keycloak/walleturbo-realm.json:/opt/keycloak/data/import/walleturbo-realm.json:ro
+    depends_on:
+      auth-db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, bash, -ec, "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.0\r\n\r\n' >&3; cat <&3 | grep -q '200 OK'"]
+      interval: 5s
+      timeout: 4s
+      retries: 40
+      start_period: 30s
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    tmpfs: ['/tmp:size=128m']
+    mem_limit: 1g
+    cpus: 2
+    restart: unless-stopped
+volumes:
+  keycloak_data:

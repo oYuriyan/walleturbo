@@ -99,3 +99,7 @@ O shell Bash explícito habilita `pipefail`, propagando falhas na criação da s
 Substituído httpx 0.28.1 por httpx2 2.16.0, suportado por Authlib 1.9.3 e Starlette 1.10.0. Locks de produção/testes regenerados com hashes; scripts de integração usam o novo cliente. A suíte local passou com 76 testes e `pytest -q -W error`, sem avisos. Dois cenários adicionais exercitam o transporte assíncrono real de Authlib com endpoint simulado: envio do verificador PKCE na troca de código e recusa de `invalid_grant`. Isso não homologa assinatura de ID token, Google, MFA ou provedor OIDC real. A validação containerizada completa permanece no check do commit correspondente no PR #1.
 
 O novo transporte usa truststore e certificados do sistema. A verificação TLS continua habilitada; ambientes com CA privada devem instalar essa CA no trust store do sistema. Não foram adicionadas exceções de certificado nem supressões de avisos.
+
+## Infraestrutura de identidade local — em validação
+
+Adicionados Keycloak 26.8.1 com banco exclusivo, realm versionado sem usuários/credenciais e gerador de segredos locais. A configuração Compose foi validada sem iniciar serviços locais, devido ao limite de disco. Os 76 testes existentes passaram sem avisos. O CI recebeu um fluxo adicional com provedor real e cadastro TOTP no Chromium; a aprovação depende do resultado do check deste incremento. Google, recuperação e operação pública não são homologados por esse teste local. Roteiro em KEYCLOAK.md.

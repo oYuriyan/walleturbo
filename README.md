@@ -66,3 +66,5 @@ node --check web/app.js
 Os testes isolados usam SQLite e fakeredis. Eles não substituem validação em PostgreSQL, Redis real, provedor OIDC, navegador e infraestrutura de produção. O pipeline executa a suíte em container e auditoria das dependências.
 
 Licença: [GPL-3.0](LICENSE), preservada do repositório original.
+
+Para configurar login local com Keycloak e TOTP, consulte [Identidade local](docs/KEYCLOAK.md).

@@ -1,0 +1,16 @@
+{
+  "alias": "google",
+  "providerId": "google",
+  "enabled": false,
+  "trustEmail": false,
+  "storeToken": false,
+  "linkOnly": false,
+  "firstBrokerLoginFlowAlias": "first broker login",
+  "postBrokerLoginFlowAlias": "walleturbo-broker-mfa",
+  "config": {
+    "clientId": "PREENCHER_NO_PROVEDOR",
+    "clientSecret": "PREENCHER_NO_PROVEDOR",
+    "defaultScope": "openid profile email",
+    "syncMode": "IMPORT"
+  }
+}

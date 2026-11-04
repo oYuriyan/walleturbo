@@ -49,6 +49,14 @@ jobs:
       - name: Validar planejamento no navegador
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_planning.cjs
+      - name: Validar OIDC e TOTP com Keycloak real
+        run: |
+          python scripts/setup_auth.py
+          docker compose --env-file .env --env-file .env.auth -f compose.yaml -f compose.auth.yaml up --build -d --wait --wait-timeout 240
+          set -a
+          source .env.auth
+          set +a
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e KEYCLOAK_ADMIN_USER -e KEYCLOAK_ADMIN_PASSWORD api python < tests/seed_oidc.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_oidc.cjs
       - name: Salvar evidências sintéticas de interface
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
@@ -59,4 +67,9 @@ jobs:
             artifacts/planning-*.png
       - name: Encerrar serviços de teste
         if: always()
-        run: docker compose down
+        run: |
+          if [ -f .env.auth ]; then
+            docker compose --env-file .env --env-file .env.auth -f compose.yaml -f compose.auth.yaml down
+          else
+            docker compose down
+          fi
