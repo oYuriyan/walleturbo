@@ -7,9 +7,9 @@ Data: 03/11/2026 (America/Sao_Paulo). Ambiente: workspace cloud Linux, Python 3.
 | Verificação | Resultado |
 |---|---|
 | Testes de domínio/API/segurança no host | 26 aprovados |
-| Mesma suíte em container sem privilégios, filesystem somente leitura e capabilities removidas | 26 aprovados |
+| Mesma suíte em container sem privilégios, filesystem somente leitura e capabilities removidas | 26 aprovados, inclusive pela imagem padrão no GitHub Actions |
 | Build da imagem de aplicação e da imagem de testes com dependências/hashes | Concluído após correção de ownership nos COPY |
-| PostgreSQL 17 e Redis 7 reais | Readiness, sessão sintética, importação, deduplicação, saldo, exportação e exclusão aprovados |
+| PostgreSQL 17 e Redis 7 reais | Readiness, sessão sintética, importação, deduplicação, saldo, exportação e exclusão aprovados; inicialização em volume novo também aprovada no CI |
 | Chromium desktop e mobile 390 px | Navegação, criação/edição de lançamento, busca, criação de meta e tema escuro aprovados |
 | Tentativa de descrição HTML na interface | Exibida como texto; nenhum elemento img inserido |
 | JavaScript | `node --check web/app.js` aprovado; zero erros de runtime nos fluxos exercitados |
@@ -32,7 +32,9 @@ docker run --rm --read-only --tmpfs /tmp --user 1000:1000 \
 
 Esta alternativa valida execução containerizada, mas não equivale a verificar o comando padrão da imagem de testes. O GitHub Actions executou diretamente a imagem de testes: 26 testes aprovados no job 126309571600. A primeira auditoria do CI falhou ao tentar criar cache em diretório sem permissão; o workflow foi corrigido para usar `/tmp/pip-audit`. A validação de PostgreSQL/Redis com volume novo foi adicionada ao CI para resolver a limitação local.
 
-O volume local de PostgreSQL precisou da aplicação manual da migração inicial depois de falhas de permissão e espaço. O SQL foi envolvido em transação para evitar migração parcial em instalações futuras. Não houve dados reais. A inicialização automática em volume novo ainda precisa ser repetida em ambiente com espaço adequado.
+**Validação independente concluída:** [execução 41749313210](https://github.com/oYuriyan/walleturbo/actions/runs/41749313210), commit `ffdc617`, aprovada em todas as etapas: build, 26 testes pela imagem padrão, auditoria, JavaScript e integração PostgreSQL/Redis com volume novo. As limitações locais acima não impediram a confirmação no runner do GitHub.
+
+O volume local de PostgreSQL precisou da aplicação manual da migração inicial depois de falhas de permissão e espaço. O SQL foi envolvido em transação para evitar migração parcial em instalações futuras. Não houve dados reais. A inicialização automática em volume novo foi posteriormente aprovada no GitHub Actions.
 
 Integração real reproduzível apenas em ambiente de testes próprio (o script cria sessão sintética diretamente no Redis e limpa os dados que criou):
 
