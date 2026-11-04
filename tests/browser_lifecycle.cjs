@@ -63,10 +63,12 @@ const base = "http://localhost:8000";
         .click();
     };
     const save = async () => {
+      const saved = await form.evaluate(f => ({kind: f.elements.kind.value, id: f.elements.id.value, version: Number(f.elements.version.value)}));
       await form
         .getByRole("button", { name: "Salvar cadastro", exact: true })
         .click();
       await dialog.waitFor({ state: "hidden" });
+      await page.waitForFunction(({kind, id, version}) => (kind === "accounts" ? financeAccounts : financeCards).some(row => row.id === id && row.version > version), saved);
     };
     await manage(account.id, "accounts");
     // Simular outra sessão antes de salvar; a interface deve exigir recarga explícita.
