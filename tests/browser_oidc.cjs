@@ -22,7 +22,8 @@ assert.equal(totp('12345678901234567890', 59000), '287082');
   try {
     assert.equal((await context.request.get(base + '/api/me')).status(), 401);
     const start = await page.goto(base + '/auth/login');
-    console.log('OIDC: resposta inicial', start.status(), 'host', new URL(page.url()).hostname);
+    const errorCode = new URL(page.url()).searchParams.get('error');
+    console.log('OIDC: resposta inicial', start.status(), 'host', new URL(page.url()).hostname, 'erro', /^[a-z_]+$/.test(errorCode || '') ? errorCode : 'nenhum');
     assert.equal(new URL(page.url()).hostname, 'auth.walleturbo.localhost');
     assert.equal(new URL(page.url()).searchParams.get('code_challenge_method'), 'S256');
     const before = (await context.cookies(base)).find(c => c.name === 'walleturbo_session');
