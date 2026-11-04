@@ -54,3 +54,7 @@ Dashboard e exportação ainda carregam registros na memória; definir paginaç�
 ## ADR 005 — Consumo e caixa separados
 
 Compras no cartão geram parcelas nas faturas de vencimento. O resultado mensal considera essas parcelas e estornos; pagamentos afetam somente a variação de caixa. Faturas precisam ter categorias revisadas e total conferido antes de receber pagamentos. A primeira fatura é informada pelo usuário, sem presumir regras de fechamento de cada emissor. Ver FATURAS.md.
+
+## ADR 006 — PDF em processo e container restritos
+
+O serviço parser recebe bytes por socket Unix, sem rede ou credenciais financeiras. Cada documento é extraído em processo com CPU/memória/tempo limitados. O texto segue transitoriamente para identificação de candidatos; somente seleção revisada vira lançamento. A prévia mantém metadados e hashes temporários no Redis, vinculados à sessão/fatura. Não há OCR nem interpretação por IA nesta etapa. Consulte PDF.md para formatos e limites.

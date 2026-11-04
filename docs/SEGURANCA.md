@@ -10,7 +10,7 @@ Não existe garantia de barrar toda entrada indesejada. O objetivo é reduzir a 
 | SQL injection | ORM com parâmetros, schemas restritos | Não há SQL dinâmico com entrada do usuário |
 | Fixação / furto de sessão | Cookie HttpOnly, rotação, TTL, sessão no Redis | Secure em HTTPS; revogação global pendente |
 | Bypass de MFA | Claim ACR exigida e issuer fixado | Configuração real do provedor pendente |
-| Abuso de upload | Corpo 300 KB com prazo total de envio de 10s, CSV 256 KB/500 linhas, campos limitados | PDFs ainda não aceitos |
+| Abuso de upload | Corpo 300 KB (PDF: 2 MB) com prazo total de envio de 10s, CSV 256 KB/500 linhas, campos limitados | PDF textual em leitor isolado; ver PDF.md |
 | Abuso de tráfego | Limite Redis atômico por IP (120/min), proprietário (90/min) e importação (10/min) | WAF, CDN, quotas persistentes e carga pendentes |
 | Falha de Redis | Resposta 503, sem fallback permissivo | Teste automatizado |
 | Cadeia de suprimentos | Dependências com hashes, auditoria em CI | Fixar imagens/actions por digest e política de atualização |
