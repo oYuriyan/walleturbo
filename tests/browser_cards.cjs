@@ -40,11 +40,19 @@ const fs = require("fs");
       .locator("#setup-form button[type=submit], #setup-form .button.full")
       .click();
     await page.locator("#setup-dialog").waitFor({ state: "hidden" });
+    await page
+      .locator("#account-list")
+      .getByText("Conta de teste", { exact: true })
+      .waitFor();
     await page.locator("#new-card").click();
     await page.locator("#setup-form [name=name]").fill("Cartão de teste");
     await page.locator("#setup-form [name=due_day]").fill("31");
     await page.locator("#setup-form .button.full").click();
     await page.locator("#setup-dialog").waitFor({ state: "hidden" });
+    await page
+      .locator("#card-list")
+      .getByText("Cartão de teste", { exact: true })
+      .waitFor();
     await page.locator("#new-purchase").click();
     await page
       .locator("#purchase-form [name=description]")

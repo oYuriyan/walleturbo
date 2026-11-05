@@ -97,10 +97,12 @@ jobs:
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_cards.cjs
           PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser.cjs
       - name: Salvar evidências sintéticas de interface
+        if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
           name: revisao-pdf
-          if-no-files-found: error
+          if-no-files-found: warn
+          retention-days: 7
           path: |
             artifacts/pdf-*.png
             artifacts/planning-*.png
