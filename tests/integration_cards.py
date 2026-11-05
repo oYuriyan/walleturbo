@@ -150,6 +150,8 @@ with httpx.Client(
         final = client.get(path).json()
         assert sum(c["amount_cents"] for c in final["charges"]) in (20000, 30000)
 
+        deletion_revision = final["revision"]
+
         def delete_or_replay(delete):
             with httpx.Client(
                 base_url=url,
@@ -159,7 +161,7 @@ with httpx.Client(
                 timeout=15,
             ) as worker:
                 return (
-                    worker.delete(path)
+                    worker.delete(path + "?expected_revision=" + deletion_revision)
                     if delete
                     else worker.post("/api/card-purchases", json=original)
                 )

@@ -47,3 +47,9 @@ Adiciona versão (inicial 1) e motivo nullable às parcelas e cria request_recei
 ## Migração 009 — versão e motivo de pagamentos
 
 Adiciona version=1 e correction_reason nullable aos pagamentos legados, preservando valor, data, conta, ID e UUID/hash de criação. Readiness exige as novas colunas. Atualizar API/interface em conjunto: remoção de pagamento passa a exigir expected_version. O roteiro de upgrade preserva os valores e testa as migrações 007→009, repetição, rollback e checksum.
+
+## Migração 010 — lançamentos e marcas
+
+Adiciona version=1, request_id nullable e motivo a transactions, com unicidade de UUID por proprietário. Cria import_marks e copia chaves de origem ativas de lançamentos/linhas de cartão sem recalcular identidades. Dados financeiros e IDs são preservados. Não inventa marcas de exclusões antigas sem chave de origem. O upgrade testa origens legadas de movimentação e cartão.
+
+Atualize clientes/API junto do schema e interrompa escritores antigos: PUT/DELETE de lançamento, revisão de categoria e DELETE de operação de cartão passam a exigir os dados de versão/revisão documentados em LANCAMENTOS_E_IMPORTACAO.md. Readiness verifica as novas colunas/tabela. Não remova volumes para atualizar.

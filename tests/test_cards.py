@@ -32,6 +32,12 @@ def statement(client, month="2026-11"):
     return client.get("/api/statements?month=" + month).json()[0]
 
 
+def delete_operation(client, path):
+    response = client.get(path)
+    revision = response.json()["revision"] if response.status_code == 200 else "0" * 64
+    return client.delete(path + "?expected_revision=" + revision)
+
+
 def test_installment_rounding_and_calendar():
     assert split_cents(10001, 3) == [3334, 3334, 3333]
     assert sum(split_cents(99999999999, 36)) == 99999999999
@@ -164,7 +170,11 @@ def test_pending_review_blocks_close_and_closed_bill_is_immutable(client, login)
     assert (
         client.put(
             f"/api/card-charges/{charge['id']}/review",
-            json={"category": "Educação", "reviewed": True},
+            json={
+                "category": "Educação",
+                "reviewed": True,
+                "expected_version": charge["version"],
+            },
         ).status_code
         == 200
     )
@@ -177,12 +187,18 @@ def test_pending_review_blocks_close_and_closed_bill_is_immutable(client, login)
     assert (
         client.put(
             f"/api/card-charges/{charge['id']}/review",
-            json={"category": "Compras", "reviewed": True},
+            json={
+                "category": "Compras",
+                "reviewed": True,
+                "expected_version": charge["version"],
+            },
         ).status_code
         == 409
     )
     assert (
-        client.delete("/api/card-operations/" + charge["operation_id"]).status_code
+        delete_operation(
+            client, "/api/card-operations/" + charge["operation_id"]
+        ).status_code
         == 409
     )
     assert buy(client, card, installments=1)[0].status_code == 409
@@ -203,16 +219,16 @@ def test_operation_delete_is_atomic_across_installments(client, login):
     s = statement(client, "2026-12")
     client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 3334})
     assert (
-        client.delete(
-            "/api/card-operations/" + response.json()[0]["operation_id"]
+        delete_operation(
+            client, "/api/card-operations/" + response.json()[0]["operation_id"]
         ).status_code
         == 409
     )
     assert len(client.get("/api/privacy/export").json()["card_charges"]) == 3
     client.post(f"/api/statements/{s['id']}/reopen")
     assert (
-        client.delete(
-            "/api/card-operations/" + response.json()[0]["operation_id"]
+        delete_operation(
+            client, "/api/card-operations/" + response.json()[0]["operation_id"]
         ).status_code
         == 204
     )
@@ -329,13 +345,19 @@ def test_all_statement_routes_enforce_owner(client, login):
         == 404
     )
     assert (
-        client.delete("/api/card-operations/" + charge["operation_id"]).status_code
+        delete_operation(
+            client, "/api/card-operations/" + charge["operation_id"]
+        ).status_code
         == 404
     )
     assert (
         client.put(
             "/api/card-charges/" + charge["id"] + "/review",
-            json={"category": "Compras", "reviewed": True},
+            json={
+                "category": "Compras",
+                "reviewed": True,
+                "expected_version": charge["version"],
+            },
         ).status_code
         == 404
     )

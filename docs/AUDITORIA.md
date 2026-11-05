@@ -50,3 +50,7 @@ O engine oculta parâmetros SQL nas mensagens de exceção. Isso reduz exposiç�
 ## Revisão incremental 0.10
 
 Implementadas correção de pagamentos com versão monotônica, remoção com versão obrigatória e revalidação dos demais pagamentos sob lock da fatura. Conta/data/valor/motivo anteriores e posteriores permanecem no histórico; a prévia respeita referência/data e não inventa saldo para contas desconhecidas. Recibos payment_edit preservam reenvios sem reaplicar valores antigos. O histórico visual passou a apresentar vínculos às contas por seus nomes atuais. Homologado no CI 42033442245, código 39c0a67, com 123 testes em container e roteiro mobile. Versão de lançamentos diretos, importados, proteção contra SQL externo, RLS e limites de volume continuam pendentes.
+
+## Revisão incremental 0.11
+
+Implementados controles de versão e UUID para lançamentos, revisão de categoria com versão, exclusão de operação com revisão atual e marcas de origem persistentes. CSV/PDF reconhecidos não recriam linhas excluídas nem desfazem correções. Valores divergentes de confirmação de PDF são recusados. Falhas parciais revertem marcas e finanças. A identidade segue contexto/campos canônicos, sem promessa de reconhecer documentos divergentes; exclusões anteriores à migração não são inferidas sem chave. Estado de homologação pendente do CI. RLS, SQL externo, restauração, retenção de produção e quotas de armazenamento permanecem pendentes.

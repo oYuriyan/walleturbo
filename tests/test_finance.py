@@ -1,3 +1,4 @@
+from uuid import uuid4
 import pytest
 from app.domain import Entry, parse_csv, import_keys, summarize
 
@@ -10,6 +11,16 @@ ENTRY = {
     "category": "Alimentação",
     "reviewed": True,
 }
+
+
+def edit_body(row, **changes):
+    return {
+        **{key: row[key] for key in Entry.model_fields},
+        "request_id": str(uuid4()),
+        "expected_version": row["version"],
+        "reason": "Conferência do lançamento",
+        **changes,
+    }
 
 
 def test_cents_and_totals():
@@ -57,11 +68,16 @@ def test_create_review_month_and_delete(client, login):
     assert client.get("/api/dashboard?month=2026-12").json()["transactions"] == []
     assert (
         client.put(
-            "/api/transactions/" + row["id"], json={**ENTRY, "category": "Outros"}
+            "/api/transactions/" + row["id"], json=edit_body(row, category="Outros")
         ).json()["category"]
         == "Outros"
     )
-    assert client.delete("/api/transactions/" + row["id"]).status_code == 204
+    assert (
+        client.delete(
+            "/api/transactions/" + row["id"] + "?expected_version=2"
+        ).status_code
+        == 204
+    )
 
 
 def test_duplicate_import_atomic_validation(client, login):

@@ -36,3 +36,7 @@ O original e o texto completo não são gravados em disco, banco ou logs. O Redi
 Não há OCR, antivírus, garantia contra qualquer PDF malicioso nem suporte universal a faturas. O isolamento limita o impacto; scanners, atualização de dependências, corpus de emissores e revisão especializada continuam necessários antes da produção. O leitor é serial e tem fila curta; quando ocupado/indisponível retorna erro recuperável, sem persistir despesas. Para escala, substituir o socket local por fila e workers com identidade/rede restritas, preservando limites e isolamento.
 
 Os testes unitários usam apenas PDFs sintéticos. `tests/integration_pdf.py` exercita o leitor real isolado e a API. `tests/browser_pdf.cjs` valida prévia, edição e importação no navegador; a sessão sintética é removida com seus dados ao final. O CI salva capturas sem dados reais.
+
+## Origem após correção/exclusão — 0.11
+
+A marca da linha original permanece ligada ao registro, mesmo quando a prévia ou o lançamento forem corrigidos. Confirmar PDF com outros valores para uma origem já gravada recebe 409. Origens excluídas são ignoradas e contadas em removed, sem recriar registros; CSV/PDF compartilham marcas quando seus campos canônicos/contexto coincidem. Diferenças de texto e contexto ainda exigem conferência. Detalhes em LANCAMENTOS_E_IMPORTACAO.md.

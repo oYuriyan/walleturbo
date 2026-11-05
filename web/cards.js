@@ -3,6 +3,25 @@ let financeAccounts = [],
   financeCards = [],
   financeStatements = [];
 function clearFinance() {
+  for (const name of [
+    "setup",
+    "purchase",
+    "payment",
+    "reconcile",
+    "review-charge",
+  ]) {
+    const f = $("#" + name + "-form");
+    f.reset();
+    f.querySelectorAll('input[type="hidden"]').forEach((n) => (n.value = ""));
+    for (const key of ["account_id", "card_id"])
+      f.elements[key]?.replaceChildren();
+    const dialog = $("#" + name + "-dialog");
+    dialog.querySelector(".dialog-error")?.remove();
+    if (dialog.open) dialog.close();
+  }
+  if (typeof clearEntryForm === "function") clearEntryForm();
+  if (typeof clearImports === "function") clearImports();
+  if (typeof clearPdf === "function") clearPdf();
   if (typeof clearPaymentCorrection === "function") clearPaymentCorrection();
   if (typeof clearCorrection === "function") clearCorrection();
   if (typeof clearHistory === "function") clearHistory();
@@ -271,21 +290,30 @@ function renderFinance() {
         );
         if (s.status === "open") {
           const tools = el("div", undefined, "row-actions");
-          if (!demo && csrf && !c.imported)
+          if (!demo && csrf)
             tools.append(
-              button("Corrigir compra", () => openCorrection(c.operation_id)),
+              button(
+                c.imported ? "Corrigir importado" : "Corrigir compra",
+                () => openCorrection(c.operation_id),
+              ),
             );
           tools.append(
             button("Revisar categoria", () => {
               const f = $("#review-charge-form");
               f.elements.id.value = c.id;
+              f.elements.version.value = c.version || 1;
               f.elements.category.value = c.category;
               openDialog("#review-charge-dialog");
             }),
             button("Excluir compra", async () => {
+              const current = !demo
+                ? await api("/api/card-operations/" + c.operation_id)
+                : null;
               if (
                 !confirm(
-                  "Excluir esta compra e todas as suas parcelas? Todas as faturas afetadas precisam estar abertas.",
+                  current
+                    ? `Excluir “${current.description}” e suas ${current.installments} parcela(s), total ${money(current.amount_cents)}? Todas as faturas afetadas precisam estar abertas.`
+                    : "Excluir esta compra e todas as suas parcelas?",
                 )
               )
                 return;
@@ -304,7 +332,10 @@ function renderFinance() {
                     )),
                 );
               } else
-                await api("/api/card-operations/" + c.operation_id, "DELETE");
+                await api(
+                  `/api/card-operations/${c.operation_id}?expected_revision=${current.revision}`,
+                  "DELETE",
+                );
               await refresh();
             }),
           );
@@ -485,11 +516,33 @@ $("#purchase-form").onsubmit = (e) => {
     );
   });
 };
+$("#reload-charge-review").onclick = () =>
+  action(async () => {
+    const f = $("#review-charge-form"),
+      id = f.elements.id.value,
+      expectedCsrf = csrf;
+    await refresh();
+    if (!csrf || csrf !== expectedCsrf) return;
+    const row = financeStatements
+      .flatMap((s) => s.charges)
+      .find((c) => c.id === id);
+    if (!row)
+      throw Error(
+        "Lançamento não encontrado neste período. Atualize as faturas.",
+      );
+    f.elements.version.value = row.version;
+    f.elements.category.value = row.category;
+    $("#review-charge-dialog").querySelector(".dialog-error")?.remove();
+  });
 $("#review-charge-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
     const f = e.target,
-      body = { category: f.elements.category.value, reviewed: true };
+      body = {
+        category: f.elements.category.value,
+        reviewed: true,
+        expected_version: Number(f.elements.version.value),
+      };
     if (demo) {
       const s = financeStatements.find((s) =>
         s.charges.some((c) => c.id === f.elements.id.value),

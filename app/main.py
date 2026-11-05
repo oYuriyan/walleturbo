@@ -14,6 +14,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DBSession
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.config import settings
+from app.entries import router as entries_router
+from app.import_marks import reserve, result as import_result
 from app.audit import router as audit_router
 from app.operations import router as operations_router
 from app.payment_corrections import router as payment_corrections_router
@@ -26,6 +28,7 @@ from app.db import (
     Goal,
     FinancialAudit,
     RequestReceipt,
+    ImportMark,
     MonthPlan,
     OpeningBalance,
     Transfer,
@@ -44,7 +47,7 @@ from app.cards import (
     monthly_card_summary,
     require_active,
 )
-from app.domain import Entry, GoalInput, parse_csv, import_keys, summarize
+from app.domain import GoalInput, parse_csv, import_keys, summarize
 from app.security import (
     SecurityMiddleware,
     BodyLimitMiddleware,
@@ -75,7 +78,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.10.0",
+    version="0.11.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -97,6 +100,7 @@ app.include_router(balances_router)
 app.include_router(lifecycle_router)
 app.include_router(audit_router)
 app.include_router(operations_router)
+app.include_router(entries_router)
 app.include_router(payment_corrections_router)
 app.include_router(pdf_router)
 app.include_router(planning_router)
@@ -128,6 +132,8 @@ def ready(db: DBSession = Depends(db_session)):
         db.execute(select(Statement.id).limit(1))
         db.execute(select(Transaction.account_id).limit(1))
         db.execute(select(RequestReceipt.request_id).limit(1))
+        db.execute(select(ImportMark.resource_id).limit(1))
+        db.execute(select(Transaction.version, Transaction.request_id).limit(1))
         db.execute(select(Charge.correction_reason).limit(1))
         db.execute(
             select(StatementPayment.version, StatementPayment.correction_reason).limit(
@@ -201,10 +207,7 @@ def me(request: Request, user=Depends(current_user)):
 
 
 def serialized(row):
-    if isinstance(row, Goal):
-        return public(row)
-    fields = Entry.model_fields
-    return {"id": row.id, **{key: getattr(row, key) for key in fields}}
+    return public(row)
 
 
 @app.get("/api/dashboard")
@@ -271,46 +274,6 @@ def dashboard(
     }
 
 
-@app.post("/api/transactions", status_code=201)
-def create_entry(
-    body: Entry, user=Depends(current_user), db: DBSession = Depends(db_session)
-):
-    if body.account_id:
-        require_active(owned(db, Account, user, body.account_id, lock=True))
-    entry = Transaction(owner=user, **body.model_dump())
-    db.add(entry)
-    db.commit()
-    db.refresh(entry)
-    return serialized(entry)
-
-
-@app.put("/api/transactions/{entry_id}")
-def update_entry(
-    entry_id: str,
-    body: Entry,
-    user=Depends(current_user),
-    db: DBSession = Depends(db_session),
-):
-    entry = owned(db, Transaction, user, entry_id, lock=True)
-    if body.account_id:
-        account = owned(db, Account, user, body.account_id, lock=True)
-        if body.account_id != entry.account_id:
-            require_active(account)
-    for key, value in body.model_dump().items():
-        setattr(entry, key, value)
-    db.commit()
-    return serialized(entry)
-
-
-@app.delete("/api/transactions/{entry_id}", status_code=204)
-def delete_entry(
-    entry_id: str, user=Depends(current_user), db: DBSession = Depends(db_session)
-):
-    row = owned(db, Transaction, user, entry_id, lock=True)
-    db.delete(row)
-    db.commit()
-
-
 class CSVInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     content: str = Field(max_length=256000)
@@ -335,25 +298,36 @@ def confirm(
         raise HTTPException(422, str(exc)) from None
     if body.account_id:
         require_active(owned(db, Account, user, body.account_id, lock=True))
-    created = 0
-    for entry, key in zip(entries, import_keys(entries)):
-        entry.account_id = body.account_id
-        if body.account_id:
-            key = hashlib.sha256((body.account_id + "|" + key).encode()).hexdigest()
-        try:
-            with db.begin_nested():
-                db.add(Transaction(owner=user, import_key=key, **entry.model_dump()))
-                db.flush()
-            created += 1
-        except IntegrityError:
+    keys = import_keys(entries)
+    if body.account_id:
+        keys = [
+            hashlib.sha256((body.account_id + "|" + key).encode()).hexdigest()
+            for key in keys
+        ]
+    marks = reserve(db, user, "transaction", "", keys)
+    created = removed = 0
+    for entry, key in zip(entries, keys):
+        mark = marks[key]
+        if mark.removed:
+            removed += 1
+            continue
+        if mark.resource_id:
             if not db.scalar(
                 select(Transaction.id).where(
-                    Transaction.owner == user, Transaction.import_key == key
+                    Transaction.owner == user, Transaction.id == mark.resource_id
                 )
             ):
-                raise
+                mark.removed = True
+                removed += 1
+            continue
+        entry.account_id = body.account_id
+        row = Transaction(owner=user, import_key=key, **entry.model_dump())
+        db.add(row)
+        db.flush()
+        mark.resource_id = row.id
+        created += 1
     db.commit()
-    return {"created": created, "duplicates": len(entries) - created}
+    return import_result(len(entries), created, removed)
 
 
 @app.post("/api/goals", status_code=201)
@@ -382,6 +356,7 @@ def export(user=Depends(current_user), db: DBSession = Depends(db_session)):
                 for row in db.scalars(select(model).where(model.owner == user))
             ]
             for name, model in [
+                ("import_marks", ImportMark),
                 ("request_receipts", RequestReceipt),
                 ("financial_history", FinancialAudit),
                 ("accounts", Account),
@@ -410,6 +385,7 @@ def erase(
     db.execute(delete(Goal).where(Goal.owner == user))
     for model in (Card, Account, MonthPlan, Budget):
         db.execute(delete(model).where(model.owner == user))
+    db.execute(delete(ImportMark).where(ImportMark.owner == user))
     db.execute(delete(RequestReceipt).where(RequestReceipt.owner == user))
     db.execute(delete(FinancialAudit).where(FinancialAudit.owner == user))
     db.commit()

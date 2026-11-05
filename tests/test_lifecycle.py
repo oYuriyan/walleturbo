@@ -1,7 +1,7 @@
 from uuid import uuid4
 import pytest
 from tests.test_balances import account, opening, transfer, balances
-from tests.test_finance import ENTRY, CSV
+from tests.test_finance import ENTRY, CSV, edit_body
 from tests.test_cards import buy, statement
 
 
@@ -76,14 +76,14 @@ def test_archived_account_blocks_new_entries_imports_and_transfers_preserves_his
     assert (
         client.put(
             "/api/transactions/" + entry["id"],
-            json={**ENTRY, "account_id": a, "amount_cents": 1000},
+            json=edit_body(entry, account_id=a, amount_cents=1000),
         ).status_code
         == 200
     )
     other = client.post("/api/transactions", json={**ENTRY, "account_id": b}).json()
     assert (
         client.put(
-            "/api/transactions/" + other["id"], json={**ENTRY, "account_id": a}
+            "/api/transactions/" + other["id"], json=edit_body(other, account_id=a)
         ).status_code
         == 409
     )

@@ -20,6 +20,7 @@ from app.cards import (
     active_statement_card,
 )
 from app.db import Statement, Charge, db_session
+from app.import_marks import reserve, result as import_result
 from app.domain import suggest_category
 from app.pdf_protocol import MAX_PDF_BYTES, extract_isolated
 
@@ -240,17 +241,29 @@ def confirm(
         )
     # Ordem original preserva a contagem de ocorrências mesmo se o cliente reordenar a lista.
     entries = sorted(body.entries, key=lambda entry: entry.source_index)
-    created = 0
+    keys = [metadata["source_keys"][entry.source_index] for entry in entries]
+    marks = reserve(db, user, "card", statement_id, keys)
+    created = removed = 0
     for entry in entries:
         canonical = f"{entry.date}|{entry.description.casefold()}|{entry.amount_cents}|{entry.kind}"
         key = metadata["source_keys"][entry.source_index]
-        existing = db.scalar(
-            select(Charge).where(
-                Charge.owner == user,
-                Charge.statement_id == statement_id,
-                Charge.import_key == key,
+        mark = marks[key]
+        if mark.removed:
+            removed += 1
+            continue
+        existing = (
+            db.scalar(
+                select(Charge).where(
+                    Charge.owner == user, Charge.id == mark.resource_id
+                )
             )
+            if mark.resource_id
+            else None
         )
+        if mark.resource_id and existing is None:
+            mark.removed = True
+            removed += 1
+            continue
         if existing:
             previous = f"{existing.date}|{existing.description.casefold()}|{existing.amount_cents}|{existing.kind}"
             if previous != canonical:
@@ -259,20 +272,20 @@ def confirm(
                     "Uma linha já importada foi alterada. Corrija o lançamento existente antes de reimportar.",
                 )
             continue
-        db.add(
-            Charge(
-                owner=user,
-                statement_id=statement_id,
-                import_key=key,
-                payload_hash=key,
-                operation_id=str(uuid4()),
-                installment=1,
-                installments=1,
-                reviewed=True,
-                **entry.model_dump(exclude={"source_index"}),
-            )
+        row = Charge(
+            owner=user,
+            statement_id=statement_id,
+            import_key=key,
+            payload_hash=key,
+            operation_id=str(uuid4()),
+            installment=1,
+            installments=1,
+            reviewed=True,
+            **entry.model_dump(exclude={"source_index"}),
         )
+        db.add(row)
         db.flush()
+        mark.resource_id = row.id
         created += 1
     db.commit()
-    return {"created": created, "duplicates": len(entries) - created}
+    return import_result(len(entries), created, removed)

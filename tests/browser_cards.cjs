@@ -4,7 +4,9 @@ const fs = require("fs");
   const seed = JSON.parse(fs.readFileSync(0, "utf8"));
   const base = process.env.APP_URL || "http://localhost:8000";
   const browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
+    ...(process.env.CHROMIUM_PATH
+      ? { executablePath: process.env.CHROMIUM_PATH }
+      : {}),
     headless: true,
     args: ["--no-sandbox"],
   });

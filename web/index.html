@@ -46,7 +46,7 @@
         </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
         ><span class="version"
-          >Walleturbo · versão em desenvolvimento 0.10</span
+          >Walleturbo · versão em desenvolvimento 0.11</span
         >
       </div>
     </aside>
@@ -373,7 +373,10 @@
             ×
           </button>
         </div>
-        <input type="hidden" name="id" /><label
+        <input type="hidden" name="id" /><input
+          type="hidden"
+          name="version"
+        /><input type="hidden" name="request_id" /><label
           >Descrição<input
             name="description"
             required
@@ -388,7 +391,13 @@
               inputmode="decimal"
               pattern="[0-9]+([,.][0-9]{1,2})?"
               placeholder="0,00" /></label
-          ><label>Data<input name="date" type="date" required /></label
+          ><label
+            >Data<input
+              name="date"
+              type="date"
+              min="1900-01-01"
+              max="9998-12-31"
+              required /></label
           ><label
             >Tipo<select name="kind">
               <option value="expense">Despesa</option>
@@ -406,7 +415,17 @@
         <label class="checkbox"
           ><input type="checkbox" name="reviewed" checked /> Categoria revisada
           por mim</label
-        ><button class="button full" type="submit">Salvar lançamento</button>
+        >
+        <p id="entry-origin" class="subtle"></p>
+        <label id="entry-reason-label" hidden
+          >Motivo da correção<input name="reason" maxlength="160"
+        /></label>
+        <div class="actions">
+          <button class="button" type="submit">Salvar lançamento</button
+          ><button id="reload-entry" class="ghost" type="button" hidden>
+            Recarregar lançamento
+          </button>
+        </div>
       </form>
     </dialog>
 
@@ -478,7 +497,7 @@
     <dialog id="correction-dialog">
       <form id="correction-form">
         <div class="section-heading">
-          <h2>Corrigir compra completa</h2>
+          <h2 id="correction-title">Corrigir compra completa</h2>
           <button type="button" class="icon-button close" aria-label="Fechar">
             ×
           </button>
@@ -491,7 +510,7 @@
           type="hidden"
         />
         <p id="correction-card"></p>
-        <p>
+        <p id="correction-policy">
           Todas as parcelas serão recalculadas. O cartão original será mantido.
           Faturas afetadas precisam estar abertas; confira a prévia antes de
           confirmar.
@@ -732,9 +751,14 @@
             ×
           </button>
         </div>
-        <input name="id" type="hidden" /><label
-          >Categoria<select name="category"></select></label
+        <input name="id" type="hidden" /><input
+          name="version"
+          type="hidden"
+        /><label>Categoria<select name="category"></select></label
         ><button class="button full">Confirmar revisão</button>
+        <button id="reload-charge-review" class="ghost" type="button">
+          Recarregar categoria
+        </button>
       </form>
     </dialog>
     <dialog id="reconcile-dialog">

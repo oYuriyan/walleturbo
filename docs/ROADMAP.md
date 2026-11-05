@@ -164,4 +164,6 @@ Entrega 0.9: correção atômica de compras manuais com prévia, motivo e revis�
 
 Entrega 0.10: correção versionada de pagamentos com prévia de saldos/caixa, limite revalidado e remoção protegida, preservando IDs/UUIDs e histórico. Migração 009 e testes homologados no CI 42033442245, código 39c0a67 (PAGAMENTOS.md).
 
-Próxima entrega: FIN-04 para versão ampla de lançamentos diretos e correção de importados; FIN-05 para importações após exclusão, idempotência entre formatos e contrato financeiro amplo. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+Entrega 0.11: lançamentos versionados, correção de importados no mesmo contexto, revisão/exclusão de cartão protegidas e marcas de origem após exclusão. Migração 010 e testes; homologação pendente do CI (LANCAMENTOS_E_IMPORTACAO.md).
+
+Próxima entrega: concluir revisão do contrato financeiro/efeitos em faturas e cenários e a identidade de origem para documentos divergentes (FIN-04/05, IMP-02), preservando limites de crédito/créditos/recorrências da fase 2. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.

@@ -24,7 +24,8 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 ## Recursos desta entrega
 
 - Visão mensal de entradas, saídas, resultado e distribuição por categoria.
-- Lançamentos manuais, revisão, edição e exclusão; busca por descrição/categoria.
+- Lançamentos com UUIDs de envio, revisão/edição com motivo e versão, exclusão protegida e busca por descrição/categoria.
+- Marcas de origem preservam importações reconhecidas após correção/exclusão; correção de importados mantém fatura e parcela única.
 - CSV UTF-8 com prévia, limites de tamanho, validação integral e deduplicação.
 - PDF com texto selecionável: leitor isolado sem rede e candidatos editáveis, com revisão obrigatória. Formato limitado, sem OCR.
 - Sugestões de categoria por regras, sempre pendentes de revisão.
@@ -53,6 +54,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - [Histórico financeiro e revisão técnica](docs/AUDITORIA.md)
 - [Correções integrais e recibos de envio](docs/CORRECOES.md)
 - [Correção de pagamentos e impacto nos saldos](docs/PAGAMENTOS.md)
+- [Lançamentos versionados e origem de importação](docs/LANCAMENTOS_E_IMPORTACAO.md)
 - [Matriz de requisitos e testes](docs/MATRIZ.md)
 - [Leitura assistida de PDF e limites](docs/PDF.md)
 - [Migrações preservando dados](docs/MIGRACOES.md)

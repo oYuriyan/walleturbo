@@ -235,7 +235,11 @@ function transactionNode(t, editable) {
     del.onclick = () =>
       action(async () => {
         if (!confirm(`Excluir o lançamento “${t.description}”?`)) return;
-        if (!demo) await api("/api/transactions/" + t.id, "DELETE");
+        if (!demo)
+          await api(
+            `/api/transactions/${t.id}?expected_version=${t.version}`,
+            "DELETE",
+          );
         all = all.filter((x) => x.id !== t.id);
         await refresh();
         message("Lançamento excluído.");
@@ -352,10 +356,43 @@ function openDialog(id) {
   d.querySelector(".dialog-error")?.remove();
   d.showModal();
 }
+let entryGeneration = 0;
+function clearEntryForm() {
+  entryGeneration++;
+  const f = $("#entry-form");
+  f.reset();
+  f.querySelectorAll('input[type="hidden"]').forEach((n) => (n.value = ""));
+  f.querySelectorAll("input,select,button").forEach((n) => (n.disabled = true));
+  f.elements.account_id.replaceChildren();
+  $("#entry-origin").textContent = "";
+  if ($("#entry-dialog").open) $("#entry-dialog").close();
+}
+function clearImports() {
+  importVersion++;
+  csvContent = "";
+  importStatementId = null;
+  $("#csv-file").value = "";
+  $("#import-preview").replaceChildren();
+  $("#import-account").replaceChildren();
+  $("#confirm-import").disabled = true;
+  if ($("#import-dialog").open) $("#import-dialog").close();
+}
 function openEntry(t) {
   if (!allowed()) return;
   const f = $("#entry-form");
+  entryGeneration++;
   f.reset();
+  f.querySelectorAll("input,select,button").forEach(
+    (n) => (n.disabled = false),
+  );
+  f.elements.version.value = t?.version || 1;
+  f.elements.request_id.value = crypto.randomUUID();
+  $("#entry-reason-label").hidden = !t;
+  f.elements.reason.required = !!t;
+  $("#reload-entry").hidden = !t;
+  $("#entry-origin").textContent = t?.imported
+    ? "Importado: a origem será preservada. Reimportações não substituem esta correção."
+    : "";
   f.elements.id.value = t?.id || "";
   f.elements.description.value = t?.description || "";
   f.elements.amount.value = t
@@ -478,36 +515,71 @@ $("#demo").onclick = () => {
   seedFinance();
   action(refresh);
 };
+$("#reload-entry").onclick = () =>
+  action(async () => {
+    const id = $("#entry-form").elements.id.value,
+      generation = entryGeneration,
+      expectedCsrf = csrf;
+    if (demo) {
+      openEntry(all.find((t) => t.id === id));
+      return;
+    }
+    const [row] = await Promise.all([
+      api("/api/transactions/" + id),
+      loadFinance(),
+    ]);
+    if (generation !== entryGeneration || csrf !== expectedCsrf) return;
+    openEntry(row);
+  });
 $("#entry-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
     const f = e.target,
-      id = f.elements.id.value,
-      body = {
-        description: f.elements.description.value.trim(),
-        date: f.elements.date.value,
-        amount_cents: cents(f.elements.amount.value),
-        kind: f.elements.kind.value,
-        category: f.elements.category.value,
-        reviewed: f.elements.reviewed.checked,
-        account_id: f.elements.account_id.value || null,
-      };
-    if (body.amount_cents <= 0 || !body.description)
+      submit = f.querySelector('button[type="submit"]');
+    if (submit.disabled) return;
+    const generation = entryGeneration,
+      id = f.elements.id.value;
+    const body = {
+      description: f.elements.description.value.trim(),
+      date: f.elements.date.value,
+      amount_cents: cents(f.elements.amount.value),
+      kind: f.elements.kind.value,
+      category: f.elements.category.value,
+      reviewed: f.elements.reviewed.checked,
+      account_id: f.elements.account_id.value || null,
+      request_id: f.elements.request_id.value,
+    };
+    if (id)
+      Object.assign(body, {
+        expected_version: Number(f.elements.version.value),
+        reason: f.elements.reason.value.trim(),
+      });
+    if (!body.description || body.amount_cents <= 0)
       throw Error("Informe uma descrição e um valor maior que zero.");
-    if (demo) {
-      if (id) all = all.map((t) => (t.id === id ? { id, ...body } : t));
-      else all.push({ id: crypto.randomUUID(), ...body });
-    } else
-      await api(
-        "/api/transactions" + (id ? "/" + id : ""),
-        id ? "PUT" : "POST",
-        body,
+    submit.disabled = true;
+    try {
+      if (demo) {
+        const { expected_version, reason, request_id, ...values } = body;
+        if (id)
+          all = all.map((t) =>
+            t.id === id ? { id, ...values, version: (t.version || 1) + 1 } : t,
+          );
+        else all.push({ id: crypto.randomUUID(), ...values, version: 1 });
+      } else
+        await api(
+          "/api/transactions" + (id ? "/" + id : ""),
+          id ? "PUT" : "POST",
+          body,
+        );
+      if (generation !== entryGeneration) return;
+      $("#entry-dialog").close();
+      await refresh();
+      message(
+        "Lançamento salvo. Se necessário, altere o período para visualizar a data informada.",
       );
-    $("#entry-dialog").close();
-    await refresh();
-    message(
-      "Lançamento salvo. Se necessário, altere o período para visualizar a data informada.",
-    );
+    } finally {
+      if (generation === entryGeneration) submit.disabled = !csrf && !demo;
+    }
   });
 };
 $("#goal-form").onsubmit = (e) => {
@@ -689,7 +761,7 @@ $("#confirm-import").onclick = () =>
       $("#import-dialog").close();
       await refresh();
       message(
-        `${result.created} lançamentos importados; ${result.duplicates} duplicados ignorados. Revise as categorias.`,
+        `${result.created} lançamentos importados; ${result.duplicates} linhas já conhecidas ignoradas.${result.removed ? ` ${result.removed} excluídas anteriormente não foram recriadas.` : ""} Revise as categorias.`,
       );
     } finally {
       $("#confirm-import").disabled = false;

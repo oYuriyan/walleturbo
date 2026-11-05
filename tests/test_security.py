@@ -2,7 +2,7 @@ import json
 import time
 import pytest
 from app.security import COOKIE, session_key
-from tests.test_finance import ENTRY
+from tests.test_finance import ENTRY, edit_body
 
 
 def test_auth_required_and_no_dev_bypass(client):
@@ -28,8 +28,16 @@ def test_isolation_across_users(client, login):
     goal_id = client.post("/api/goals", json=goal).json()["id"]
     login("bob")
     assert client.get("/api/dashboard?month=2026-11").json()["transactions"] == []
-    assert client.put("/api/transactions/" + row["id"], json=ENTRY).status_code == 404
-    assert client.delete("/api/transactions/" + row["id"]).status_code == 404
+    assert (
+        client.put("/api/transactions/" + row["id"], json=edit_body(row)).status_code
+        == 404
+    )
+    assert (
+        client.delete(
+            "/api/transactions/" + row["id"] + "?expected_version=1"
+        ).status_code
+        == 404
+    )
     assert (
         client.put(
             "/api/goals/" + goal_id,

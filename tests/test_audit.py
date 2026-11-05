@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from app.db import Account, FinancialAudit, Transaction, db_session
 from app.main import app
-from tests.test_finance import ENTRY
+from tests.test_finance import ENTRY, edit_body
 from tests.test_balances import account, opening, transfer
 from tests.test_cards import buy, statement
 
@@ -18,10 +18,12 @@ def events(client, **params):
 def test_transaction_changes_and_deletion_keep_private_history(client, login):
     login()
     row = client.post("/api/transactions", json=ENTRY).json()
-    client.put("/api/transactions/" + row["id"], json={**ENTRY, "amount_cents": 2000})
-    # Mesmo conteúdo não produz mudança fictícia.
-    client.put("/api/transactions/" + row["id"], json={**ENTRY, "amount_cents": 2000})
-    client.delete("/api/transactions/" + row["id"])
+    change = edit_body(row, amount_cents=2000)
+    response = client.put("/api/transactions/" + row["id"], json=change)
+    assert response.status_code == 200, response.text
+    # Reenvio com o mesmo UUID não cria evento adicional.
+    client.put("/api/transactions/" + row["id"], json=change)
+    client.delete("/api/transactions/" + row["id"] + "?expected_version=2")
     data = events(client, entity="transaction", entity_id=row["id"])["items"]
     assert [e["action"] for e in data] == ["deleted", "updated", "created"]
     assert data[1]["before"]["amount_cents"] == 1234

@@ -8,7 +8,7 @@ O cartão original é mantido e deve estar ativo. Todas as faturas de origem e d
 
 O valor total é redistribuído em centavos, com o resto nas primeiras parcelas. Exemplo: R$ 100,01 em três parcelas a partir de novembro (R$ 33,34 / R$ 33,34 / R$ 33,33), corrigidos para R$ 200,03 em duas parcelas a partir de dezembro, deixam zero da operação em novembro, R$ 100,02 em dezembro e R$ 100,01 em janeiro. Sobreviventes mantêm seus IDs; parcelas excedentes são removidas e novas recebem IDs próprios. Categoria e revisão informadas aplicam-se a todas as parcelas. O motivo fica em `correction_reason` e no histórico. Novas faturas são criadas somente na confirmação, se necessárias. Faturas antigas vazias permanecem preservadas. Estorno exige uma única parcela. Não há cálculo de juros ou movimentação bancária.
 
-Linhas importadas por CSV/PDF continuam com revisão de categoria e exclusão conforme regras existentes; a correção integral delas permanece pendente para não invalidar silenciosamente sua deduplicação. Demonstração não simula essa nova operação. Correção de pagamentos passou a ser implementada na 0.10 (PAGAMENTOS.md). Troca de cartão, crédito entre faturas e versão ampla de lançamentos diretos continuam no roadmap.
+Na 0.11, linhas importadas por CSV/PDF podem ser corrigidas mantendo a fatura e a parcela única, com origem preservada (LANCAMENTOS_E_IMPORTACAO.md). Demonstração não simula essa nova operação. Correção de pagamentos passou a ser implementada na 0.10 (PAGAMENTOS.md). Troca de cartão, crédito entre faturas e versão ampla de lançamentos diretos continuam no roadmap.
 
 ## API e concorrência
 
@@ -28,7 +28,7 @@ Escritores com UUID bloqueiam recibo antes do cartão; em seguida faturas e cont
 
 Exclusão de compra manual e remoção de pagamento preservam seu UUID como cancelado. Reenvio posterior é recusado (409 quando o cadastro associado ainda existe), em vez de recriar o registro. Nova operação exige novo UUID. Exclusão repetida de um registro cujo recibo já está cancelado pode retornar 204 sem gerar novo evento financeiro. Uma tentativa malsucedida não consome o UUID: recibo e operação são revertidos juntos.
 
-Reenvio da criação de uma compra corrigida retorna suas parcelas atuais; não restaura os valores originais. O hash de criação continua correspondendo ao envio original. Recibos de correção permanecem separados. A proteção cobre compras manuais e pagamentos com UUID, incluindo cadastros existentes na migração. CSV/PDF após exclusão, lançamentos manuais sem UUID e idempotência entre formatos ainda dependem de FIN-05/IMP-02. O histórico não substitui esses controles.
+Reenvio da criação de uma compra corrigida retorna suas parcelas atuais; não restaura os valores originais. O hash de criação continua correspondendo ao envio original. Recibos de correção permanecem separados. A proteção cobre compras manuais e pagamentos com UUID, incluindo cadastros existentes na migração. A 0.11 acrescenta marcas para CSV/PDF após exclusão e UUIDs opcionais de lançamentos diretos. Identidade entre documentos/fontes divergentes ainda depende de FIN-05/IMP-02. O histórico não substitui esses controles.
 
 ## Migração, retenção e privacidade
 
@@ -41,3 +41,5 @@ Recibos permanecem durante a manutenção dos dados financeiros do titular, inte
 `test_corrections.py`: prévia sem escrita, centavos/IDs, redução/aumento de parcelas, versão obsoleta/retorno ao estado anterior, bloqueio de fatura de origem/destino conferida, isolamento, importados, arquivamento, UUID cancelado, expurgo e rollback parcial. `integration_cards.py`: correções concorrentes, exclusão versus reenvio, pagamentos removidos e UUID entre cartões. `integration_migrations.py`: dados legados, versões, recibos e cancelamentos auditados. `browser_corrections.cjs`: prévia mobile, confirmação, conflito/recarga, reenvio cancelado e limpeza na expiração. Aceite completo depende do CI do código correspondente, registrado em HOMOLOGACAO.md.
 
 **Homologação técnica aprovada:** [CI 41892139036](https://github.com/oYuriyan/walleturbo/actions/runs/41892139036), código `961b0e0`, com 116 testes em container, PostgreSQL/Redis, migração, concorrência e fluxo mobile. Captura inspecionada visualmente. Isso cobre os cenários declarados, sem concluir os itens de pagamentos/importações/produção ainda pendentes.
+
+Na 0.11, DELETE de operação exige expected_revision e revisão de categoria exige expected_version. A interface consulta a operação atual antes de pedir confirmação. Contratos e migração em LANCAMENTOS_E_IMPORTACAO.md.

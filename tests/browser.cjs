@@ -1,7 +1,9 @@
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 (async () => {
   const browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
+    ...(process.env.CHROMIUM_PATH
+      ? { executablePath: process.env.CHROMIUM_PATH }
+      : {}),
     headless: true,
     args: ["--no-sandbox"],
   });
@@ -29,6 +31,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     throw Error("Lançamento não encontrado");
   await page.getByRole("button", { name: "Revisar", exact: true }).click();
   await page.locator("#entry-form [name=amount]").fill("29,99");
+  await page
+    .locator("#entry-form [name=reason]")
+    .fill("Conferência da demonstração");
   await page.getByRole("button", { name: "Salvar lançamento" }).click();
   await page.getByRole("button", { name: "Minhas metas" }).click();
   await page.getByRole("button", { name: "Criar meta", exact: false }).click();

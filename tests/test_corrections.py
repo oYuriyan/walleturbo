@@ -1,6 +1,6 @@
 from uuid import uuid4
 import pytest
-from tests.test_cards import setup, buy, statement
+from tests.test_cards import setup, buy, statement, delete_operation
 
 
 def operation(client, body):
@@ -67,11 +67,15 @@ def test_grow_installments_then_stale_revision_and_aba_review(client, login):
     )
     change = correction(client, body)
     c = r.json()["charges"][0]
-    for category in ("Outros", "Compras"):
+    for index, category in enumerate(("Outros", "Compras")):
         assert (
             client.put(
                 "/api/card-charges/" + c["id"] + "/review",
-                json={"category": category, "reviewed": True},
+                json={
+                    "category": category,
+                    "reviewed": True,
+                    "expected_version": c["version"] + index,
+                },
             ).status_code
             == 200
         )
@@ -108,7 +112,7 @@ def test_delete_purchase_and_payment_keep_request_reservations_and_purge(client,
     a, card = setup(client, login)
     _, body = buy(client, card, installments=1)
     path = "/api/card-operations/" + body["request_id"]
-    assert client.delete(path).status_code == 204
+    assert delete_operation(client, path).status_code == 204
     assert client.post("/api/card-purchases", json=body).status_code == 409
     assert (
         client.post(
@@ -116,7 +120,7 @@ def test_delete_purchase_and_payment_keep_request_reservations_and_purge(client,
         ).status_code
         == 409
     )
-    assert client.delete(path).status_code == 204
+    assert delete_operation(client, path).status_code == 204
     new = {**body, "request_id": str(uuid4())}
     assert client.post("/api/card-purchases", json=new).status_code == 201
     s = statement(client)
@@ -184,7 +188,7 @@ def test_correction_ownership_imported_archived_and_refund_validation(client, lo
             "/api/card-operations/" + imported["operation_id"],
             json=correction(client, fake, installments=1),
         ).status_code
-        == 409
+        == 200
     )
     client.put(
         "/api/cards/" + card["id"],

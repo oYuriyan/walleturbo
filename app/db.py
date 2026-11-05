@@ -27,6 +27,10 @@ class Transaction(Base):
         String(36), primary_key=True, default=lambda: str(uuid4())
     )
     owner: Mapped[str] = mapped_column(String(128))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    __mapper_args__ = {"version_id_col": version}
+    request_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    correction_reason: Mapped[str | None] = mapped_column(String(160), nullable=True)
     date: Mapped[date] = mapped_column(Date)
     description: Mapped[str] = mapped_column(String(160))
     amount_cents: Mapped[int] = mapped_column(BigInteger)
@@ -36,6 +40,7 @@ class Transaction(Base):
     import_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     account_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     __table_args__ = (
+        UniqueConstraint("owner", "request_id"),
         ForeignKeyConstraint(
             ["owner", "account_id"], ["accounts.owner", "accounts.id"]
         ),
@@ -266,6 +271,18 @@ class Budget(Base):
     category: Mapped[str] = mapped_column(String(40), primary_key=True)
     amount_cents: Mapped[int] = mapped_column(BigInteger)
     __table_args__ = (CheckConstraint("amount_cents BETWEEN 1 AND 99999999999"),)
+
+
+class ImportMark(Base):
+    __tablename__ = "import_marks"
+    owner: Mapped[str] = mapped_column(String(128), primary_key=True)
+    scope: Mapped[str] = mapped_column(String(16), primary_key=True)
+    container_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    source_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    removed: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
 
 
 class RequestReceipt(Base):

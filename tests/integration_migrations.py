@@ -2,6 +2,7 @@
 
 import os
 import json
+from datetime import date
 import tempfile
 from pathlib import Path
 from uuid import uuid4
@@ -111,6 +112,16 @@ try:
                         "state": json.dumps(state),
                     },
                 )
+            conn.execute(
+                text(
+                    "UPDATE transactions SET import_key=repeat('d',64) WHERE id='preserved'"
+                )
+            )
+            conn.execute(
+                text(
+                    "INSERT INTO card_charges(id,owner,statement_id,date,description,amount_cents,kind,category,reviewed,operation_id,payload_hash,installment,installments,import_key) VALUES ('legacy-imported-charge','synthetic','legacy-statement','2026-11-01','Importado',2000,'expense','Outros',false,'55555555-5555-4555-8555-555555555555',repeat('c',64),1,1,repeat('c',64))"
+                )
+            )
         migrate.DIRECTORY = original
     migrate.migrate()
     migrate.migrate()
@@ -121,7 +132,7 @@ try:
             )
         ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 9
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 10
         )
     with test_engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
@@ -173,16 +184,34 @@ try:
         ).one() == (
             100,
             "legacy-account",
-            __import__("datetime").date(2026, 11, 2),
+            date(2026, 11, 2),
             1,
             None,
+        )
+    with test_engine.connect() as conn:
+        assert conn.execute(
+            text(
+                "SELECT version,request_id,correction_reason FROM transactions WHERE id='preserved'"
+            )
+        ).one() == (1, None, None)
+        marks = conn.execute(
+            text(
+                "SELECT scope,source_key,resource_id,removed FROM import_marks ORDER BY scope"
+            )
+        ).all()
+        assert len(marks) == 2 and {m.resource_id for m in marks} == {
+            "preserved",
+            "legacy-imported-charge",
+        }
+        assert {m.source_key for m in marks} == {"c" * 64, "d" * 64} and not any(
+            m.removed for m in marks
         )
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as tmp:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "010_test_failure.sql"
+        broken = migrate.DIRECTORY / "011_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -200,7 +229,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 9
+                == 10
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

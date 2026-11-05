@@ -163,10 +163,21 @@ const base = "http://localhost:8000";
       ).status(),
       201,
     );
+    const cancelledRevision = (
+      await (
+        await context.request.get(
+          base + "/api/card-operations/" + cancelled.request_id,
+        )
+      ).json()
+    ).revision;
     assert.equal(
       (
         await context.request.delete(
-          base + "/api/card-operations/" + cancelled.request_id,
+          base +
+            "/api/card-operations/" +
+            cancelled.request_id +
+            "?expected_revision=" +
+            cancelledRevision,
           { headers },
         )
       ).status(),

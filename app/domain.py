@@ -3,7 +3,7 @@ import hashlib
 import io
 import re
 from collections import defaultdict
-from datetime import date
+from datetime import date, date as CivilDate
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -24,7 +24,7 @@ CATEGORIES = (
 
 class Entry(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    date: date
+    date: CivilDate = Field(ge=CivilDate(1900, 1, 1), le=CivilDate(9998, 12, 31))
     description: str = Field(min_length=1, max_length=160)
     amount_cents: int = Field(strict=True, gt=0, le=99999999999)
     kind: Literal["income", "expense"] = "expense"

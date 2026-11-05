@@ -85,6 +85,17 @@ jobs:
           sleep 60
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_payment_corrections.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_payment_corrections.cjs
+      - name: Validar lançamentos e origens de importação
+        run: |
+          # Preservar as cotas por IP e importação com uma nova janela de teste.
+          sleep 60
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_entry_import_integrity.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_entry_import_integrity.cjs
+      - name: Validar cartões e demonstração com segurança de conteúdo
+        run: |
+          sleep 60
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_cards.cjs
+          PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser.cjs
       - name: Salvar evidências sintéticas de interface
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
@@ -99,6 +110,11 @@ jobs:
             artifacts/history-*.png
             artifacts/corrections-*.png
             artifacts/payment-corrections-*.png
+            artifacts/entry-import-*.png
+            artifacts/import-correction-*.png
+            artifacts/cards-*.png
+            artifacts/desktop.png
+            artifacts/mobile*.png
       - name: Encerrar serviços de teste
         if: always()
         run: |

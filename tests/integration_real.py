@@ -35,7 +35,15 @@ with httpx.Client(
             client.get("/api/dashboard?month=2026-11").json()["expense_cents"] == 1234
         )
         row = client.get("/api/privacy/export").json()["transactions"][0]
-        assert client.delete("/api/transactions/" + row["id"]).status_code == 204
+        assert (
+            client.delete(
+                "/api/transactions/"
+                + row["id"]
+                + "?expected_version="
+                + str(row["version"])
+            ).status_code
+            == 204
+        )
         assert client.get("/api/privacy/export").json()["transactions"] == []
         print(
             "PASS: PostgreSQL/Redis reais: readiness, sessão, importação, deduplicação, saldo, exportação e exclusão."

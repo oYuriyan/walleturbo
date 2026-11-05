@@ -1,7 +1,6 @@
 """Correção integral de compras manuais, com prévia, revisão e idempotência."""
 
 import hashlib
-import json
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import Field
@@ -17,6 +16,7 @@ from app.cards import (
     statement_for,
     statement_totals,
     split_cents,
+    operation_revision,
     shift_month,
 )
 from app.db import Card, Charge, Statement, db_session
@@ -66,9 +66,7 @@ def load(db, user, identifier):
         raise HTTPException(
             409, "Operação inconsistente entre cartões; revise antes de corrigir."
         )
-    revision = hashlib.sha256(
-        json.dumps([public(c) for c in charges], sort_keys=True, default=str).encode()
-    ).hexdigest()
+    revision = operation_revision(charges)
     return card, charges, statements, revision
 
 
@@ -78,7 +76,8 @@ def representation(card, charges, statements, revision):
         "id": first.operation_id,
         "revision": revision,
         "card_id": card.id,
-        "editable": all(c.import_key is None for c in charges),
+        "editable": all(c.import_key is None for c in charges) or len(charges) == 1,
+        "origin": "imported" if any(c.import_key for c in charges) else "manual",
         "first_month": statements[first.statement_id].month,
         "date": first.date,
         "description": first.description,
@@ -103,10 +102,14 @@ def prepare(db, user, identifier, body):
             409,
             "A correção mantém o cartão original. Para trocar, registre uma nova operação explicitamente.",
         )
-    if any(c.import_key is not None for c in charges):
+    if any(c.import_key is not None for c in charges) and (
+        len(charges) != 1
+        or body.installments != 1
+        or body.first_month != statements[charges[0].statement_id].month
+    ):
         raise HTTPException(
             409,
-            "Correção integral de linhas importadas ainda não disponível. A revisão de categoria permanece disponível.",
+            "Linha importada mantém a fatura original e uma única parcela. Registre outra operação explicitamente para outro contexto.",
         )
     require_active(card)
     old = {}

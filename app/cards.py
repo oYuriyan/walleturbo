@@ -2,6 +2,7 @@
 
 import calendar
 import hashlib
+import json
 from datetime import date
 from typing import Literal
 from uuid import UUID, uuid4
@@ -15,7 +16,8 @@ from app.db import Account, Card, Statement, Charge, StatementPayment, db_sessio
 from app.domain import CATEGORIES, parse_csv, import_keys
 from app.security import current_user
 from app.receipts import claim
-from app.db import RequestReceipt
+from app.db import RequestReceipt, Transaction
+from app.import_marks import reserve, remove as remove_import, result as import_result
 
 router = APIRouter(prefix="/api")
 MONTH_PATTERN = r"^(19\d{2}|[2-9]\d{3})-(0[1-9]|1[0-2])$"
@@ -65,6 +67,7 @@ class PurchaseInput(Input):
 
 
 class ReviewInput(Input):
+    expected_version: int = Field(strict=True, ge=1, le=2147483646)
     category: str
     reviewed: bool
 
@@ -112,11 +115,21 @@ def public(row):
     fields = {
         column.name: getattr(row, column.name)
         for column in row.__table__.columns
-        if column.name not in {"owner", "payload_hash", "import_key"}
+        if column.name not in {"owner", "payload_hash", "import_key", "source_key"}
     }
-    if isinstance(row, Charge):
+    if isinstance(row, (Charge, Transaction)):
         fields["imported"] = row.import_key is not None
     return fields
+
+
+def operation_revision(charges):
+    return hashlib.sha256(
+        json.dumps(
+            [public(c) for c in sorted(charges, key=lambda c: c.installment)],
+            sort_keys=True,
+            default=str,
+        ).encode()
+    ).hexdigest()
 
 
 def fingerprint(body):
@@ -345,6 +358,11 @@ def review(
     lock_statement(db, user, charge.statement_id)
     charge = owned(db, Charge, user, charge_id, lock=True)
     require_open(lock_statement(db, user, charge.statement_id))
+    if charge.version != body.expected_version:
+        raise HTTPException(
+            409,
+            "Lançamento de cartão alterado em outra sessão. Recarregue antes de revisar.",
+        )
     charge.category, charge.reviewed = body.category, body.reviewed
     db.commit()
     return public(charge)
@@ -352,7 +370,10 @@ def review(
 
 @router.delete("/card-operations/{operation_id}", status_code=204)
 def delete_operation(
-    operation_id: UUID, user=Depends(current_user), db: Session = Depends(db_session)
+    operation_id: UUID,
+    expected_revision: str = Query(pattern=r"^[a-f0-9]{64}$"),
+    user=Depends(current_user),
+    db: Session = Depends(db_session),
 ):
     charges = list(
         db.scalars(
@@ -384,9 +405,17 @@ def delete_operation(
             .execution_options(populate_existing=True)
         )
     )
+    if operation_revision(charges) != expected_revision:
+        raise HTTPException(
+            409, "Compra alterada em outra sessão. Atualize antes de excluir."
+        )
     for statement_id in sorted({c.statement_id for c in charges}):
         require_open(lock_statement(db, user, statement_id))
     for charge in charges:
+        if charge.import_key:
+            remove_import(
+                db, user, "card", charge.statement_id, charge.import_key, charge.id
+            )
         db.delete(charge)
     receipt.cancelled, receipt.resource_id = True, str(operation_id)
     db.commit()
@@ -555,32 +584,39 @@ def import_statement(
     require_open(statement)
     active_statement_card(db, user, statement)
     entries = csv_entries(body)
-    created = 0
-    for entry, key in zip(entries, import_keys(entries)):
-        if db.scalar(
-            select(Charge.id).where(
-                Charge.owner == user,
-                Charge.statement_id == statement.id,
-                Charge.import_key == key,
-            )
-        ):
+    keys = import_keys(entries)
+    marks = reserve(db, user, "card", statement.id, keys)
+    created = removed = 0
+    for entry, key in zip(entries, keys):
+        mark = marks[key]
+        if mark.removed:
+            removed += 1
             continue
-        db.add(
-            Charge(
-                owner=user,
-                statement_id=statement.id,
-                import_key=key,
-                operation_id=str(uuid4()),
-                payload_hash=key,
-                installment=1,
-                installments=1,
-                **entry.model_dump(exclude={"account_id"}),
-            )
+        if mark.resource_id:
+            if not db.scalar(
+                select(Charge.id).where(
+                    Charge.owner == user, Charge.id == mark.resource_id
+                )
+            ):
+                mark.removed = True
+                removed += 1
+            continue
+        row = Charge(
+            owner=user,
+            statement_id=statement.id,
+            import_key=key,
+            operation_id=str(uuid4()),
+            payload_hash=key,
+            installment=1,
+            installments=1,
+            **entry.model_dump(exclude={"account_id"}),
         )
+        db.add(row)
         db.flush()
+        mark.resource_id = row.id
         created += 1
     db.commit()
-    return {"created": created, "duplicates": len(entries) - created}
+    return import_result(len(entries), created, removed)
 
 
 def monthly_card_summary(db, user, month):

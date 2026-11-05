@@ -71,3 +71,11 @@ Excluir uma compra ou remover um pagamento mantém seu identificador de envio re
 Em **Contas e cartões**, escolha **Corrigir pagamento**. Revise conta, data, valor e data da consulta dos saldos; informe o motivo. **Conferir pagamento** mostra os saldos das contas afetadas, o pago/restante da fatura e as mudanças no caixa mensal. Sem referência, o saldo continua desconhecido. Só confirme após revisar. Isso corrige um registro local e não movimenta dinheiro no banco.
 
 Se outra sessão alterar o pagamento, use **Recarregar pagamento**. A remoção também recusa uma versão desatualizada; atualize a tela antes de tentar novamente. A fatura original permanece. Regras completas em [PAGAMENTOS.md](PAGAMENTOS.md).
+
+## Revisão segura e reimportação
+
+**Revisar lançamento** exige motivo e versão atual; em conflito, **Recarregar lançamento** busca os dados atuais. A exclusão recusa uma tela desatualizada. A interface identifica novos envios por UUID para evitar duplicação por reenvio.
+
+Reimportar linhas reconhecidas já excluídas informa quantas não foram recriadas. Use o mesmo contexto/fatura e a mesma seleção de conta da importação original. Para uma despesa realmente nova com dados iguais, registre explicitamente um lançamento/compra novo.
+
+Em fatura aberta, **Corrigir importado** permite revisar os dados mantendo fatura e parcela única. A origem permanece reservada; a reimportação não desfaz sua correção. A revisão de categoria também verifica a versão; use **Recarregar categoria** em conflito. Detalhes e limitações em [Lançamentos e importação](LANCAMENTOS_E_IMPORTACAO.md).

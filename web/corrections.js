@@ -20,7 +20,7 @@ async function openCorrection(id) {
   const data = await api("/api/card-operations/" + id);
   if (generation !== correctionGeneration || csrf !== expectedCsrf) return;
   if (!data.editable)
-    throw Error("Correção integral de importados ainda não disponível.");
+    throw Error("Operação importada inconsistente; revise seus vínculos.");
   const f = $("#correction-form");
   f.reset();
   f.querySelectorAll("input,select,button").forEach(
@@ -42,6 +42,16 @@ async function openCorrection(id) {
     .toFixed(2)
     .replace(".", ",");
   f.elements.reviewed.checked = data.reviewed;
+  f.elements.installments.readOnly = data.origin === "imported";
+  f.elements.first_month.readOnly = data.origin === "imported";
+  $("#correction-title").textContent =
+    data.origin === "imported"
+      ? "Corrigir lançamento importado"
+      : "Corrigir compra completa";
+  $("#correction-policy").textContent =
+    data.origin === "imported"
+      ? "A fatura original e uma única parcela serão mantidas. A origem permanece reservada para evitar reimportações."
+      : "Todas as parcelas serão recalculadas. O cartão original será mantido. Faturas afetadas precisam estar abertas; confira a prévia antes de confirmar.";
   f.elements.category.replaceChildren();
   for (const option of $("#category-options").options)
     if (option.value !== "Renda")

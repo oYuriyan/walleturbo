@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 0.11.0 — em desenvolvimento
+
+- Lançamentos diretos versionados com motivo, UUIDs de criação/correção e remoção protegida.
+- Marcas de origem sobrevivem à exclusão/correção, impedindo recriação de linhas conhecidas em CSV/PDF.
+- Correção de importados preserva fatura e parcela única; revisão de categoria e exclusão de compra exigem versão/revisão.
+- Migração 010 preserva dados e origens ativas legadas; exportação/expurgo abrangem marcas.
+- Limpeza de formulários/prévias ao perder sessão e roteiros adicionais de PostgreSQL, navegador, cartões e demonstração/XSS no CI.
+
 ## 0.10.0 — em desenvolvimento
 
 - Correção de conta, data e valor de pagamentos com motivo, prévia de saldos/caixa e limite revalidado na fatura.

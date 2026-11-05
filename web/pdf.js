@@ -2,6 +2,17 @@
 let pdfStatementId = null,
   pdfToken = null,
   pdfGeneration = 0;
+function clearPdf() {
+  pdfGeneration++;
+  pdfToken = null;
+  pdfStatementId = null;
+  $("#pdf-form").reset();
+  $("#pdf-file").value = "";
+  for (const id of ["#pdf-state", "#pdf-warnings", "#pdf-rows", "#pdf-totals"])
+    $(id).replaceChildren();
+  $("#pdf-confirm").disabled = true;
+  if ($("#pdf-dialog").open) $("#pdf-dialog").close();
+}
 function openPdf(statementId) {
   if (!allowed()) return;
   if (demo) {
@@ -204,7 +215,7 @@ $("#pdf-form").onsubmit = (e) => {
       $("#pdf-dialog").close();
       await refresh();
       message(
-        `${result.created} lançamento(s) importado(s); ${result.duplicates} duplicado(s) ignorado(s). Confira agora o total da fatura.`,
+        `${result.created} lançamento(s) importado(s); ${result.duplicates} linha(s) já conhecida(s) ignorada(s).${result.removed ? ` ${result.removed} excluída(s) anteriormente não foram recriadas.` : ""} Confira agora o total da fatura.`,
       );
     } finally {
       if ($("#pdf-dialog").open) updatePdfTotal();
