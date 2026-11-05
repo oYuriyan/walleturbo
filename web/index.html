@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Walleturbo · Seu dinheiro, com direção</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+    <script src="/assets/app.js" defer></script>
+    <script src="/assets/cards.js" defer></script>
+    <script src="/assets/pdf.js" defer></script>
+    <script src="/assets/planning.js" defer></script>
+    <script src="/assets/balances.js" defer></script>
+    <script src="/assets/lifecycle.js" defer></script>
+    <script src="/assets/history.js" defer></script>
+    <script src="/assets/corrections.js" defer></script>
+    <script src="/assets/payment-corrections.js" defer></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Walleturbo início"
+        ><span class="brand-mark">w</span> walleturbo<span class="brand-dot"
+          >.</span
+        ></a
+      ><span class="eyebrow">SEU ESPAÇO FINANCEIRO</span>
+      <nav aria-label="Navegação principal">
+        <button class="nav active" data-view="overview">
+          <span aria-hidden="true">◫</span> Visão geral</button
+        ><button class="nav" data-view="transactions">
+          <span aria-hidden="true">⇄</span> Movimentações</button
+        ><button class="nav" data-view="finance">
+          <span aria-hidden="true">▤</span> Contas e cartões</button
+        ><button class="nav" data-view="planning">
+          <span aria-hidden="true">▥</span> Planejamento</button
+        ><button class="nav" data-view="goals">
+          <span aria-hidden="true">◎</span> Minhas metas</button
+        ><button class="nav" data-view="privacy">
+          <span aria-hidden="true">◇</span> Privacidade
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="small-card">
+          <span class="spark">✧</span
+          ><strong>Pequenos hábitos.<br />Grandes planos.</strong>
+          <p>Um passo de cada vez para cuidar do seu amanhã.</p>
+        </div>
+        <button id="theme" class="nav">◐ <span>Alternar tema</span></button
+        ><span class="version"
+          >Walleturbo · versão em desenvolvimento 0.11</span
+        >
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <span>Organize hoje. Respire amanhã.</span>
+        <div>
+          <span id="mode" class="badge">Não conectado</span
+          ><a class="button small" href="/auth/login" id="login"
+            >Entrar com segurança ↑</a
+          ><button id="logout" class="ghost" hidden>Sair</button>
+        </div>
+      </header>
+      <section class="welcome">
+        <div>
+          <span class="eyebrow">MENOS RUÍDO, MAIS CLAREZA</span>
+          <h1>Seu dinheiro, com direção<span>.</span></h1>
+          <p>Entenda suas escolhas e abra espaço para o que importa.</p>
+        </div>
+        <label class="month-label"
+          >Período<input type="month" id="month" aria-label="Mês de referência"
+        /></label>
+      </section>
+      <div id="notice" class="notice">
+        <span
+          >Explore com dados fictícios. Para salvar seus dados, conecte sua
+          conta.</span
+        ><button id="demo" class="text-button">Explorar demonstração →</button>
+      </div>
+      <div id="status" role="status" aria-live="polite"></div>
+      <section id="overview" class="view">
+        <div class="summary-grid">
+          <article class="balance-card">
+            <div class="card-top">
+              <span>Resultado do mês</span><span>↑</span>
+            </div>
+            <strong id="balance">R$ 0,00</strong
+            ><span class="muted-light"
+              >Receitas menos despesas, incluindo parcelas a vencer</span
+            >
+            <div class="balance-bottom">
+              <span>Um olhar mais leve para suas finanças</span><span>✳</span>
+            </div>
+          </article>
+          <article class="metric">
+            <div class="icon-circle income">↓</div>
+            <span>Entradas</span><strong id="income">R$ 0,00</strong
+            ><small>Receitas no período</small>
+          </article>
+          <article class="metric">
+            <div class="icon-circle expense">↑</div>
+            <span>Despesas líquidas</span><strong id="expense">R$ 0,00</strong
+            ><small>Cartões pelo mês de vencimento</small>
+          </article>
+        </div>
+        <div class="notice">
+          <span id="cash-result">Movimentação de caixa: R$ 0,00</span
+          ><span id="card-result"
+            >Pagamentos de fatura não duplicam despesas.</span
+          >
+        </div>
+        <div class="content-grid">
+          <article class="panel">
+            <div class="section-heading">
+              <div>
+                <h2>Para onde seu dinheiro vai</h2>
+                <p>Gastos por categoria neste mês</p>
+              </div>
+              <span class="subtle">● BRL</span>
+            </div>
+            <div id="categories" class="categories"></div>
+          </article>
+          <article class="panel insights-panel">
+            <span class="eyebrow">UM OLHAR ATENTO</span>
+            <h2>Oportunidades de cuidado <span>✧</span></h2>
+            <p class="subtle">Sinais calculados a partir dos seus registros.</p>
+            <div id="insights"></div>
+            <div class="fine-print">
+              Análise por regras transparentes. IA e ofertas de parceiros ainda
+              não estão ativadas.
+            </div>
+          </article>
+        </div>
+        <div class="content-grid">
+          <article class="panel">
+            <div class="section-heading">
+              <div>
+                <h2>Últimas movimentações</h2>
+                <p>O cotidiano também conta</p>
+              </div>
+              <button class="text-button" data-view="transactions">
+                Ver todas ↑
+              </button>
+            </div>
+            <div id="recent"></div>
+          </article>
+          <article class="panel">
+            <div class="section-heading">
+              <div>
+                <h2>Planos que ganham forma</h2>
+                <p>Seu próximo passo começa aqui</p>
+              </div>
+              <button
+                class="icon-button"
+                data-action="new-goal"
+                aria-label="Criar meta"
+              >
+                +
+              </button>
+            </div>
+            <div id="goal-preview"></div>
+          </article>
+        </div>
+      </section>
+      <section id="transactions" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Movimentações</h2>
+            <p>Importe, revise e acompanhe cada lançamento.</p>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="import-button">↑ Importar CSV</button
+            ><button class="button" data-action="new-entry">
+              + Novo lançamento
+            </button>
+          </div>
+        </div>
+        <div class="panel">
+          <label class="search-label"
+            >Buscar lançamento<input
+              id="search"
+              type="search"
+              placeholder="Descrição ou categoria"
+          /></label>
+          <div id="transaction-list"></div>
+        </div>
+      </section>
+      <section id="finance" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Contas e cartões</h2>
+            <p>Das compras ao pagamento, sem contar o gasto duas vezes.</p>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="new-account">+ Conta</button
+            ><button class="ghost" id="new-card">+ Cartão</button
+            ><button class="button" id="new-purchase">
+              + Compra ou estorno
+            </button>
+          </div>
+        </div>
+        <div class="notice">
+          As faturas abaixo vencem no mês selecionado. Informe a primeira fatura
+          conforme o emissor; datas de fechamento não são presumidas.
+        </div>
+        <div id="account-list" class="account-list"></div>
+        <article class="panel balance-panel">
+          <div class="section-heading">
+            <h2>Saldos por conta</h2>
+            <button id="new-transfer" class="button" type="button" disabled>
+              Registrar transferência
+            </button>
+          </div>
+          <label
+            >Consultar até a data<input
+              id="balance-date"
+              type="date"
+              min="1900-01-01"
+              max="9998-12-31"
+              required
+          /></label>
+          <p id="balance-notice" role="status"></p>
+          <div id="balance-list" class="goals-grid"></div>
+          <h3>Transferências registradas</h3>
+          <p>
+            Movimentos entre suas contas, sem gerar receita ou despesa. Este
+            registro não movimenta dinheiro no banco.
+          </p>
+          <div id="transfer-list"></div>
+          <button id="more-transfers" class="ghost" type="button" hidden>
+            Carregar mais transferências
+          </button>
+        </article>
+        <div id="card-list" class="goals-grid"></div>
+        <h2 class="statement-heading">Faturas do período</h2>
+        <div id="statement-list"></div>
+        <article class="panel">
+          <div class="section-heading">
+            <h2>Histórico de alterações</h2>
+            <button id="refresh-history" class="ghost" type="button">
+              Consultar histórico
+            </button>
+          </div>
+          <p>
+            Criações, correções e exclusões registradas a partir da versão 0.8.
+            Inclui todos os meses. Atualize a consulta para ver novas
+            alterações.
+          </p>
+          <p id="history-notice" role="status"></p>
+          <div id="history-list"></div>
+          <button id="more-history" class="ghost" type="button" hidden>
+            Carregar mais alterações
+          </button>
+        </article>
+      </section>
+      <section id="planning" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Planejamento do mês</h2>
+            <p>
+              Defina limites, reveja recorrências e simule aportes para suas
+              metas
+            </p>
+          </div>
+        </div>
+        <p id="planning-notice" role="status"></p>
+        <div class="content-grid">
+          <article class="panel">
+            <h2>Seu cenário mensal</h2>
+            <form id="plan-form">
+              <label
+                >Renda de referência (R$, opcional)<input
+                  name="income"
+                  inputmode="decimal"
+                  pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+              ><label
+                >Margem que deseja preservar (R$)<input
+                  name="buffer"
+                  inputmode="decimal"
+                  required
+                  value="0"
+                  pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+              ><label class="checkbox"
+                ><input name="complete" type="checkbox" /> Conferi que as
+                receitas, despesas e faturas deste mês estão completas</label
+              ><button class="button" type="submit">Salvar cenário</button>
+            </form>
+          </article>
+          <article class="panel">
+            <h2>Limite por categoria</h2>
+            <form id="budget-form">
+              <label>Categoria<select name="category"></select></label
+              ><label
+                >Limite mensal (R$)<input
+                  name="amount"
+                  required
+                  inputmode="decimal"
+                  pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+              ><button class="button" type="submit">Salvar limite</button>
+            </form>
+            <p>
+              Os limites não reservam dinheiro e não alteram seus lançamentos
+            </p>
+          </article>
+        </div>
+        <article class="panel planning-panel">
+          <h2>Limites e gastos</h2>
+          <div id="budget-list"></div>
+        </article>
+        <article class="panel planning-panel">
+          <h2>Plano de aportes</h2>
+          <p id="capacity"></p>
+          <div id="planning-warnings"></div>
+          <div id="goal-plan-list"></div>
+        </article>
+        <article class="panel planning-panel">
+          <h2>Assinaturas para revisar</h2>
+          <p>
+            Recorrências observadas em pelo menos três meses, sem presumir falta
+            de uso
+          </p>
+          <div id="recurrence-list"></div>
+        </article>
+        <p id="planning-disclaimer" class="subtle"></p>
+      </section>
+      <section id="goals" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Minhas metas</h2>
+            <p>Transforme seus desejos em planos possíveis.</p>
+          </div>
+          <button class="button" data-action="new-goal">+ Criar meta</button>
+        </div>
+        <div id="goal-list" class="goals-grid"></div>
+      </section>
+      <section id="privacy" class="view" hidden>
+        <article class="panel privacy-panel">
+          <span class="eyebrow">CONTROLE TAMBÉM É LIBERDADE</span>
+          <h2>Seus dados, suas escolhas.</h2>
+          <p>
+            Guardamos descrições, valores e datas que você registra, além de um
+            identificador derivado da sua conta. Não solicitamos número completo
+            de cartão, CVV ou senha bancária.
+          </p>
+          <p>
+            Esta versão não envia suas informações a modelos de IA ou serviços
+            de ofertas. Os alertas são calculados por regras locais à aplicação.
+          </p>
+          <h3>Portabilidade</h3>
+          <p>
+            Exporte lançamentos, metas, contas, cartões, faturas e pagamentos em
+            JSON.
+          </p>
+          <button id="export" class="ghost">Baixar meus dados ↓</button>
+          <h3>Excluir dados financeiros</h3>
+          <p>
+            A exclusão remove todos os registros financeiros ativos. Não exclui
+            sua conta no provedor de identidade. Prazos de backups e política
+            legal precisam ser definidos antes do lançamento público.
+          </p>
+          <button id="erase" class="danger">Excluir meus dados</button>
+        </article>
+      </section>
+      <footer>
+        Feito para dar mais espaço à sua vida.
+        <span>Valores em reais · pt-BR</span>
+      </footer>
+    </main>
+    <dialog id="entry-dialog">
+      <form id="entry-form">
+        <div class="section-heading">
+          <h2 id="entry-title">Novo lançamento</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input type="hidden" name="id" /><input
+          type="hidden"
+          name="version"
+        /><input type="hidden" name="request_id" /><label
+          >Descrição<input
+            name="description"
+            required
+            maxlength="160"
+            placeholder="Ex.: Mercado da semana"
+        /></label>
+        <div class="form-grid">
+          <label
+            >Valor (R$)<input
+              name="amount"
+              required
+              inputmode="decimal"
+              pattern="[0-9]+([,.][0-9]{1,2})?"
+              placeholder="0,00" /></label
+          ><label
+            >Data<input
+              name="date"
+              type="date"
+              min="1900-01-01"
+              max="9998-12-31"
+              required /></label
+          ><label
+            >Tipo<select name="kind">
+              <option value="expense">Despesa</option>
+              <option value="income">Receita</option>
+            </select></label
+          ><label
+            >Categoria<select name="category" id="category-options"></select
+          ></label>
+        </div>
+        <label
+          >Conta (opcional)<select name="account_id" id="entry-account">
+            <option value="">Sem conta vinculada</option>
+          </select></label
+        >
+        <label class="checkbox"
+          ><input type="checkbox" name="reviewed" checked /> Categoria revisada
+          por mim</label
+        >
+        <p id="entry-origin" class="subtle"></p>
+        <label id="entry-reason-label" hidden
+          >Motivo da correção<input name="reason" maxlength="160"
+        /></label>
+        <div class="actions">
+          <button class="button" type="submit">Salvar lançamento</button
+          ><button id="reload-entry" class="ghost" type="button" hidden>
+            Recarregar lançamento
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="payment-correction-dialog">
+      <form id="payment-correction-form">
+        <div class="section-heading">
+          <h2>Corrigir registro de pagamento</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="payment_id" type="hidden" /><input
+          name="version"
+          type="hidden"
+        /><input name="request_id" type="hidden" />
+        <p id="payment-correction-context"></p>
+        <p>
+          A correção ajusta apenas o registro na aplicação. Não executa
+          pagamento, transferência ou devolução no banco. A fatura original será
+          mantida.
+        </p>
+        <label
+          >Conta de origem<select name="account_id" required></select
+        ></label>
+        <div class="form-grid">
+          <label
+            >Data do pagamento<input
+              name="date"
+              type="date"
+              min="1900-01-01"
+              max="9998-12-31"
+              required /></label
+          ><label
+            >Valor (R$)<input
+              name="amount"
+              inputmode="decimal"
+              required
+              pattern="[0-9]+([,.][0-9]{1,2})?"
+          /></label>
+        </div>
+        <label
+          >Consultar saldo até<input
+            name="as_of"
+            type="date"
+            min="1900-01-01"
+            max="9998-12-31"
+            required
+        /></label>
+        <label
+          >Motivo da correção<input name="reason" required maxlength="160"
+        /></label>
+        <div class="actions">
+          <button class="button" type="submit">Conferir pagamento</button
+          ><button id="reload-payment-correction" class="ghost" type="button">
+            Recarregar pagamento
+          </button>
+        </div>
+        <div id="payment-correction-effects" aria-live="polite"></div>
+        <button
+          id="confirm-payment-correction"
+          class="button full"
+          type="button"
+          disabled
+        >
+          Confirmar ajuste do registro
+        </button>
+      </form>
+    </dialog>
+    <dialog id="correction-dialog">
+      <form id="correction-form">
+        <div class="section-heading">
+          <h2 id="correction-title">Corrigir compra completa</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="operation_id" type="hidden" /><input
+          name="card_id"
+          type="hidden"
+        /><input name="request_id" type="hidden" /><input
+          name="revision"
+          type="hidden"
+        />
+        <p id="correction-card"></p>
+        <p id="correction-policy">
+          Todas as parcelas serão recalculadas. O cartão original será mantido.
+          Faturas afetadas precisam estar abertas; confira a prévia antes de
+          confirmar.
+        </p>
+        <label
+          >Descrição<input name="description" required maxlength="160"
+        /></label>
+        <div class="form-grid">
+          <label>Data da compra<input name="date" type="date" required /></label
+          ><label
+            >Primeira fatura<input name="first_month" type="month" required
+          /></label>
+        </div>
+        <div class="form-grid">
+          <label
+            >Valor total (R$)<input
+              name="amount"
+              inputmode="decimal"
+              required
+              pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+          ><label
+            >Parcelas<input
+              name="installments"
+              type="number"
+              min="1"
+              max="36"
+              required
+          /></label>
+        </div>
+        <div class="form-grid">
+          <label
+            >Tipo<select name="kind">
+              <option value="expense">Compra</option>
+              <option value="refund">Estorno</option>
+            </select></label
+          ><label>Categoria<select name="category"></select></label>
+        </div>
+        <label class="checkbox"
+          ><input name="reviewed" type="checkbox" />Categoria conferida para
+          todas as parcelas</label
+        >
+        <label
+          >Motivo da correção<input name="reason" required maxlength="160"
+        /></label>
+        <div class="actions">
+          <button class="button" type="submit">Conferir alterações</button
+          ><button id="reload-correction" class="ghost" type="button">
+            Recarregar compra
+          </button>
+        </div>
+        <div id="correction-effects" aria-live="polite"></div>
+        <button
+          id="confirm-correction"
+          class="button full"
+          type="button"
+          disabled
+        >
+          Confirmar correção
+        </button>
+      </form>
+    </dialog>
+    <dialog id="goal-dialog">
+      <form id="goal-form">
+        <div class="section-heading">
+          <h2>Planejar uma meta</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" /><input
+          name="version"
+          type="hidden"
+        /><label
+          >O que você quer conquistar?<input
+            name="name"
+            required
+            maxlength="100"
+            placeholder="Minha reserva de emergência"
+        /></label>
+        <div class="form-grid">
+          <label
+            >Objetivo (R$)<input
+              name="target"
+              required
+              inputmode="decimal"
+              pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+          ><label
+            >Já reservado (R$)<input
+              name="saved"
+              required
+              inputmode="decimal"
+              value="0"
+              pattern="[0-9]+([,.][0-9]{1,2})?"
+          /></label>
+        </div>
+        <label
+          >Data desejada<input name="deadline" type="date" required
+        /></label>
+        <label id="goal-archive-label" class="checkbox" hidden
+          ><input name="archived" type="checkbox" />Meta arquivada</label
+        >
+        <p>
+          Arquivar preserva os valores e retira a meta da simulação de aportes.
+          A reserva é informativa e não movimenta suas contas.
+        </p>
+        <div class="actions">
+          <button class="button" type="submit">Salvar meta</button
+          ><button id="reload-goal" class="ghost" type="button" hidden>
+            Recarregar meta
+          </button>
+        </div>
+        <button id="delete-goal" class="ghost" type="button" hidden>
+          Excluir meta arquivada
+        </button>
+        <p class="subtle">
+          A exclusão exige meta arquivada com reserva informada igual a zero.
+          Revise a reserva antes de zerá-la.
+        </p>
+      </form>
+    </dialog>
+    <dialog id="import-dialog">
+      <div class="section-heading">
+        <h2>Importar com cuidado</h2>
+        <button class="icon-button close" aria-label="Fechar">×</button>
+      </div>
+      <p>
+        CSV UTF-8, separado por ponto e vírgula. Até 500 linhas e 256 KB. Revise
+        a prévia antes de confirmar.
+      </p>
+      <a href="/assets/exemplo.csv" download class="text-button"
+        >Baixar modelo de CSV ↓</a
+      ><label
+        >Selecione o arquivo<input
+          type="file"
+          accept=".csv,text/csv"
+          id="csv-file"
+      /></label>
+      <p>
+        PDF, OFX e leitura de imagens serão adicionados em uma próxima etapa.
+      </p>
+      <label id="import-account-label"
+        >Conta de origem (opcional)<select id="import-account"></select
+      ></label>
+      <div id="import-preview"></div>
+      <button id="confirm-import" class="button full" disabled>
+        Confirmar importação
+      </button>
+    </dialog>
+    <dialog id="setup-dialog">
+      <form id="setup-form">
+        <div class="section-heading">
+          <h2 id="setup-title">Cadastrar conta</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="type" type="hidden" /><label
+          >Apelido<input
+            name="name"
+            required
+            maxlength="80"
+            placeholder="Ex.: Conta principal" /></label
+        ><label id="due-day-label"
+          >Dia do vencimento<input
+            name="due_day"
+            type="number"
+            min="1"
+            max="31"
+            value="10"
+        /></label>
+        <p>
+          Use somente um apelido. Não informe número completo do cartão, CVV,
+          senha ou dados de acesso bancário.
+        </p>
+        <button class="button full">Cadastrar</button>
+      </form>
+    </dialog>
+    <dialog id="purchase-dialog">
+      <form id="purchase-form">
+        <div class="section-heading">
+          <h2>Compra ou estorno no cartão</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="request_id" type="hidden" /><label
+          >Cartão<select name="card_id" required></select></label
+        ><label
+          >Descrição<input name="description" required maxlength="160"
+        /></label>
+        <div class="form-grid">
+          <label
+            >Valor total (R$)<input
+              name="amount"
+              required
+              inputmode="decimal"
+              pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+          ><label
+            >Quantidade de parcelas<input
+              name="installments"
+              type="number"
+              min="1"
+              max="36"
+              required
+              value="1" /></label
+          ><label
+            >Data da compra / crédito<input
+              name="date"
+              type="date"
+              required /></label
+          ><label
+            >Primeiro vencimento (mês)<input
+              name="first_month"
+              type="month"
+              required /></label
+          ><label
+            >Tipo<select name="kind">
+              <option value="expense">Compra / encargo</option>
+              <option value="refund">Estorno creditado</option>
+            </select></label
+          ><label>Categoria<select name="category"></select></label>
+        </div>
+        <p>
+          O valor total será dividido entre as parcelas, preservando cada
+          centavo. Estornos devem ser informados em uma única fatura.
+        </p>
+        <label class="checkbox"
+          ><input type="checkbox" name="reviewed" checked /> Categoria revisada
+          por mim</label
+        ><button class="button full">Registrar no cartão</button>
+      </form>
+    </dialog>
+    <dialog id="review-charge-dialog">
+      <form id="review-charge-form">
+        <div class="section-heading">
+          <h2>Revisar categoria</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" /><input
+          name="version"
+          type="hidden"
+        /><label>Categoria<select name="category"></select></label
+        ><button class="button full">Confirmar revisão</button>
+        <button id="reload-charge-review" class="ghost" type="button">
+          Recarregar categoria
+        </button>
+      </form>
+    </dialog>
+    <dialog id="reconcile-dialog">
+      <form id="reconcile-form">
+        <div class="section-heading">
+          <h2>Conferir fatura</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" />
+        <p>
+          Digite o total cobrado pelo emissor. Para concluir, as categorias
+          precisam estar revisadas e o total deve coincidir com os lançamentos.
+        </p>
+        <label
+          >Total da fatura (R$)<input
+            name="amount"
+            required
+            inputmode="decimal"
+            pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+        ><button class="button full">Conferir e fechar</button>
+      </form>
+    </dialog>
+    <dialog id="payment-dialog">
+      <form id="payment-form">
+        <div class="section-heading">
+          <h2>Registrar pagamento</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" /><input
+          name="request_id"
+          type="hidden"
+        /><label
+          >Conta de origem<select name="account_id" required></select></label
+        ><label
+          >Data do pagamento<input name="date" type="date" required /></label
+        ><label
+          >Valor pago (R$)<input
+            name="amount"
+            required
+            inputmode="decimal"
+            pattern="[0-9]+([,.][0-9]{1,2})?"
+        /></label>
+        <p>
+          Apenas registra um pagamento que você realizou. Não movimenta dinheiro
+          no banco e não cria uma segunda despesa.
+        </p>
+        <button class="button full">Salvar pagamento</button>
+      </form>
+    </dialog>
+    <dialog id="pdf-dialog">
+      <form id="pdf-form">
+        <div class="section-heading">
+          <h2>Revisar lançamentos do PDF</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <p>
+          Até 2 MB e 30 páginas, com texto selecionável. Esta versão reconhece
+          data completa, descrição e valor em reais na mesma linha. PDFs
+          escaneados, protegidos ou com conteúdo ativo não são aceitos.
+        </p>
+        <label
+          >Fatura em PDF<input
+            id="pdf-file"
+            type="file"
+            accept="application/pdf,.pdf"
+        /></label>
+        <p id="pdf-state" role="status" aria-live="polite"></p>
+        <div id="pdf-warnings"></div>
+        <div id="pdf-rows"></div>
+        <p id="pdf-totals"></p>
+        <label class="checkbox"
+          ><input id="pdf-reviewed" type="checkbox" required /> Revisei as
+          linhas selecionadas e conferi datas, descrições, valores e
+          estornos</label
+        >
+        <p>
+          A leitura pode omitir linhas. Após importar, confira o total da fatura
+          com o emissor. Cada linha entra somente nesta fatura; parcelas futuras
+          não são criadas a partir do PDF.
+        </p>
+        <button id="pdf-confirm" type="submit" class="button full" disabled>
+          Importar seleção revisada
+        </button>
+      </form>
+    </dialog>
+    <dialog id="lifecycle-dialog">
+      <form id="lifecycle-form">
+        <div class="section-heading">
+          <h2 id="lifecycle-title">Gerenciar cadastro</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" /><input
+          name="kind"
+          type="hidden"
+        /><input name="version" type="hidden" />
+        <label>Apelido<input name="name" maxlength="80" required /></label>
+        <label class="checkbox"
+          ><input name="archived" type="checkbox" />Arquivado</label
+        >
+        <p>
+          Arquivar mantém os saldos e o histórico e impede novas operações. Você
+          pode reativar depois. Faturas existentes continuam disponíveis para
+          revisão e pagamento.
+        </p>
+        <p>
+          O apelido atualizado aparecerá também nos registros anteriores.
+          Alterar vencimento exige uma revisão própria das faturas.
+        </p>
+        <div class="actions">
+          <button class="button" type="submit">Salvar cadastro</button
+          ><button id="reload-lifecycle" class="ghost" type="button">
+            Recarregar cadastro
+          </button>
+        </div>
+        <button id="delete-empty-entity" class="danger" type="button" hidden>
+          Excluir cadastro vazio
+        </button>
+        <p id="lifecycle-delete-note" class="subtle">
+          A exclusão exige cadastro arquivado e sem registros vinculados. Se
+          houver histórico, mantenha-o arquivado.
+        </p>
+      </form>
+    </dialog>
+    <dialog id="opening-dialog">
+      <form id="opening-form">
+        <div class="section-heading">
+          <h2 id="opening-title">Referência de saldo</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <p>
+          Informe o saldo no início da data. Os movimentos desse dia serão
+          somados; os anteriores ficam apenas no histórico. Corrigir esta
+          referência recalcula as consultas, preservando as revisões anteriores.
+        </p>
+        <input name="account_id" type="hidden" /><input
+          name="request_id"
+          type="hidden"
+        /><input name="expected_version" type="hidden" />
+        <label
+          >Data de referência<input
+            name="date"
+            type="date"
+            min="1900-01-01"
+            max="9998-12-31"
+            required
+        /></label>
+        <label
+          >Saldo inicial (R$)<input
+            name="amount"
+            type="text"
+            inputmode="text"
+            placeholder="Ex.: -120,50 ou 1000,00"
+            required
+        /></label>
+        <label
+          >Motivo da referência ou correção<input
+            name="reason"
+            maxlength="160"
+            required
+        /></label>
+        <button class="button full" type="submit">Salvar referência</button>
+      </form>
+    </dialog>
+    <dialog id="transfer-dialog">
+      <form id="transfer-form">
+        <div class="section-heading">
+          <h2>Registrar transferência</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="request_id" type="hidden" />
+        <label
+          >Conta de origem<select name="source_account_id" required></select
+        ></label>
+        <label
+          >Conta de destino<select
+            name="destination_account_id"
+            required
+          ></select
+        ></label>
+        <label
+          >Data realizada<input
+            name="date"
+            type="date"
+            min="1900-01-01"
+            max="9998-12-31"
+            required
+        /></label>
+        <label
+          >Valor (R$)<input name="amount" inputmode="decimal" required
+        /></label>
+        <label
+          >Descrição<input name="description" maxlength="160" required
+        /></label>
+        <p>
+          Registre apenas a movimentação realizada. Taxas devem ser lançadas
+          separadamente como despesa. O saldo calculado pode ficar negativo.
+        </p>
+        <button class="button full" type="submit">Salvar transferência</button>
+      </form>
+    </dialog>
+    <dialog id="reverse-transfer-dialog">
+      <form id="reverse-transfer-form">
+        <div class="section-heading">
+          <h2>Reverter transferência</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" />
+        <p>
+          A transferência será preservada e os valores retornarão às contas na
+          data informada. Para corrigir um registro que não ocorreu, use a data
+          original.
+        </p>
+        <label
+          >Data da reversão<input
+            name="date"
+            type="date"
+            max="9998-12-31"
+            required
+        /></label>
+        <button class="button full" type="submit">Confirmar reversão</button>
+      </form>
+    </dialog>
+    <dialog id="delete-dialog">
+      <form id="delete-form">
+        <h2>Excluir seus dados financeiros?</h2>
+        <p>
+          Essa ação remove todos os seus registros financeiros. Digite EXCLUIR
+          para confirmar.
+        </p>
+        <label
+          >Confirmação<input
+            name="confirmation"
+            pattern="EXCLUIR"
+            required
+            autocomplete="off"
+        /></label>
+        <div class="actions">
+          <button class="ghost close" type="button">Cancelar</button
+          ><button class="danger" type="submit">Excluir definitivamente</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
