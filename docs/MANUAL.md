@@ -65,3 +65,9 @@ Em **Contas e cartões**, use **Consultar histórico** para ver criações, alte
 Em uma fatura aberta, escolha **Corrigir compra** em uma compra manual. Todos os meses da operação serão considerados. Corrija os campos, informe o motivo e selecione **Conferir alterações**. Revise os totais por fatura antes de **Confirmar correção**. Se outra sessão mudar a compra, use **Recarregar compra** e confira novamente. Cartão arquivado precisa ser reativado; faturas conferidas precisam de revisão/reabertura explícita. A correção integral de linhas importadas ainda não está disponível.
 
 Excluir uma compra ou remover um pagamento mantém seu identificador de envio reservado. Um reenvio antigo não recria o registro. Para uma operação nova, use um novo cadastro pelo formulário. Consulte [CORRECOES.md](CORRECOES.md).
+
+## Corrigir um registro de pagamento
+
+Em **Contas e cartões**, escolha **Corrigir pagamento**. Revise conta, data, valor e data da consulta dos saldos; informe o motivo. **Conferir pagamento** mostra os saldos das contas afetadas, o pago/restante da fatura e as mudanças no caixa mensal. Sem referência, o saldo continua desconhecido. Só confirme após revisar. Isso corrige um registro local e não movimenta dinheiro no banco.
+
+Se outra sessão alterar o pagamento, use **Recarregar pagamento**. A remoção também recusa uma versão desatualizada; atualize a tela antes de tentar novamente. A fatura original permanece. Regras completas em [PAGAMENTOS.md](PAGAMENTOS.md).

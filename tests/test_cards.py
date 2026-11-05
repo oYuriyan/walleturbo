@@ -111,7 +111,12 @@ def test_reconciliation_and_payment_do_not_double_expenses(client, login):
     assert statement(client)["remaining_cents"] == 4000
     assert client.post(f"/api/statements/{s['id']}/reopen").status_code == 409
     assert (
-        client.delete("/api/statement-payments/" + response.json()["id"]).status_code
+        client.delete(
+            "/api/statement-payments/"
+            + response.json()["id"]
+            + "?expected_version="
+            + str(response.json()["version"])
+        ).status_code
         == 204
     )
     assert client.post(f"/api/statements/{s['id']}/reopen").status_code == 200
@@ -314,7 +319,15 @@ def test_all_statement_routes_enforce_owner(client, login):
         ).status_code
         == 404
     )
-    assert client.delete("/api/statement-payments/" + p["id"]).status_code == 404
+    assert (
+        client.delete(
+            "/api/statement-payments/"
+            + p["id"]
+            + "?expected_version="
+            + str(p["version"])
+        ).status_code
+        == 404
+    )
     assert (
         client.delete("/api/card-operations/" + charge["operation_id"]).status_code
         == 404

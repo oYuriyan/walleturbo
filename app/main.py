@@ -16,6 +16,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.config import settings
 from app.audit import router as audit_router
 from app.operations import router as operations_router
+from app.payment_corrections import router as payment_corrections_router
 from app.lifecycle import router as lifecycle_router
 from app.balances import router as balances_router
 from app.planning import router as planning_router
@@ -74,7 +75,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.9.0",
+    version="0.10.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -96,6 +97,7 @@ app.include_router(balances_router)
 app.include_router(lifecycle_router)
 app.include_router(audit_router)
 app.include_router(operations_router)
+app.include_router(payment_corrections_router)
 app.include_router(pdf_router)
 app.include_router(planning_router)
 
@@ -127,6 +129,11 @@ def ready(db: DBSession = Depends(db_session)):
         db.execute(select(Transaction.account_id).limit(1))
         db.execute(select(RequestReceipt.request_id).limit(1))
         db.execute(select(Charge.correction_reason).limit(1))
+        db.execute(
+            select(StatementPayment.version, StatementPayment.correction_reason).limit(
+                1
+            )
+        )
         db.execute(select(FinancialAudit.id).limit(1))
         db.execute(select(Goal.archived, Goal.version).limit(1))
         db.execute(select(Account.archived, Account.version).limit(1))

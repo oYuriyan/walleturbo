@@ -151,7 +151,12 @@ def test_card_only_payment_affects_account_and_reversal_restores_it(client, logi
     )
     assert payment.status_code == 201
     assert balances(client)["total_cents"] == 7000
-    client.delete("/api/statement-payments/" + payment.json()["id"])
+    client.delete(
+        "/api/statement-payments/"
+        + payment.json()["id"]
+        + "?expected_version="
+        + str(payment.json()["version"])
+    )
     assert balances(client)["total_cents"] == 10000
 
 

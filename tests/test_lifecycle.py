@@ -165,7 +165,15 @@ def test_archived_card_can_settle_existing_bills_but_not_create_new_charges(
     assert (
         client.delete(f"/api/cards/{card['id']}?expected_version=1").status_code == 409
     )
-    assert client.delete("/api/statement-payments/" + r.json()["id"]).status_code == 204
+    assert (
+        client.delete(
+            "/api/statement-payments/"
+            + r.json()["id"]
+            + "?expected_version="
+            + str(r.json()["version"])
+        ).status_code
+        == 204
+    )
     assert client.post(f"/api/statements/{bill['id']}/reopen").status_code == 200
 
 

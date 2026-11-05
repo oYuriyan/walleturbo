@@ -98,7 +98,12 @@ with httpx.Client(
         winner = next(r for r in payments if r.status_code == 201)
         payment_body = json.loads(winner.request.content)
         assert (
-            client.delete("/api/statement-payments/" + winner.json()["id"]).status_code
+            client.delete(
+                "/api/statement-payments/"
+                + winner.json()["id"]
+                + "?expected_version="
+                + str(winner.json()["version"])
+            ).status_code
             == 204
         )
         assert (

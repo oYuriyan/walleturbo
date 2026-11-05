@@ -8,7 +8,7 @@ O cartão original é mantido e deve estar ativo. Todas as faturas de origem e d
 
 O valor total é redistribuído em centavos, com o resto nas primeiras parcelas. Exemplo: R$ 100,01 em três parcelas a partir de novembro (R$ 33,34 / R$ 33,34 / R$ 33,33), corrigidos para R$ 200,03 em duas parcelas a partir de dezembro, deixam zero da operação em novembro, R$ 100,02 em dezembro e R$ 100,01 em janeiro. Sobreviventes mantêm seus IDs; parcelas excedentes são removidas e novas recebem IDs próprios. Categoria e revisão informadas aplicam-se a todas as parcelas. O motivo fica em `correction_reason` e no histórico. Novas faturas são criadas somente na confirmação, se necessárias. Faturas antigas vazias permanecem preservadas. Estorno exige uma única parcela. Não há cálculo de juros ou movimentação bancária.
 
-Linhas importadas por CSV/PDF continuam com revisão de categoria e exclusão conforme regras existentes; a correção integral delas permanece pendente para não invalidar silenciosamente sua deduplicação. Demonstração não simula essa nova operação. Edição direta de pagamento, troca de cartão, crédito entre faturas e versão ampla de lançamentos/pagamentos continuam no roadmap.
+Linhas importadas por CSV/PDF continuam com revisão de categoria e exclusão conforme regras existentes; a correção integral delas permanece pendente para não invalidar silenciosamente sua deduplicação. Demonstração não simula essa nova operação. Correção de pagamentos passou a ser implementada na 0.10 (PAGAMENTOS.md). Troca de cartão, crédito entre faturas e versão ampla de lançamentos diretos continuam no roadmap.
 
 ## API e concorrência
 

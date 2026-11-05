@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 0.10.0 — em desenvolvimento
+
+- Correção de conta, data e valor de pagamentos com motivo, prévia de saldos/caixa e limite revalidado na fatura.
+- Versão por pagamento evita sobreposição e remoção desatualizada; DELETE passa a exigir expected_version.
+- Recibos de correção preservam a idempotência; IDs/UUIDs de criação e histórico mantidos.
+- Migração 009 preserva pagamentos legados; testes de saldo desconhecido, referência temporal, concorrência e interface mobile.
+- Histórico visual apresenta vínculos às contas; exportação/expurgo abrangem os novos dados. Limites em PAGAMENTOS.md.
+
 ## 0.9.0 — em desenvolvimento
 
 - Correção integral de compras manuais com prévia dos totais por mês, motivo e versão contra sobreposição entre sessões.

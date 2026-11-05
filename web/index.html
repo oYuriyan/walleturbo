@@ -14,6 +14,7 @@
     <script src="/assets/lifecycle.js" defer></script>
     <script src="/assets/history.js" defer></script>
     <script src="/assets/corrections.js" defer></script>
+    <script src="/assets/payment-corrections.js" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -44,7 +45,9 @@
           <p>Um passo de cada vez para cuidar do seu amanhã.</p>
         </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
-        ><span class="version">Walleturbo · versão em desenvolvimento 0.9</span>
+        ><span class="version"
+          >Walleturbo · versão em desenvolvimento 0.10</span
+        >
       </div>
     </aside>
     <main>
@@ -407,6 +410,71 @@
       </form>
     </dialog>
 
+    <dialog id="payment-correction-dialog">
+      <form id="payment-correction-form">
+        <div class="section-heading">
+          <h2>Corrigir registro de pagamento</h2>
+          <button type="button" class="icon-button close" aria-label="Fechar">
+            ×
+          </button>
+        </div>
+        <input name="payment_id" type="hidden" /><input
+          name="version"
+          type="hidden"
+        /><input name="request_id" type="hidden" />
+        <p id="payment-correction-context"></p>
+        <p>
+          A correção ajusta apenas o registro na aplicação. Não executa
+          pagamento, transferência ou devolução no banco. A fatura original será
+          mantida.
+        </p>
+        <label
+          >Conta de origem<select name="account_id" required></select
+        ></label>
+        <div class="form-grid">
+          <label
+            >Data do pagamento<input
+              name="date"
+              type="date"
+              min="1900-01-01"
+              max="9998-12-31"
+              required /></label
+          ><label
+            >Valor (R$)<input
+              name="amount"
+              inputmode="decimal"
+              required
+              pattern="[0-9]+([,.][0-9]{1,2})?"
+          /></label>
+        </div>
+        <label
+          >Consultar saldo até<input
+            name="as_of"
+            type="date"
+            min="1900-01-01"
+            max="9998-12-31"
+            required
+        /></label>
+        <label
+          >Motivo da correção<input name="reason" required maxlength="160"
+        /></label>
+        <div class="actions">
+          <button class="button" type="submit">Conferir pagamento</button
+          ><button id="reload-payment-correction" class="ghost" type="button">
+            Recarregar pagamento
+          </button>
+        </div>
+        <div id="payment-correction-effects" aria-live="polite"></div>
+        <button
+          id="confirm-payment-correction"
+          class="button full"
+          type="button"
+          disabled
+        >
+          Confirmar ajuste do registro
+        </button>
+      </form>
+    </dialog>
     <dialog id="correction-dialog">
       <form id="correction-form">
         <div class="section-heading">

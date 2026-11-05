@@ -486,7 +486,10 @@ def pay(
 
 @router.delete("/statement-payments/{payment_id}", status_code=204)
 def reverse_payment(
-    payment_id: str, user=Depends(current_user), db: Session = Depends(db_session)
+    payment_id: str,
+    expected_version: int = Query(ge=1, le=2147483646),
+    user=Depends(current_user),
+    db: Session = Depends(db_session),
 ):
     payment = db.scalar(
         select(StatementPayment).where(
@@ -506,7 +509,11 @@ def reverse_payment(
         raise HTTPException(404, "Registro não encontrado")
     receipt = claim(db, user, "payment", payment.request_id, payment.payload_hash)
     lock_statement(db, user, payment.statement_id)
-    db.refresh(payment)
+    payment = owned(db, StatementPayment, user, payment_id, lock=True)
+    if payment.version != expected_version:
+        raise HTTPException(
+            409, "Pagamento alterado em outra sessão. Atualize antes de remover."
+        )
     db.delete(payment)
     receipt.cancelled = True
     db.commit()

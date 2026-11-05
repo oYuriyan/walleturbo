@@ -34,6 +34,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - Visões separadas de resultado mensal e movimentação líquida de caixa; saldos por conta com referência datada e transferências com reversão.
 - Contas/cartões com edição versionada e arquivamento preservando histórico.
 - Correção integral de compras manuais com prévia dos totais mensais e recibos contra recriação por reenvio após exclusão de compra/pagamento.
+- Correção versionada de pagamentos com prévia de saldos/caixa, motivo e remoção protegida contra versão desatualizada.
 - Histórico privado de alterações financeiras, consulta paginada e exportação/expurgo.
 - Limites por categoria, cenário mensal e simulação conservadora de aportes; recorrências de assinaturas com evidências.
 - Exportação JSON e exclusão dos dados financeiros ativos.
@@ -51,6 +52,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - [Ciclo de vida dos cadastros e metas](docs/CADASTROS.md)
 - [Histórico financeiro e revisão técnica](docs/AUDITORIA.md)
 - [Correções integrais e recibos de envio](docs/CORRECOES.md)
+- [Correção de pagamentos e impacto nos saldos](docs/PAGAMENTOS.md)
 - [Matriz de requisitos e testes](docs/MATRIZ.md)
 - [Leitura assistida de PDF e limites](docs/PDF.md)
 - [Migrações preservando dados](docs/MIGRACOES.md)

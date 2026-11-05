@@ -223,6 +223,9 @@ class StatementPayment(Base):
     account_id: Mapped[str] = mapped_column(String(36))
     date: Mapped[date] = mapped_column(Date)
     amount_cents: Mapped[int] = mapped_column(BigInteger)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    __mapper_args__ = {"version_id_col": version}
+    correction_reason: Mapped[str | None] = mapped_column(String(160), nullable=True)
     request_id: Mapped[str] = mapped_column(String(36))
     payload_hash: Mapped[str] = mapped_column(String(64))
     __table_args__ = (

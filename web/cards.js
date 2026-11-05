@@ -3,6 +3,7 @@ let financeAccounts = [],
   financeCards = [],
   financeStatements = [];
 function clearFinance() {
+  if (typeof clearPaymentCorrection === "function") clearPaymentCorrection();
   if (typeof clearCorrection === "function") clearCorrection();
   if (typeof clearHistory === "function") clearHistory();
   if (typeof clearGoalForm === "function") clearGoalForm();
@@ -334,12 +335,24 @@ function renderFinance() {
                 return;
               if (demo)
                 raw.payments = raw.payments.filter((x) => x.id !== p.id);
-              else await api("/api/statement-payments/" + p.id, "DELETE");
+              else
+                await api(
+                  `/api/statement-payments/${p.id}?expected_version=${p.version}`,
+                  "DELETE",
+                );
               await refresh();
             },
             "text-button",
           ),
         );
+        if (!demo && csrf)
+          row.append(
+            button(
+              "Corrigir pagamento",
+              () => openPaymentCorrection(p.id),
+              "text-button",
+            ),
+          );
         panel.append(row);
       });
       statements.append(panel);

@@ -34,6 +34,7 @@ jobs:
           node --check web/lifecycle.js
           node --check web/history.js
           node --check web/corrections.js
+          node --check web/payment-corrections.js
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
@@ -78,6 +79,12 @@ jobs:
       - name: Validar correção integral de compras no navegador
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_corrections.cjs
+      - name: Validar correção de pagamentos no PostgreSQL e navegador
+        run: |
+          # Nova janela de cotas por IP, sem desabilitar os limites da aplicação.
+          sleep 60
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_payment_corrections.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_payment_corrections.cjs
       - name: Salvar evidências sintéticas de interface
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
         with:
@@ -91,6 +98,7 @@ jobs:
             artifacts/goals-*.png
             artifacts/history-*.png
             artifacts/corrections-*.png
+            artifacts/payment-corrections-*.png
       - name: Encerrar serviços de teste
         if: always()
         run: |

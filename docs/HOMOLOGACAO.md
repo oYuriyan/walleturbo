@@ -149,3 +149,9 @@ Capturas `goals-mobile.png` e `history-mobile.png` do artefato `revisao-pdf` des
 **CI 0.9 aprovado:** [execução 41892139036](https://github.com/oYuriyan/walleturbo/actions/runs/41892139036), código `961b0e0`: 116 testes em container, auditoria de dependências sem vulnerabilidades conhecidas encontradas, PostgreSQL/Redis, migração 007→008 com dados ativos e exclusões auditadas, correções concorrentes, UUID entre cartões e exclusão versus reenvio aprovados. Regressões de PDF, planejamento, saldos, cadastros, histórico e Keycloak/TOTP também passaram.
 
 O navegador confirmou prévia dos totais, redistribuição de centavos, conflito/recarga, reenvio cancelado e limpeza após expiração de sessão. A captura `corrections-mobile.png` do artefato `revisao-pdf` foi inspecionada visualmente: formulário legível, controles do padrão da aplicação e diálogo com rolagem. O teste verifica ausência de overflow horizontal e interage com os controles de prévia/confirmação. Documentação consolidada em 05/11/2026, sem alterar o código homologado. FIN-04/05 permanecem parciais nos limites de CORRECOES.md.
+
+## Incremento 0.10 — correção de registros de pagamento
+
+123 testes locais aprovados com avisos tratados como erro (116 anteriores + sete novos cenários). No isolamento do ambiente gerenciado, o cliente de teste bloqueou na comunicação entre threads; a suíte passou ao ser executada fora desse isolamento, com SQLite/fakeredis e dados sintéticos. Essa execução não substitui o CI containerizado.
+
+Prévia sem escrita considera referência da conta/data de consulta, preserva saldo desconhecido e mostra efeito no caixa mensal. Conta/data/valor/motivo podem ser corrigidos sem alterar fatura/ID/UUID original. Versões e limite dos demais pagamentos são revalidados; remoção exige versão. Roteiros de PostgreSQL, migração e navegador mobile foram acrescentados ao CI; homologação completa pendente do resultado. Contrato e limites em PAGAMENTOS.md.

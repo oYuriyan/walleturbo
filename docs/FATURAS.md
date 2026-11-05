@@ -16,7 +16,7 @@ Exemplo: uma compra de R$ 100,01 em três vezes gera R$ 33,34, R$ 33,34 e R$ 33,
 4. Alternativamente, abra uma fatura vazia e importe um CSV nela. Cada linha corresponde a um lançamento **já cobrado naquela fatura**, sem gerar novas parcelas automaticamente. CSV de fatura aceita apenas `despesa`; registre estornos separadamente para evitar interpretar receitas como créditos indevidos.
 5. Revise as categorias. Use **Conferir total** e digite o valor informado pelo emissor. A fatura só é fechada se não houver revisões pendentes e os valores coincidirem exatamente. Encargos podem ser registrados como despesa antes da conferência.
 6. Use **Registrar pagamento** para registrar o que já foi pago no banco. Pagamentos parciais são aceitos até o valor restante. O sistema não executa transferências nem quita o cartão junto ao banco.
-7. Para corrigir um pagamento, use **Estornar registro**. Isso remove o registro local, sem desfazer uma operação bancária. Uma fatura com pagamentos não pode ser reaberta; primeiro remova os registros incorretos, depois reabra e ajuste.
+7. Para ajustar conta, data ou valor de um pagamento, use **Corrigir pagamento** e confira a prévia. **Estornar registro** remove apenas o registro local e exige sua versão atual. Nenhum desses fluxos desfaz uma operação bancária. Uma fatura com pagamentos não pode ser reaberta; primeiro revise/remova os registros incorretos, depois reabra e ajuste. Veja PAGAMENTOS.md.
 
 A exclusão de uma compra remove todas as suas parcelas atomicamente. Se alguma fatura estiver conferida, a exclusão é recusada. Estornos financeiros são lançamentos explícitos, distintos da correção de um registro. Estornos creditados após uma fatura paga devem ser lançados na fatura em que o emissor os creditou.
 

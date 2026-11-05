@@ -74,7 +74,9 @@ def test_card_reconciliation_payment_and_reversal_have_history(client, login):
             "amount_cents": 100,
         },
     ).json()
-    client.delete("/api/statement-payments/" + p["id"])
+    client.delete(
+        "/api/statement-payments/" + p["id"] + "?expected_version=" + str(p["version"])
+    )
     data = events(client, entity="statement_payment")["items"]
     assert [e["action"] for e in data] == ["deleted", "created"]
     assert data[0]["before"]["amount_cents"] == 100

@@ -128,11 +128,27 @@ def test_delete_purchase_and_payment_keep_request_reservations_and_purge(client,
         "amount_cents": 1000,
     }
     p = client.post(f"/api/statements/{s['id']}/payments", json=pay).json()
-    assert client.delete("/api/statement-payments/" + p["id"]).status_code == 204
+    assert (
+        client.delete(
+            "/api/statement-payments/"
+            + p["id"]
+            + "?expected_version="
+            + str(p["version"])
+        ).status_code
+        == 204
+    )
     assert (
         client.post(f"/api/statements/{s['id']}/payments", json=pay).status_code == 409
     )
-    assert client.delete("/api/statement-payments/" + p["id"]).status_code == 204
+    assert (
+        client.delete(
+            "/api/statement-payments/"
+            + p["id"]
+            + "?expected_version="
+            + str(p["version"])
+        ).status_code
+        == 204
+    )
     receipts = client.get("/api/privacy/export").json()["request_receipts"]
     assert sum(r["cancelled"] for r in receipts) == 2
     assert all("payload_hash" not in r and "owner" not in r for r in receipts)

@@ -21,6 +21,9 @@ const historyEntities = {
 };
 const historyFields = {
   name: "Nome",
+  account_id: "Conta",
+  source_account_id: "Conta de origem",
+  destination_account_id: "Conta de destino",
   description: "Descrição",
   amount_cents: "Valor",
   target_cents: "Objetivo",
@@ -42,6 +45,11 @@ const historyFields = {
   correction_reason: "Motivo da correção",
 };
 function historyValue(key, value) {
+  if (key.endsWith("account_id") && value)
+    return (
+      financeAccounts.find((a) => a.id === value)?.name ||
+      "Conta sem cadastro atual (vínculo na exportação)"
+    );
   if (value === null || value === undefined) return "Não informado";
   if (typeof value === "boolean") return value ? "Sim" : "Não";
   if (key.endsWith("_cents")) return money(value);

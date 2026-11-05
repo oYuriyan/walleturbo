@@ -162,4 +162,6 @@ Entrega 0.8: histórico privado para nove tipos de registro, consulta paginada, 
 
 Entrega 0.9: correção atômica de compras manuais com prévia, motivo e revisão; recibos de criação/pagamento/correção que preservam UUIDs após exclusão isolada. Migração 008 e testes homologados no CI 41892139036, código 961b0e0 (CORRECOES.md).
 
-Próxima entrega: FIN-04 para edição de pagamentos, versão ampla de lançamentos e correção de importados; FIN-05 para importações após exclusão, idempotência entre formatos e contrato financeiro amplo. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+Entrega 0.10: correção versionada de pagamentos com prévia de saldos/caixa, limite revalidado e remoção protegida, preservando IDs/UUIDs e histórico. Migração 009 e testes; homologação completa pendente do CI (PAGAMENTOS.md).
+
+Próxima entrega: FIN-04 para versão ampla de lançamentos diretos e correção de importados; FIN-05 para importações após exclusão, idempotência entre formatos e contrato financeiro amplo. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.

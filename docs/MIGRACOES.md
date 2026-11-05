@@ -43,3 +43,7 @@ Cria financial_audit e índice por proprietário/instante/ID. Não altera valore
 ## Migração 008 — parcelas e recibos de envio
 
 Adiciona versão (inicial 1) e motivo nullable às parcelas e cria request_receipts. Preserva IDs/valores e preenche recibos de compras manuais/pagamentos ativos. Reserva UUIDs de exclusões encontradas no histórico 0.8, sem inventar hashes originais; recibos ativos têm precedência. Exclusões sem histórico não são reconstruídas. O roteiro de migração simula upgrade de 007 para 008, com registros ativos e excluídos, repetição e rollback. Readiness exige a nova tabela/colunas; aplicar junto da aplicação.
+
+## Migração 009 — versão e motivo de pagamentos
+
+Adiciona version=1 e correction_reason nullable aos pagamentos legados, preservando valor, data, conta, ID e UUID/hash de criação. Readiness exige as novas colunas. Atualizar API/interface em conjunto: remoção de pagamento passa a exigir expected_version. O roteiro de upgrade preserva os valores e testa as migrações 007→009, repetição, rollback e checksum.
