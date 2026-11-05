@@ -229,6 +229,7 @@ function renderFinance() {
               const f = $("#reconcile-form");
               f.reset();
               f.elements.id.value = s.id;
+              f.elements.revision.value = s.revision || "";
               openDialog("#reconcile-dialog");
             },
             "button",
@@ -244,7 +245,11 @@ function renderFinance() {
                 );
               raw.status = "open";
               raw.expected_cents = null;
-            } else await api(`/api/statements/${s.id}/reopen`, "POST");
+            } else
+              await api(
+                `/api/statements/${s.id}/reopen?expected_revision=${s.revision}`,
+                "POST",
+              );
             await refresh();
           }),
         );
@@ -575,6 +580,7 @@ $("#reconcile-form").onsubmit = (e) => {
     } else
       await api(`/api/statements/${f.elements.id.value}/close`, "POST", {
         expected_cents: expected,
+        expected_revision: f.elements.revision.value,
       });
     $("#reconcile-dialog").close();
     await refresh();

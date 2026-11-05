@@ -41,3 +41,11 @@ Saldos por conta e transferências próprias passaram a ser implementados no inc
 ## Revisão e exclusão — 0.11
 
 Revisão de categoria exige a versão atual da parcela. Exclusão integral exige revisão atual da operação; a interface consulta os dados atuais, pede confirmação e envia essa revisão. Correções ocorridas durante a confirmação impedem exclusão silenciosa. Linhas importadas podem ser corrigidas mantendo a fatura e a parcela única, com motivo/prévia e origem preservada. Faturas conferidas continuam bloqueando essas alterações. Detalhes em LANCAMENTOS_E_IMPORTACAO.md.
+
+## Revisão da conferência — incremento em validação
+
+As respostas de fatura incluem `revision`, um hash do estado da fatura, lançamentos e pagamentos, incluindo versões dos registros. A interface guarda a revisão ao abrir a conferência e envia `expected_revision` no fechamento; a reabertura envia esse parâmetro na query. O servidor compara sob o lock do cartão/fatura. Alterações mesmo sem diferença no total recebem 409 e exigem atualizar a tela e conferir novamente.
+
+Compatibilidade transitória: clientes anteriores que omitem a revisão mantêm as verificações de total, categorias e pagamentos, mas não recebem a proteção adicional de snapshot. Tornar o parâmetro obrigatório, versionar o ciclo aberto/fechado e oferecer recarga dentro do diálogo ainda fazem parte de FIN-04/05. O hash detecta o estado atual; fechar e reabrir sem alterar registros pode restaurar o mesmo hash, portanto não representa uma versão monotônica da fatura. Não conclui o contrato financeiro amplo nem os controles de cenários.
+
+Validação local: 135 testes com avisos tratados como erro; checagens novas cobrem alteração de categoria sem mudança de total, fechamento/reabertura obsoletos, revisão estável e token inválido. Homologação containerizada depende do CI deste incremento.
