@@ -33,3 +33,17 @@ Isso identifica repetição observada, não falta de uso, fraude ou economia gar
 Cenários e limites são segregados por proprietário e incluídos na exportação/exclusão financeira. A migração 003 adiciona tabelas sem modificar lançamentos existentes. Não há cobrança recorrente automática ou recomendação comercial.
 
 Testes cobrem isolamento, renda declarada sem receita, agregados alterados, conservação da capacidade, estornos e recorrência sem parcelas. O pipeline também valida orçamento e cenário no navegador desktop/mobile com dados sintéticos. IA, perfil financeiro completo, recorrências automáticas e recomendações de ofertas permanecem pendentes.
+
+## Versão mensal e histórico — 0.13
+
+GET /api/planning/{month} devolve version (0 para mês ainda sem configuração). PUT plan e PUT budget exigem expected_version inteiro no JSON; DELETE budget exige expected_version na query. Ausência ou formato inválido recebe 422; versão desatualizada recebe 409. A versão pertence ao conjunto de configurações do usuário/mês: alterar qualquer limite ou cenário invalida as telas antigas desse mês. Meses e titulares são independentes. Clientes antigos precisam atualizar.
+
+O registro do mês é criado sob demanda por INSERT ON CONFLICT e bloqueado antes da comparação. A versão aumenta em cada escrita aceita, inclusive salvamento repetido, e permanece após remover todos os limites. Recriar um limite não restaura versões antigas. Um reenvio com versão antiga recebe conflito; não há recibo idempotente para essas configurações. A remoção de limite inexistente com versão atual recebe 404. O expurgo financeiro apaga configurações, versões e histórico; o conjunto seguinte começa novamente em 0.
+
+A interface guarda mês/versão da resposta carregada, desabilita os formulários enquanto carrega e recusa respostas antigas após mudança de geração ou fim da sessão. Recarregar planejamento descarta edições ainda não salvas. Em conflito, recarregue e revise os campos antes de novo envio. Exclusão usa o mês/versão da lista exibida.
+
+Cenários e limites passam ao histórico ORM transacional. Eventos de cenário usam entity=month_plan e entity_id=AAAA-MM; limites usam entity=budget e entity_id=AAAA-MM:categoria. A criação técnica do registro mensal padrão não inventa um evento financeiro; a primeira configuração registra antes/depois dos padrões, e os limites têm criação/alteração/exclusão. Incrementos da versão compartilhada também geram evento do mês. Falha no histórico reverte escrita e versão. Exportação e expurgo abrangem esses dados.
+
+Migração 012 adiciona version=0 aos cenários existentes, preservando parâmetros e limites. Não reconstrói eventos antigos. PostgreSQL verifica disputa da primeira criação. SQLite verifica conflitos, exclusão/recriação, isolamento, rollback e privacidade; navegador cobre edição em outra sessão e recarga. 140 testes locais aprovados; homologação completa depende do CI deste incremento.
+
+A versão protege configurações; não bloqueia lançamentos financeiros enquanto uma simulação é calculada. A confirmação de completude conserva a assinatura dos agregados do método existente, sem provar identidade de cada documento ou constituir snapshot bancário imutável. Revisão ampla de competência, confirmação entre alterações financeiras, projeções/recorrências e identidade de fontes continuam no roadmap.

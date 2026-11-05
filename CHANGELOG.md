@@ -1,3 +1,9 @@
+## 0.13.0 — em validação
+
+- Cenários e limites mensais exigem versão atual, preservada após exclusão de limites.
+- Histórico transacional para configurações; recarga após conflito e proteção de respostas atrasadas.
+- Migração 012 preserva dados existentes; 140 testes locais aprovados, CI pendente.
+
 ## 0.12.0 — em validação
 
 - Conferência e reabertura exigem revisão atual; versão monotônica impede aceitar telas anteriores ao ciclo fechar/reabrir.

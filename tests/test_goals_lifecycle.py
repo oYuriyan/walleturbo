@@ -56,7 +56,15 @@ def test_archived_goal_does_not_consume_simulated_capacity_but_keeps_values(
     )
     active = create(client, name="Ativa", target_cents=100000)
     add(client, 10000, "income", "Renda")
-    client.put("/api/planning/2026-11/plan", json={"records_complete": True})
+    client.put(
+        "/api/planning/2026-11/plan",
+        json={
+            **({"records_complete": True}),
+            "expected_version": client.get(
+                ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
+            ).json()["version"],
+        },
+    )
     before = client.get("/api/planning/2026-11").json()
     assert [g["id"] for g in before["goals"]] == [archived["id"], active["id"]]
     row = update(client, archived, archived=True).json()

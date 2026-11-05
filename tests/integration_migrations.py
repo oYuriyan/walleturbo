@@ -132,7 +132,7 @@ try:
             )
         ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 11
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 12
         )
     with test_engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
@@ -211,7 +211,7 @@ try:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "012_test_failure.sql"
+        broken = migrate.DIRECTORY / "013_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -229,7 +229,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 11
+                == 12
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

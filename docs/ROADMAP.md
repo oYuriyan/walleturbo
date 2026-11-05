@@ -168,4 +168,6 @@ Entrega 0.11: lançamentos versionados, correção de importados no mesmo contex
 
 Próxima entrega: concluir revisão do contrato financeiro/efeitos em faturas e cenários e a identidade de origem para documentos divergentes (FIN-04/05, IMP-02/03), preservando limites de crédito/créditos/recorrências da fase 2. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
 
-Entrega 0.12 em validação: conferência/reabertura com revisão obrigatória, versão monotônica da fatura, migração 011 e recarga no diálogo. Cenários/orçamentos e contrato financeiro amplo permanecem na próxima prioridade; não concluir FIN-04/05 antes das respectivas evidências.
+Entrega 0.12 homologada (CI 42085667177, PR #2 integrado à main): conferência/reabertura com revisão obrigatória, versão monotônica da fatura, migração 011 e recarga no diálogo. Cenários/orçamentos e contrato financeiro amplo permanecem na próxima prioridade; não concluir FIN-04/05 antes das respectivas evidências.
+
+Entrega 0.13 em validação: versão compartilhada de cenários/limites, histórico e recarga, migração 012. A próxima prioridade de FIN-04/05 continua sendo o contrato financeiro amplo e confirmação dos registros diante de mudanças financeiras; depois conciliação de documentos/fontes divergentes em IMP-02/03. Não declarar FIN-04/05 integralmente concluídos com essas configurações.

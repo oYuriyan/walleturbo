@@ -73,6 +73,42 @@ const fs = require("fs");
     await page
       .getByText(/Margem para a simulação de aportes: R\$\s*600,00/)
       .waitFor();
+    const current = await (
+      await context.request.get(base + "/api/planning/2026-11")
+    ).json();
+    const changed = await context.request.put(
+      base + "/api/planning/2026-11/plan",
+      {
+        headers,
+        data: {
+          expected_version: current.version,
+          buffer_cents: 20000,
+          records_complete: true,
+        },
+      },
+    );
+    if (changed.status() !== 200) throw Error("Alteração paralela não aceita");
+    await page.locator("#plan-form [name=buffer]").fill("50,00");
+    await page
+      .getByRole("button", { name: "Salvar cenário", exact: true })
+      .click();
+    await page
+      .getByText(
+        "Planejamento alterado em outra sessão. Recarregue antes de salvar.",
+        { exact: true },
+      )
+      .waitFor();
+    await page.locator("#reload-planning").click();
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#plan-form [name=buffer]").value === "200,00",
+    );
+    if (
+      (await (await context.request.get(base + "/api/planning/2026-11")).json())
+        .version !==
+      current.version + 1
+    )
+      throw Error("Conflito sobrescreveu o cenário");
     await page.screenshot({
       path: "artifacts/planning-desktop.png",
       fullPage: true,

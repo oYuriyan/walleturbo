@@ -9,6 +9,8 @@ function clearHistory() {
   $("#more-history").hidden = true;
 }
 const historyEntities = {
+  month_plan: "Cenário mensal",
+  budget: "Limite mensal",
   account: "Conta",
   card: "Cartão",
   goal: "Meta",
@@ -20,6 +22,10 @@ const historyEntities = {
   transfer: "Transferência",
 };
 const historyFields = {
+  buffer_cents: "Margem de segurança",
+  income_reference_cents: "Renda de referência",
+  records_complete: "Registros confirmados",
+  version: "Versão",
   name: "Nome",
   account_id: "Conta",
   source_account_id: "Conta de origem",

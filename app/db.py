@@ -249,6 +249,7 @@ class StatementPayment(Base):
 
 
 class MonthPlan(Base):
+    version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     __tablename__ = "month_plans"
     owner: Mapped[str] = mapped_column(String(128), primary_key=True)
     month: Mapped[str] = mapped_column(String(7), primary_key=True)

@@ -1,11 +1,13 @@
 "use strict";
-let planningGeneration = 0;
+let planningGeneration = 0,
+  planningContext = null;
 const budgetCategory = $("#budget-form").elements.category;
 categories
   .filter((c) => c !== "Renda")
   .forEach((c) => budgetCategory.append(el("option", c)));
 function clearPlanning() {
   planningGeneration++;
+  planningContext = null;
   $("#plan-form").reset();
   $("#budget-form").reset();
   for (const id of [
@@ -28,7 +30,7 @@ async function loadPlanning() {
   for (const form of [$("#plan-form"), $("#budget-form")])
     form
       .querySelectorAll("input,select,button")
-      .forEach((n) => (n.disabled = !enabled));
+      .forEach((n) => (n.disabled = true));
   for (const id of [
     "budget-list",
     "goal-plan-list",
@@ -47,6 +49,11 @@ async function loadPlanning() {
   $("#planning-notice").textContent = "Calculando com os registros do mês…";
   const data = await api("/api/planning/" + $("#month").value);
   if (generation !== planningGeneration) return;
+  planningContext = { month: data.month, version: data.version };
+  for (const form of [$("#plan-form"), $("#budget-form")])
+    form
+      .querySelectorAll("input,select,button")
+      .forEach((n) => (n.disabled = false));
   $("#planning-notice").textContent =
     `Resultado registrado: ${money(data.figures.result_cents)} · Variação de caixa: ${money(data.figures.cash_change_cents)}`;
   const form = $("#plan-form");
@@ -78,6 +85,7 @@ async function loadPlanning() {
       button(
         "Remover limite",
         async () => {
+          const generation = planningGeneration;
           if (
             !confirm(
               "Remover este limite mensal? Os lançamentos serão preservados.",
@@ -85,9 +93,10 @@ async function loadPlanning() {
           )
             return;
           await api(
-            `/api/planning/${data.month}/budget/${encodeURIComponent(b.category)}`,
+            `/api/planning/${data.month}/budget/${encodeURIComponent(b.category)}?expected_version=${data.version}`,
             "DELETE",
           );
+          if (generation !== planningGeneration) return;
           await loadPlanning();
         },
         "text-button",
@@ -156,14 +165,19 @@ document
 $("#plan-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
-    const f = e.target;
-    await api(`/api/planning/${$("#month").value}/plan`, "PUT", {
+    const f = e.target,
+      context = planningContext,
+      generation = planningGeneration;
+    if (!context) throw Error("Recarregue o planejamento.");
+    await api(`/api/planning/${context.month}/plan`, "PUT", {
+      expected_version: context.version,
       income_reference_cents: f.elements.income.value
         ? cents(f.elements.income.value)
         : null,
       buffer_cents: cents(f.elements.buffer.value),
       records_complete: f.elements.complete.checked,
     });
+    if (generation !== planningGeneration) return;
     await loadPlanning();
     message("Cenário salvo. A simulação não movimenta nem reserva dinheiro.");
   });
@@ -171,12 +185,19 @@ $("#plan-form").onsubmit = (e) => {
 $("#budget-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
-    const f = e.target;
-    await api(`/api/planning/${$("#month").value}/budget`, "PUT", {
+    const f = e.target,
+      context = planningContext,
+      generation = planningGeneration;
+    if (!context) throw Error("Recarregue o planejamento.");
+    await api(`/api/planning/${context.month}/budget`, "PUT", {
+      expected_version: context.version,
       category: f.elements.category.value,
       amount_cents: cents(f.elements.amount.value),
     });
+    if (generation !== planningGeneration) return;
     await loadPlanning();
     message("Limite mensal salvo.");
   });
 };
+
+$("#reload-planning").onclick = () => action(loadPlanning);
