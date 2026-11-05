@@ -95,6 +95,7 @@ const fs = require("fs");
     await page.locator("#reconcile-form [name=amount]").fill("33,34");
     await page.locator("#reconcile-form .button.full").click();
     await page
+      .locator("#reconcile-dialog")
       .getByText(
         "Fatura alterada em outra sessão. Atualize os dados e confira novamente.",
         { exact: true },
