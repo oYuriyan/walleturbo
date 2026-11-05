@@ -30,7 +30,7 @@ A exclusão de uma compra remove todas as suas parcelas atomicamente. Se alguma 
 
 ## Limites explícitos
 
-A conferência compara totais digitados; não autentica um documento do banco. Existe leitura assistida limitada de PDF textual (ver PDF.md). Não há OCR, OFX, sincronização bancária, juros/rotativo automáticos, fechamento por regra do emissor, limite de crédito ou carregamento de crédito negativo entre faturas. Faturas com total negativo podem permanecer em revisão, mas não são fechadas ou pagas nesta etapa. Metas continuam independentes das contas. Renomeação/exclusão individual de contas/cartões será tratada com política de histórico; a exclusão global já os inclui.
+A conferência compara totais digitados; não autentica um documento do banco. Existe leitura assistida limitada de PDF textual (ver PDF.md). Não há OCR, OFX, sincronização bancária, juros/rotativo automáticos, fechamento por regra do emissor, limite de crédito ou carregamento de crédito negativo entre faturas. Faturas com total negativo podem permanecer em revisão, mas não são fechadas ou pagas nesta etapa. Metas continuam independentes das contas. Renomeação, arquivamento e exclusão individual de contas/cartões seguem CADASTROS.md; a exclusão global também os inclui.
 
 Saldos por conta e transferências próprias passaram a ser implementados no incremento 0.5; ver SALDOS.md. Pagamentos de fatura reduzem o saldo da conta desde a referência aplicável, enquanto compras e estornos na fatura continuam afetando o consumo.
 

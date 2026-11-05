@@ -43,3 +43,5 @@ Renomear e corrigir objetivo, reserva ou prazo preserva o ID. A reserva não pod
 Edição/exclusão bloqueiam a mesma linha no PostgreSQL, impedindo que uma exclusão desatualizada apague uma correção concorrente de reserva. IDs de terceiros retornam 404; exportação/exclusão de privacidade incluem ambos os estados. Após expiração da sessão, o formulário limpa valores/IDs e fecha.
 
 FIN-03 tem seu escopo atual implementado: contas, cartões, metas e política de lançamentos sem conta. FIN-04 ainda deve fechar histórico mínimo de alterações financeiras, retenção e acesso. O incremento 0.7 previne sobrescrita por versão; a trilha com estados anteriores foi introduzida na 0.8, sem reconstruir mudanças anteriores à implantação.
+
+Correção integral de compra manual (0.9) exige cartão ativo e todas as faturas afetadas abertas. Reative antes de usar esse fluxo; a revisão de categoria e exclusão existentes mantêm suas regras. Consulte CORRECOES.md.
