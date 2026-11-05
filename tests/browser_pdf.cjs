@@ -46,13 +46,18 @@ const fs = require("fs");
     await page.locator("#month").dispatchEvent("change");
     await page.getByRole("button", { name: "Contas e cartões" }).click();
     await page.getByRole("button", { name: "Ler PDF", exact: true }).click();
-    const previewResponse = page.waitForResponse(
-      (r) => r.url().endsWith("/import/pdf/preview") && r.status() === 200,
-    );
+    let originalPreview;
+    // Capturar pelo transporte HTTP evita depender do cache de inspeção do Chromium.
+    // O upload da interface e a resposta real do parser continuam sendo usados.
+    await page.route("**/import/pdf/preview", async (route) => {
+      const response = await route.fetch();
+      if (response.status() !== 200) throw Error("Prévia real de PDF falhou");
+      originalPreview = await response.json();
+      await route.fulfill({ response });
+    });
     await page
       .locator("#pdf-file")
       .setInputFiles("artifacts/fatura-sintetica.pdf");
-    const originalPreview = await (await previewResponse).json();
     await page.locator(".pdf-row").first().waitFor({ timeout: 20000 });
     if ((await page.locator(".pdf-row").count()) !== 2)
       throw Error("Prévia incompleta");

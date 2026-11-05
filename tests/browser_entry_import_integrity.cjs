@@ -52,7 +52,10 @@ const base = "http://localhost:8000";
       .click();
     const created = await createdResponse,
       original = created.request().postDataJSON(),
-      row = await created.json();
+      row = (
+        await (await context.request.get(base + "/api/privacy/export")).json()
+      ).transactions.find((entry) => entry.request_id === original.request_id);
+    assert(row && row.version === 1);
     await dialog.waitFor({ state: "hidden" });
     await refreshed;
     const path = base + "/api/transactions/" + row.id;
