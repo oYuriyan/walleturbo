@@ -78,6 +78,7 @@ class ReviewInput(Input):
 
 
 class ReconcileInput(Input):
+    expected_revision: str = Field(pattern=r"^[a-f0-9]{64}$")
     expected_cents: int = Field(strict=True, ge=0, le=99999999999)
 
 
@@ -216,7 +217,7 @@ def statement_totals(db, user, statement):
     )
     total = sum(c.amount_cents * (-1 if c.kind == "refund" else 1) for c in charges)
     paid = sum(p.amount_cents for p in payments)
-    return {
+    snapshot = {
         **public(statement),
         "total_cents": total,
         "paid_cents": paid,
@@ -225,6 +226,18 @@ def statement_totals(db, user, statement):
         "charges": [public(c) for c in charges],
         "payments": [public(p) for p in payments],
     }
+    snapshot["revision"] = hashlib.sha256(
+        json.dumps(snapshot, sort_keys=True, default=str).encode()
+    ).hexdigest()
+    return snapshot
+
+
+def require_statement_revision(snapshot, expected):
+    if snapshot["revision"] != expected:
+        raise HTTPException(
+            409,
+            "Fatura alterada em outra sessão. Atualize os dados e confira novamente.",
+        )
 
 
 @router.get("/accounts")
@@ -421,6 +434,14 @@ def delete_operation(
     db.commit()
 
 
+@router.get("/statements/{statement_id}")
+def get_statement(
+    statement_id: str, user=Depends(current_user), db: Session = Depends(db_session)
+):
+    statement = lock_statement(db, user, statement_id)
+    return statement_totals(db, user, statement)
+
+
 @router.post("/statements/{statement_id}/close")
 def close_statement(
     statement_id: str,
@@ -431,6 +452,7 @@ def close_statement(
     statement = lock_statement(db, user, statement_id)
     require_open(statement)
     totals = statement_totals(db, user, statement)
+    require_statement_revision(totals, body.expected_revision)
     if totals["pending"]:
         raise HTTPException(
             409, "Revise todas as categorias antes de conferir a fatura"
@@ -448,9 +470,13 @@ def close_statement(
 
 @router.post("/statements/{statement_id}/reopen")
 def reopen(
-    statement_id: str, user=Depends(current_user), db: Session = Depends(db_session)
+    statement_id: str,
+    expected_revision: str = Query(pattern=r"^[a-f0-9]{64}$"),
+    user=Depends(current_user),
+    db: Session = Depends(db_session),
 ):
     statement = lock_statement(db, user, statement_id)
+    require_statement_revision(statement_totals(db, user, statement), expected_revision)
     if db.scalar(
         select(StatementPayment.id)
         .where(

@@ -229,6 +229,7 @@ function renderFinance() {
               const f = $("#reconcile-form");
               f.reset();
               f.elements.id.value = s.id;
+              f.elements.revision.value = s.revision || "";
               openDialog("#reconcile-dialog");
             },
             "button",
@@ -244,7 +245,11 @@ function renderFinance() {
                 );
               raw.status = "open";
               raw.expected_cents = null;
-            } else await api(`/api/statements/${s.id}/reopen`, "POST");
+            } else
+              await api(
+                `/api/statements/${s.id}/reopen?expected_revision=${s.revision}`,
+                "POST",
+              );
             await refresh();
           }),
         );
@@ -558,6 +563,25 @@ $("#review-charge-form").onsubmit = (e) => {
     await refresh();
   });
 };
+$("#reload-reconcile").onclick = () =>
+  action(async () => {
+    const f = $("#reconcile-form"),
+      id = f.elements.id.value,
+      expectedCsrf = csrf;
+    const current = demo
+      ? totals(financeStatements.find((s) => s.id === id))
+      : await api("/api/statements/" + id);
+    if (
+      csrf !== expectedCsrf ||
+      f.elements.id.value !== id ||
+      !$("#reconcile-dialog").open
+    )
+      return;
+    f.elements.revision.value = current.revision || "";
+    f.elements.amount.value = "";
+    $("#reconcile-dialog").querySelector(".dialog-error")?.remove();
+    message("Fatura recarregada. Confira novamente o total do emissor.");
+  });
 $("#reconcile-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
@@ -575,6 +599,7 @@ $("#reconcile-form").onsubmit = (e) => {
     } else
       await api(`/api/statements/${f.elements.id.value}/close`, "POST", {
         expected_cents: expected,
+        expected_revision: f.elements.revision.value,
       });
     $("#reconcile-dialog").close();
     await refresh();

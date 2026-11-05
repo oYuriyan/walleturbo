@@ -1,3 +1,10 @@
+## 0.12.0 — em validação
+
+- Conferência e reabertura exigem revisão atual; versão monotônica impede aceitar telas anteriores ao ciclo fechar/reabrir.
+- Recarga de fatura no formulário; migração 011 preserva dados existentes.
+- Contrato de API alterado: expected_revision obrigatório nas duas operações.
+- 136 testes locais aprovados; integração concorrente e navegador ampliados, aguardando CI.
+
 # Histórico de alterações
 
 ## 0.11.0 — em desenvolvimento

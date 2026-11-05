@@ -1,6 +1,6 @@
 [project]
 name = "walleturbo"
-version = "0.11.0"
+version = "0.12.0"
 description = "Controle financeiro pessoal com privacidade desde a concepção"
 requires-python = ">=3.12"
 dependencies = [

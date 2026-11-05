@@ -190,7 +190,15 @@ def test_binding_to_statement_and_session(client, login, monkeypatch):
 def test_closed_statement_blocks_confirmation(client, login, monkeypatch):
     path, body, _ = make_preview(client, login, monkeypatch)
     statement_id = path.split("/")[3]
-    client.post(f"/api/statements/{statement_id}/close", json={"expected_cents": 0})
+    client.post(
+        f"/api/statements/{statement_id}/close",
+        json={
+            "expected_cents": 0,
+            "expected_revision": client.get(f"/api/statements/{statement_id}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     assert client.post(path + "confirm", json=body).status_code == 409
 
 

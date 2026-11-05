@@ -169,6 +169,8 @@ class Statement(Base):
     card_id: Mapped[str] = mapped_column(String(36))
     month: Mapped[str] = mapped_column(String(7))
     due_date: Mapped[date] = mapped_column(Date)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    __mapper_args__ = {"version_id_col": version}
     status: Mapped[str] = mapped_column(String(10), default="open")
     expected_cents: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     __table_args__ = (

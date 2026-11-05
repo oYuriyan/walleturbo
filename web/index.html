@@ -763,6 +763,7 @@
     </dialog>
     <dialog id="reconcile-dialog">
       <form id="reconcile-form">
+        <input name="revision" type="hidden" />
         <div class="section-heading">
           <h2>Conferir fatura</h2>
           <button type="button" class="icon-button close" aria-label="Fechar">
@@ -780,6 +781,8 @@
             required
             inputmode="decimal"
             pattern="[0-9]+([,.][0-9]{1,2})?" /></label
+        ><button id="reload-reconcile" type="button" class="ghost">
+          Recarregar fatura</button
         ><button class="button full">Conferir e fechar</button>
       </form>
     </dialog>

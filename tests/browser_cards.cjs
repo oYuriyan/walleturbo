@@ -74,6 +74,38 @@ const fs = require("fs");
     await page.locator("#reconcile-form [name=amount]").fill("33,33");
     await page.locator("#reconcile-form .button.full").click();
     await page.locator("#reconcile-dialog .dialog-error").waitFor();
+    const before = (
+      await (
+        await context.request.get(base + "/api/statements?month=2026-11")
+      ).json()
+    )[0];
+    const charge = before.charges[0];
+    const reviewed = await context.request.put(
+      base + "/api/card-charges/" + charge.id + "/review",
+      {
+        headers: { Origin: base, "X-CSRF-Token": csrf },
+        data: {
+          expected_version: charge.version,
+          category: "Outros",
+          reviewed: true,
+        },
+      },
+    );
+    if (reviewed.status() !== 200) throw Error("Revisão paralela falhou");
+    await page.locator("#reconcile-form [name=amount]").fill("33,34");
+    await page.locator("#reconcile-form .button.full").click();
+    await page
+      .locator("#reconcile-dialog")
+      .getByText(
+        "Fatura alterada em outra sessão. Atualize os dados e confira novamente.",
+        { exact: true },
+      )
+      .waitFor();
+    await page.locator("#reload-reconcile").click();
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#reconcile-form [name=amount]").value === "",
+    );
     await page.locator("#reconcile-form [name=amount]").fill("33,34");
     await page.locator("#reconcile-form .button.full").click();
     await page.locator("#reconcile-dialog").waitFor({ state: "hidden" });

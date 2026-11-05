@@ -167,3 +167,5 @@ Entrega 0.10: correção versionada de pagamentos com prévia de saldos/caixa, l
 Entrega 0.11: lançamentos versionados, correção de importados no mesmo contexto, revisão/exclusão de cartão protegidas e marcas de origem após exclusão. Migração 010 e testes homologados no CI 42045260683, código 8124548 (LANCAMENTOS_E_IMPORTACAO.md).
 
 Próxima entrega: concluir revisão do contrato financeiro/efeitos em faturas e cenários e a identidade de origem para documentos divergentes (FIN-04/05, IMP-02/03), preservando limites de crédito/créditos/recorrências da fase 2. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+
+Entrega 0.12 em validação: conferência/reabertura com revisão obrigatória, versão monotônica da fatura, migração 011 e recarga no diálogo. Cenários/orçamentos e contrato financeiro amplo permanecem na próxima prioridade; não concluir FIN-04/05 antes das respectivas evidências.

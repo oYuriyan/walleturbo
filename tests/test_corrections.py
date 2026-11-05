@@ -96,7 +96,13 @@ def test_old_or_target_closed_statement_blocks_everything(client, login, closed_
         amount = 3334
     assert (
         client.post(
-            f"/api/statements/{s['id']}/close", json={"expected_cents": amount}
+            f"/api/statements/{s['id']}/close",
+            json={
+                "expected_cents": amount,
+                "expected_revision": client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 200
     )
@@ -124,7 +130,15 @@ def test_delete_purchase_and_payment_keep_request_reservations_and_purge(client,
     new = {**body, "request_id": str(uuid4())}
     assert client.post("/api/card-purchases", json=new).status_code == 201
     s = statement(client)
-    client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 10001})
+    client.post(
+        f"/api/statements/{s['id']}/close",
+        json={
+            "expected_cents": 10001,
+            "expected_revision": client.get(f"/api/statements/{s['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     pay = {
         "request_id": str(uuid4()),
         "date": "2026-11-03",
