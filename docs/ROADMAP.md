@@ -4,7 +4,7 @@
 
 Prioridade definida pelo responsável pelo produto: concluir o desenvolvimento e uma jornada end-to-end confiável em ambiente local antes de contratar serviços, adquirir domínio ou conectar Google. Não há autorização de publicação ou contratação nesta revisão. Desenvolvimento, testes e documentação seguem containerizados, em pt-BR, com BRL/centavos e privacidade desde a concepção.
 
-Base de código homologada: `961b0e0`, [CI 41892139036](https://github.com/oYuriyan/walleturbo/actions/runs/41892139036), com 116 testes, integração PostgreSQL/Redis, PDF/planejamento no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
+Base de código homologada: `39c0a67`, [CI 42033442245](https://github.com/oYuriyan/walleturbo/actions/runs/42033442245), com 123 testes, integração PostgreSQL/Redis, PDF/planejamento no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
 
 Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOMOLOGACAO.md são históricos. Uma tarefa só passa a concluída com comportamento implementado, critérios de aceite atendidos, evidências e documentação atualizada. As fases abaixo estão pendentes ou parciais; não são entregas prontas.
 
@@ -34,7 +34,7 @@ Dependência: base existente. Origem: completar o controle financeiro já inicia
 - **FIN-01 — concluído na 0.5:** definir saldo inicial por conta com data de referência, saldo calculado, ajustes explícitos e política para lançamentos anteriores à referência. Diferenciar saldo informado, saldo calculado, resultado e caixa.
 - **FIN-02 — concluído na 0.5:** transferências entre contas próprias, com débito/crédito atômicos, estorno, reenvio idempotente e proteção contra concorrência. Transferência não conta como receita/despesa.
 - **FIN-03 — concluído na 0.7:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
-- **FIN-04 — parcial; histórico homologado na 0.8, correção integral manual homologada na 0.9:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
+- **FIN-04 — parcial; histórico homologado na 0.8, correções de compra manual/pagamento homologadas na 0.9/0.10:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
 - **FIN-05 — parcial; recibos para compras/pagamentos após exclusão homologados na 0.9; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
 
 Aceite: cenário com duas contas, saldo inicial, receitas, despesas, transferência, compra parcelada, pagamento e reversão termina com valores esperados por conta/mês; nenhuma duplicação ou perda por reenvio, concorrência ou migração.
@@ -162,6 +162,6 @@ Entrega 0.8: histórico privado para nove tipos de registro, consulta paginada, 
 
 Entrega 0.9: correção atômica de compras manuais com prévia, motivo e revisão; recibos de criação/pagamento/correção que preservam UUIDs após exclusão isolada. Migração 008 e testes homologados no CI 41892139036, código 961b0e0 (CORRECOES.md).
 
-Entrega 0.10: correção versionada de pagamentos com prévia de saldos/caixa, limite revalidado e remoção protegida, preservando IDs/UUIDs e histórico. Migração 009 e testes; homologação completa pendente do CI (PAGAMENTOS.md).
+Entrega 0.10: correção versionada de pagamentos com prévia de saldos/caixa, limite revalidado e remoção protegida, preservando IDs/UUIDs e histórico. Migração 009 e testes homologados no CI 42033442245, código 39c0a67 (PAGAMENTOS.md).
 
 Próxima entrega: FIN-04 para versão ampla de lançamentos diretos e correção de importados; FIN-05 para importações após exclusão, idempotência entre formatos e contrato financeiro amplo. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
