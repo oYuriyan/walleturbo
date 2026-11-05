@@ -1,4 +1,4 @@
-# Histórico financeiro e revisão técnica — versão 0.8
+# Histórico financeiro e revisão técnica — versão 0.11
 
 ## Finalidade e escopo
 
@@ -12,7 +12,7 @@ Não há reconstrução de eventos anteriores à migração. O primeiro evento d
 
 O evento é inserido pela mesma conexão, sem fila ou segundo commit. Se a operação falhar, ambos são revertidos. Se o histórico falhar, a escrita financeira falha também. Reenvios idempotentes que não alteram registros não criam eventos adicionais; gravações sem mudança efetiva não produzem alterações fictícias.
 
-Correções de lançamento bloqueiam sua linha antes da edição. Revisão/exclusão de compras recarregam os valores após o lock da fatura, para registrar o estado anterior atualizado. Os timestamps representam o instante da gravação do evento na transação, não necessariamente a ordem global dos commits. Ainda são necessários controle de versão e revisão de conflitos mais amplos para todas as operações financeiras (FIN-04), além dos controles já presentes em cadastros e referências de saldo.
+Correções de lançamento bloqueiam sua linha antes da edição. Revisão/exclusão de compras recarregam os valores após o lock da fatura, para registrar o estado anterior atualizado. Os timestamps representam o instante da gravação do evento na transação, não necessariamente a ordem global dos commits. As versões monotônicas de lançamentos/pagamentos e a revisão das compras/categorias protegem alterações obsoletas na 0.11, além de cadastros e referências de saldo. Conferência/reabertura de fatura e configuração de cenários/orçamentos ainda exigem revisão de contratos e conflitos (FIN-04/05).
 
 ## Consulta e privacidade
 
@@ -30,12 +30,12 @@ O engine oculta parâmetros SQL nas mensagens de exceção. Isso reduz exposiç�
 | --- | --- |
 | Perda do estado anterior em correções/exclusões — alta | Histórico transacional implementado para nove tipos de entidade na 0.8; homologado no CI 41888034624 |
 | Atualização desatualizada de cadastros/metas — alta | Versão + lock implementados e homologados em 0.6/0.7 |
-| Concorrência em correções financeiras — alta | Lock de lançamento e recarga após lock de fatura adicionados; versão e revisão de conflitos amplas ainda pendentes em FIN-04 |
-| Reenvio após exclusão de pagamentos/compras — alta | Recibos implementados na 0.9 para compras manuais/pagamentos e exclusões auditadas; homologados no CI 41892139036. Importações após exclusão ainda pendentes |
-| Alterar valor/data/parcelamento de uma compra existente — alta | Correção integral de compra manual implementada na 0.9, com prévia, revisão e bloqueio de faturas conferidas; homologada no CI 41892139036. Pagamentos/importados ainda pendentes |
+| Concorrência em correções financeiras — alta | Versões de lançamentos/pagamentos e revisão de compras/categorias implementadas; conferência/reabertura de faturas e cenários/orçamentos permanecem em FIN-04/05 |
+| Reenvio após exclusão de pagamentos/compras — alta | Recibos para compras manuais/pagamentos na 0.9 e lançamentos na 0.11; marcas de origem conhecidas preservadas após exclusão na 0.11. Identidade entre documentos divergentes continua pendente |
+| Alterar valor/data/parcelamento de uma compra existente — alta | Compra manual na 0.9, pagamento na 0.10 e linha importada no mesmo contexto na 0.11, com histórico e conflitos. Limites de cada correção estão nos respectivos contratos |
 | Histórico de cenário/orçamentos e escrita por SQL/jobs — média | Fora da cobertura deste incremento; tratar antes de introduzir novos escritores |
 | Proteção contra administrador do banco e acesso cruzado SQL — alta | Permissões mínimas/RLS/restauração continuam em REL-02/03; histórico não resolve esses controles |
-| Jornada completa e verificações de interface existentes fora do CI — média | Roteiros de cartões/demonstração e teste XSS persistido abrangente continuam em REL-07; a consulta de histórico recebe regressão HTML neste incremento |
+| Jornada completa e verificações de interface existentes fora do CI — média | Cartões/demonstração passam ao CI na 0.11, além do HTML no histórico. Jornada única, segundo motor e XSS persistido abrangente continuam pendentes |
 | Resposta atrasada após encerrar sessão — alta | Guardas de sessão em dashboard e cadastros adicionadas; navegador segura uma resposta anterior e verifica ausência de restauração após 401 |
 | Volume/armazenamento — média | Consulta de histórico paginada; exportação ainda carrega dados integralmente e precisa REL-04/08 |
 
@@ -53,4 +53,4 @@ Implementadas correção de pagamentos com versão monotônica, remoção com ve
 
 ## Revisão incremental 0.11
 
-Implementados controles de versão e UUID para lançamentos, revisão de categoria com versão, exclusão de operação com revisão atual e marcas de origem persistentes. CSV/PDF reconhecidos não recriam linhas excluídas nem desfazem correções. Valores divergentes de confirmação de PDF são recusados. Falhas parciais revertem marcas e finanças. A identidade segue contexto/campos canônicos, sem promessa de reconhecer documentos divergentes; exclusões anteriores à migração não são inferidas sem chave. Estado de homologação pendente do CI. RLS, SQL externo, restauração, retenção de produção e quotas de armazenamento permanecem pendentes.
+Implementados controles de versão e UUID para lançamentos, revisão de categoria com versão, exclusão de operação com revisão atual e marcas de origem persistentes. CSV/PDF reconhecidos não recriam linhas excluídas nem desfazem correções. Valores divergentes de confirmação de PDF são recusados. Falhas parciais revertem marcas e finanças. A identidade segue contexto/campos canônicos, sem promessa de reconhecer documentos divergentes; exclusões anteriores à migração não são inferidas sem chave. Homologado no CI 42045260683, código 8124548, com 133 testes em container e concorrência/navegador reais. RLS, SQL externo, restauração, retenção de produção e quotas de armazenamento permanecem pendentes.

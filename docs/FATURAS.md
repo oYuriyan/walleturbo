@@ -22,7 +22,7 @@ A exclusão de uma compra remove todas as suas parcelas atomicamente. Se alguma 
 
 ## Integridade e concorrência
 
-- Compras/pagamentos exigem UUID de solicitação. Reenvio idêntico retorna o estado atual; reuso com conteúdo diferente retorna 409. Desde 0.9, recibos preservam UUIDs de compras manuais e pagamentos após exclusão, recusando reenvios cancelados. Novas operações exigem novos UUIDs. A proteção de importações após exclusão permanece pendente; ver CORRECOES.md.
+- Compras/pagamentos exigem UUID de solicitação. Reenvio idêntico retorna o estado atual; reuso com conteúdo diferente retorna 409. Desde 0.9, recibos preservam UUIDs de compras manuais e pagamentos após exclusão, recusando reenvios cancelados. Novas operações exigem novos UUIDs. Desde 0.11, marcas persistentes impedem recriar origens CSV/PDF conhecidas após exclusão; identidade entre documentos divergentes permanece pendente. Contrato e limites em LANCAMENTOS_E_IMPORTACAO.md.
 - Escritores bloqueiam o cartão e a fatura na mesma ordem no PostgreSQL. Isso serializa fechamento, edição e pagamentos; duas solicitações não conseguem pagar mais que o saldo restante.
 - Chaves estrangeiras compostas com `owner` impedem associar conta/cartão/fatura de outra pessoa também no banco.
 - Importação é atômica. A deduplicação de cartão considera proprietário, fatura e ocorrência da linha; a de movimentações diretas pode ser vinculada a uma conta. Arquivos distintos com compras realmente diferentes, mas com dados idênticos na mesma fatura, ainda podem colidir; revisar com o emissor.
@@ -37,3 +37,7 @@ Saldos por conta e transferências próprias passaram a ser implementados no inc
 ## Correção integral de compra manual — 0.9
 
 **Corrigir compra** carrega todas as parcelas, permite corrigir valor/data/primeira fatura/quantidade e exige conferir a prévia dos totais mensais. A confirmação é atômica, mantém o cartão original ativo e recusa qualquer fatura de origem/destino conferida. O motivo e os valores anteriores/posteriores ficam no histórico. Revisão desatualizada exige recarga e nova conferência. Contrato, migração e limites em [CORRECOES.md](CORRECOES.md).
+
+## Revisão e exclusão — 0.11
+
+Revisão de categoria exige a versão atual da parcela. Exclusão integral exige revisão atual da operação; a interface consulta os dados atuais, pede confirmação e envia essa revisão. Correções ocorridas durante a confirmação impedem exclusão silenciosa. Linhas importadas podem ser corrigidas mantendo a fatura e a parcela única, com motivo/prévia e origem preservada. Faturas conferidas continuam bloqueando essas alterações. Detalhes em LANCAMENTOS_E_IMPORTACAO.md.

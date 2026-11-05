@@ -4,7 +4,7 @@
 
 Prioridade definida pelo responsável pelo produto: concluir o desenvolvimento e uma jornada end-to-end confiável em ambiente local antes de contratar serviços, adquirir domínio ou conectar Google. Não há autorização de publicação ou contratação nesta revisão. Desenvolvimento, testes e documentação seguem containerizados, em pt-BR, com BRL/centavos e privacidade desde a concepção.
 
-Base de código homologada: `39c0a67`, [CI 42033442245](https://github.com/oYuriyan/walleturbo/actions/runs/42033442245), com 123 testes, integração PostgreSQL/Redis, PDF/planejamento no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
+Base de código homologada: `8124548`, [CI 42045260683](https://github.com/oYuriyan/walleturbo/actions/runs/42045260683), com 133 testes, integração PostgreSQL/Redis, migrações 001–010, PDF/planejamento/cartões/demonstração no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
 
 Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOMOLOGACAO.md são históricos. Uma tarefa só passa a concluída com comportamento implementado, critérios de aceite atendidos, evidências e documentação atualizada. As fases abaixo estão pendentes ou parciais; não são entregas prontas.
 
@@ -34,8 +34,8 @@ Dependência: base existente. Origem: completar o controle financeiro já inicia
 - **FIN-01 — concluído na 0.5:** definir saldo inicial por conta com data de referência, saldo calculado, ajustes explícitos e política para lançamentos anteriores à referência. Diferenciar saldo informado, saldo calculado, resultado e caixa.
 - **FIN-02 — concluído na 0.5:** transferências entre contas próprias, com débito/crédito atômicos, estorno, reenvio idempotente e proteção contra concorrência. Transferência não conta como receita/despesa.
 - **FIN-03 — concluído na 0.7:** ciclo de vida de contas, cartões e metas: renomear, arquivar, corrigir e excluir conforme vínculos/histórico; incluir política para lançamentos antigos sem conta. Evitar exclusão silenciosa de histórico.
-- **FIN-04 — parcial; histórico homologado na 0.8, correções de compra manual/pagamento homologadas na 0.9/0.10:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
-- **FIN-05 — parcial; recibos para compras/pagamentos após exclusão homologados na 0.9; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
+- **FIN-04 — parcial; histórico homologado na 0.8, correções de compra manual/pagamento homologadas na 0.9/0.10 e lançamentos/importados no mesmo contexto na 0.11:** edição consistente de operações parceladas, pagamentos e ajustes, com revisão de efeitos em meses/faturas já conferidos. Histórico mínimo de alterações financeiras com retenção e acesso definidos, sem registrar dados sensíveis em logs gerais.
+- **FIN-05 — parcial; recibos para compras/pagamentos após exclusão homologados na 0.9; marcas de importação/UUIDs de lançamentos na 0.11; contrato de saldos/transferências em SALDOS.md:** consolidar invariantes e exemplos em documento de domínio: centavos, sinais, datas civis, competência/vencimento, caixa, saldo, estornos e reversões. Incluir migração de dados existentes e idempotência após exclusão/reenvio tardio.
 
 Aceite: cenário com duas contas, saldo inicial, receitas, despesas, transferência, compra parcelada, pagamento e reversão termina com valores esperados por conta/mês; nenhuma duplicação ou perda por reenvio, concorrência ou migração.
 
@@ -70,7 +70,7 @@ Aceite do marco A: formatos iniciais declarados homologados, prévia não grava,
 Dependência: fluxos das fases 1–3. A interface de cada recurso é entregue junto ao backend; esta fase integra e revisa a experiência.
 
 - **UX-01:** primeiro uso orientado: conta, saldo inicial, cartão, renda, importação e primeira meta. Separar claramente demonstração e conta autenticada.
-- **UX-02:** entrada rápida de gastos, filtros/busca, edição em lote apropriada, navegação consistente e revisão simples de importações; estados vazio, carregando, erro, conflito, offline e sessão expirada.
+- **UX-02:** entrada rápida de gastos, filtros/busca, edição em lote apropriada, navegação consistente e revisão simples de importações; estados vazio, carregando, erro, conflito, offline e sessão expirada. Revisar singular/plural dos avisos de importação identificados na inspeção da 0.11.
 - **UX-03:** revisar design responsivo inspirado nas referências Nubank/Apple, identidade própria, hierarquia, botões confortáveis e temas claro/escuro. A skill unslop instalada pode apoiar a revisão; instalação não significa que o redesign foi executado.
 - **UX-04:** teclado, foco, leitores de tela, contraste, alvos de toque e mensagens acessíveis; testes automáticos e revisão manual orientada a WCAG 2.2 AA. Validar Chromium e ao menos um segundo motor de navegador, desktop/mobile e tamanhos intermediários.
 - **UX-05:** resumo mensal acionável com diferenças entre saldo, resultado, compromissos, margem e metas; alertas com evidência e caminho de correção.
@@ -87,7 +87,7 @@ Dependência: fases 1–4. Segurança e testes são transversais; esta fase fech
 - **REL-04:** paginação, agregação no banco, limites de volume, índices medidos e exportação por lotes/assíncrona quando necessário. Remover carregamento ilimitado de dashboard/exportação e documentar limite do detector de assinaturas.
 - **REL-05:** eventos de auditoria e logs estruturados mínimos com request-id, métricas e diagnóstico recuperável, sem descrições financeiras, códigos OAuth ou tokens. Testar indisponibilidade de banco/Redis/parser, falhas parciais, reinício, concorrência e reenvio de operações.
 - **REL-06:** exportação/exclusão de todas as novas entidades; política de retenção, eliminação temporária e reaplicação de exclusões após restauração. Diferenciar apagar finanças e encerrar identidade/conta.
-- **REL-07:** integrar todos os roteiros relevantes ao CI (incluindo cartões e regressão XSS), fixar imagens por digest, scans de imagens/segredos/SAST e atualização de dependências. Registrar e corrigir vulnerabilidades conforme severidade.
+- **REL-07 — parcial na 0.11 (roteiros de cartões/demonstração integrados):** integrar todos os roteiros relevantes ao CI (incluindo cartões e regressão XSS), fixar imagens por digest, scans de imagens/segredos/SAST e atualização de dependências. Registrar e corrigir vulnerabilidades conforme severidade.
 - **REL-08:** carga controlada no ambiente próprio, cotas persistentes contra crescimento de armazenamento e limites por endpoint; definir volume-alvo, orçamento de recursos e limites de latência/erro antes de medir. Otimizar com evidência, mantendo monólito modular até necessidade de separação.
 - **REL-09:** instalação reproduzível em máquina limpa, scripts de inicialização/diagnóstico, manual completo, matriz requisito→teste e checklist de aceite. Organizar entregas futuras em PRs revisáveis e configurar proteções/checks obrigatórios da main se disponíveis no plano do GitHub; limitações do plano devem ser documentadas.
 
@@ -164,6 +164,6 @@ Entrega 0.9: correção atômica de compras manuais com prévia, motivo e revis�
 
 Entrega 0.10: correção versionada de pagamentos com prévia de saldos/caixa, limite revalidado e remoção protegida, preservando IDs/UUIDs e histórico. Migração 009 e testes homologados no CI 42033442245, código 39c0a67 (PAGAMENTOS.md).
 
-Entrega 0.11: lançamentos versionados, correção de importados no mesmo contexto, revisão/exclusão de cartão protegidas e marcas de origem após exclusão. Migração 010 e testes; homologação pendente do CI (LANCAMENTOS_E_IMPORTACAO.md).
+Entrega 0.11: lançamentos versionados, correção de importados no mesmo contexto, revisão/exclusão de cartão protegidas e marcas de origem após exclusão. Migração 010 e testes homologados no CI 42045260683, código 8124548 (LANCAMENTOS_E_IMPORTACAO.md).
 
-Próxima entrega: concluir revisão do contrato financeiro/efeitos em faturas e cenários e a identidade de origem para documentos divergentes (FIN-04/05, IMP-02), preservando limites de crédito/créditos/recorrências da fase 2. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.
+Próxima entrega: concluir revisão do contrato financeiro/efeitos em faturas e cenários e a identidade de origem para documentos divergentes (FIN-04/05, IMP-02/03), preservando limites de crédito/créditos/recorrências da fase 2. Em seguida, fase 2. Não conectar automaticamente o novo saldo à capacidade de aporte antes de fechar compromissos/projeção de caixa. Nenhuma decisão de domínio ou credencial Google bloqueia esse trabalho.

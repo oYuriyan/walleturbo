@@ -6,7 +6,7 @@ Não existe garantia de barrar toda entrada indesejada. O objetivo é reduzir a 
 |---|---|---|
 | IDOR / acesso entre usuários | Filtro owner em leitura, edição, exclusão e exportação; FKs compostas nas relações novas | Testes de dois usuários; adicionar RLS |
 | CSRF | Origem exata e token de sessão nas mutações | Testes de origem e token inválidos |
-| XSS persistente | Renderização com textContent; CSP sem scripts inline | Teste de navegador pendente |
+| XSS persistente | Renderização com textContent; CSP sem scripts inline | HTML no histórico verificado na 0.8; demonstração/XSS integrada ao CI na 0.11. Cobertura persistida abrangente e segundo motor pendentes |
 | SQL injection | ORM com parâmetros, schemas restritos | Não há SQL dinâmico com entrada do usuário |
 | Fixação / furto de sessão | Cookie HttpOnly, rotação, TTL, sessão no Redis | Secure em HTTPS; revogação global pendente |
 | Bypass de MFA | Claim ACR exigida e issuer fixado | Keycloak/TOTP real validado; Google, recuperação e testes criptográficos ampliados pendentes |

@@ -22,7 +22,7 @@ data;descricao;valor;tipo
 
 Data ISO, valor sem separador de milhar e com vírgula e dois decimais, tipo `receita` ou `despesa`. Arquivos com até 256 KB/500 registros. Leia a prévia e confirme. Erros de validação impedem toda a importação. A sugestão de categoria usa palavras-chave e permanece pendente de revisão.
 
-Reimportar as mesmas linhas ignora duplicados. Compras idênticas no mesmo arquivo são preservadas por contagem de ocorrência. **Limitação:** arquivos distintos com compras realmente diferentes, mas com mesma data/descrição/valor/tipo, podem colidir; registre manualmente o item após conferir. A próxima versão precisa incorporar identidade de conta/fatura e identificador bancário.
+Reimportar as mesmas linhas ignora duplicados. Compras idênticas no mesmo arquivo são preservadas por contagem de ocorrência. **Limitação:** arquivos distintos com compras realmente diferentes, mas com mesma data/descrição/valor/tipo, podem colidir; registre manualmente o item após conferir. A seleção de conta e a fatura compõem o contexto de importação. Identificador do emissor e conciliação de fontes divergentes continuam pendentes.
 
 Para PDF com texto selecionável, use **Ler PDF** na fatura e siga [Leitura assistida](PDF.md). Imagens, OCR e OFX ainda não são suportados. Não inclua cartão completo, CVV, senha ou dados desnecessários nas descrições. A importação real exige conta conectada; o modo demonstração admite lançamentos manuais.
 
@@ -62,7 +62,7 @@ Em **Contas e cartões**, use **Consultar histórico** para ver criações, alte
 
 ## Corrigir uma compra completa
 
-Em uma fatura aberta, escolha **Corrigir compra** em uma compra manual. Todos os meses da operação serão considerados. Corrija os campos, informe o motivo e selecione **Conferir alterações**. Revise os totais por fatura antes de **Confirmar correção**. Se outra sessão mudar a compra, use **Recarregar compra** e confira novamente. Cartão arquivado precisa ser reativado; faturas conferidas precisam de revisão/reabertura explícita. A correção integral de linhas importadas ainda não está disponível.
+Em uma fatura aberta, escolha **Corrigir compra** em uma compra manual. Todos os meses da operação serão considerados. Corrija os campos, informe o motivo e selecione **Conferir alterações**. Revise os totais por fatura antes de **Confirmar correção**. Se outra sessão mudar a compra, use **Recarregar compra** e confira novamente. Cartão arquivado precisa ser reativado; faturas conferidas precisam de revisão/reabertura explícita. Linhas importadas podem ser corrigidas mantendo fatura e parcela única; veja a seção de revisão segura abaixo.
 
 Excluir uma compra ou remover um pagamento mantém seu identificador de envio reservado. Um reenvio antigo não recria o registro. Para uma operação nova, use um novo cadastro pelo formulário. Consulte [CORRECOES.md](CORRECOES.md).
 
