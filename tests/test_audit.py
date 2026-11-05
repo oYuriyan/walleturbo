@@ -64,7 +64,15 @@ def test_card_reconciliation_payment_and_reversal_have_history(client, login):
     c = client.post("/api/cards", json={"name": "Cartão", "due_day": 10}).json()
     buy(client, c, installments=1)
     s = statement(client)
-    client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 10001})
+    client.post(
+        f"/api/statements/{s['id']}/close",
+        json={
+            "expected_cents": 10001,
+            "expected_revision": client.get(f"/api/statements/{s['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     from uuid import uuid4
 
     p = client.post(

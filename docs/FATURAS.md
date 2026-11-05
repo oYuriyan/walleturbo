@@ -42,10 +42,14 @@ Saldos por conta e transferências próprias passaram a ser implementados no inc
 
 Revisão de categoria exige a versão atual da parcela. Exclusão integral exige revisão atual da operação; a interface consulta os dados atuais, pede confirmação e envia essa revisão. Correções ocorridas durante a confirmação impedem exclusão silenciosa. Linhas importadas podem ser corrigidas mantendo a fatura e a parcela única, com motivo/prévia e origem preservada. Faturas conferidas continuam bloqueando essas alterações. Detalhes em LANCAMENTOS_E_IMPORTACAO.md.
 
-## Revisão da conferência — incremento em validação
+## Conferência versionada — 0.12
 
-As respostas de fatura incluem `revision`, um hash do estado da fatura, lançamentos e pagamentos, incluindo versões dos registros. A interface guarda a revisão ao abrir a conferência e envia `expected_revision` no fechamento; a reabertura envia esse parâmetro na query. O servidor compara sob o lock do cartão/fatura. Alterações mesmo sem diferença no total recebem 409 e exigem atualizar a tela e conferir novamente.
+Faturas incluem `version` monotônica e `revision`, hash do estado, lançamentos e pagamentos. GET /api/statements/{id} obtém snapshot consistente sob lock do cartão. POST /api/statements/{id}/close exige expected_cents e expected_revision no JSON; POST /api/statements/{id}/reopen exige expected_revision na query. Ausência/formato inválido retorna 422, divergência retorna 409 e IDs alheios retornam 404. Clientes anteriores precisam atualizar. Total, categorias revisadas e impedimento de reabrir com pagamentos continuam obrigatórios.
 
-Compatibilidade transitória: clientes anteriores que omitem a revisão mantêm as verificações de total, categorias e pagamentos, mas não recebem a proteção adicional de snapshot. Tornar o parâmetro obrigatório, versionar o ciclo aberto/fechado e oferecer recarga dentro do diálogo ainda fazem parte de FIN-04/05. O hash detecta o estado atual; fechar e reabrir sem alterar registros pode restaurar o mesmo hash, portanto não representa uma versão monotônica da fatura. Não conclui o contrato financeiro amplo nem os controles de cenários.
+Fechar e reabrir aumenta version mesmo retornando aos mesmos valores. A revisão antiga não volta a ser válida. Escritores concorrentes são serializados pelo lock de cartão/fatura; somente uma confirmação da mesma revisão é aceita. A migração 011 inicializa faturas existentes em versão 1, preservando valores, pagamentos e estado; novas transições geram histórico na transação financeira.
 
-Validação local: 135 testes com avisos tratados como erro; checagens novas cobrem alteração de categoria sem mudança de total, fechamento/reabertura obsoletos, revisão estável e token inválido. Homologação containerizada depende do CI deste incremento.
+A interface envia a revisão exibida. Em conflito, Recarregar fatura limpa o valor digitado e carrega nova revisão; confira novamente com o emissor antes de confirmar. A reabertura usa a revisão da lista: em conflito, atualize a tela. Sessão encerrada limpa o formulário; respostas de recarga não devem restaurar dados privados após a limpeza.
+
+Validação local: 136 testes com avisos tratados como erro. PostgreSQL disputa duas conferências e verifica retorno ao estado aberto sem reutilizar revisão antiga. Navegador modifica a categoria em outra sessão, mantém o total e exige conflito/recarga antes de conferir. Migração, regressões e homologação dependem do CI deste incremento.
+
+FIN-04/05 permanecem parciais: cenários/orçamentos, contrato financeiro amplo e identidade de documentos divergentes continuam no roadmap. Crédito negativo, recorrências e operação pública continuam nas fases próprias.

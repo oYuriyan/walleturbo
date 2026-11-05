@@ -71,3 +71,46 @@ def test_revision_stable_and_invalid_token_rejected(client, login):
         ).status_code
         == 422
     )
+
+
+def test_cycle_changes_revision_and_requires_token(client, login):
+    _, card = setup(client, login)
+    buy(client, card, installments=1)
+    s = statement(client)
+    path = "/api/statements/" + s["id"]
+    assert (
+        client.post(
+            path + "/close", json={"expected_cents": s["total_cents"]}
+        ).status_code
+        == 422
+    )
+    assert client.post(path + "/reopen").status_code == 422
+    assert (
+        client.post(
+            path + "/close",
+            json={
+                "expected_cents": s["total_cents"],
+                "expected_revision": s["revision"],
+            },
+        ).status_code
+        == 200
+    )
+    closed = statement(client)
+    assert (
+        client.post(
+            path + "/reopen?expected_revision=" + closed["revision"]
+        ).status_code
+        == 200
+    )
+    reopened = statement(client)
+    assert reopened["version"] > s["version"] and reopened["revision"] != s["revision"]
+    assert (
+        client.post(
+            path + "/close",
+            json={
+                "expected_cents": s["total_cents"],
+                "expected_revision": s["revision"],
+            },
+        ).status_code
+        == 409
+    )

@@ -139,7 +139,15 @@ def test_card_only_payment_affects_account_and_reversal_restores_it(client, logi
     buy(client, card, amount_cents=8000, installments=1)
     assert balances(client)["total_cents"] == 10000
     s = statement(client)
-    client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 8000})
+    client.post(
+        f"/api/statements/{s['id']}/close",
+        json={
+            "expected_cents": 8000,
+            "expected_revision": client.get(f"/api/statements/{s['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     payment = client.post(
         f"/api/statements/{s['id']}/payments",
         json={
@@ -239,7 +247,15 @@ def test_complete_cash_scenario_conserves_total_without_double_expense(client, l
     card = client.post("/api/cards", json={"name": "Cartão", "due_day": 10}).json()
     buy(client, card, amount_cents=8000, installments=1)
     bill = statement(client)
-    client.post(f"/api/statements/{bill['id']}/close", json={"expected_cents": 8000})
+    client.post(
+        f"/api/statements/{bill['id']}/close",
+        json={
+            "expected_cents": 8000,
+            "expected_revision": client.get(f"/api/statements/{bill['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     client.post(
         f"/api/statements/{bill['id']}/payments",
         json={

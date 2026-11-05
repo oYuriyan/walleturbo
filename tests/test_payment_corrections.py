@@ -14,7 +14,13 @@ def fixture(client, login, reference=True):
     s = statement(client)
     assert (
         client.post(
-            f"/api/statements/{s['id']}/close", json={"expected_cents": 15000}
+            f"/api/statements/{s['id']}/close",
+            json={
+                "expected_cents": 15000,
+                "expected_revision": client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 200
     )

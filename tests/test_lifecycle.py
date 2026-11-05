@@ -138,7 +138,13 @@ def test_archived_card_can_settle_existing_bills_but_not_create_new_charges(
     )
     assert (
         client.post(
-            f"/api/statements/{bill['id']}/close", json={"expected_cents": 10000}
+            f"/api/statements/{bill['id']}/close",
+            json={
+                "expected_cents": 10000,
+                "expected_revision": client.get(f"/api/statements/{bill['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 200
     )
@@ -174,7 +180,18 @@ def test_archived_card_can_settle_existing_bills_but_not_create_new_charges(
         ).status_code
         == 204
     )
-    assert client.post(f"/api/statements/{bill['id']}/reopen").status_code == 200
+    assert (
+        client.post(
+            (
+                f"/api/statements/{bill['id']}/reopen"
+                + "?expected_revision="
+                + client.get(f"/api/statements/{bill['id']}")
+                .json()
+                .get("revision", "0" * 64)
+            )
+        ).status_code
+        == 200
+    )
 
 
 @pytest.mark.parametrize("kind", ["accounts", "cards"])

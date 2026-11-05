@@ -563,6 +563,25 @@ $("#review-charge-form").onsubmit = (e) => {
     await refresh();
   });
 };
+$("#reload-reconcile").onclick = () =>
+  action(async () => {
+    const f = $("#reconcile-form"),
+      id = f.elements.id.value,
+      expectedCsrf = csrf;
+    const current = demo
+      ? totals(financeStatements.find((s) => s.id === id))
+      : await api("/api/statements/" + id);
+    if (
+      csrf !== expectedCsrf ||
+      f.elements.id.value !== id ||
+      !$("#reconcile-dialog").open
+    )
+      return;
+    f.elements.revision.value = current.revision || "";
+    f.elements.amount.value = "";
+    $("#reconcile-dialog").querySelector(".dialog-error")?.remove();
+    message("Fatura recarregada. Confira novamente o total do emissor.");
+  });
 $("#reconcile-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {

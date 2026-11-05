@@ -78,7 +78,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.11.0",
+    version="0.12.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -129,7 +129,7 @@ def live():
 @app.get("/health/ready")
 def ready(db: DBSession = Depends(db_session)):
     try:
-        db.execute(select(Statement.id).limit(1))
+        db.execute(select(Statement.id, Statement.version).limit(1))
         db.execute(select(Transaction.account_id).limit(1))
         db.execute(select(RequestReceipt.request_id).limit(1))
         db.execute(select(ImportMark.resource_id).limit(1))

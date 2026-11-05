@@ -78,7 +78,7 @@ class ReviewInput(Input):
 
 
 class ReconcileInput(Input):
-    expected_revision: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    expected_revision: str = Field(pattern=r"^[a-f0-9]{64}$")
     expected_cents: int = Field(strict=True, ge=0, le=99999999999)
 
 
@@ -233,7 +233,7 @@ def statement_totals(db, user, statement):
 
 
 def require_statement_revision(snapshot, expected):
-    if expected is not None and snapshot["revision"] != expected:
+    if snapshot["revision"] != expected:
         raise HTTPException(
             409,
             "Fatura alterada em outra sessão. Atualize os dados e confira novamente.",
@@ -434,6 +434,14 @@ def delete_operation(
     db.commit()
 
 
+@router.get("/statements/{statement_id}")
+def get_statement(
+    statement_id: str, user=Depends(current_user), db: Session = Depends(db_session)
+):
+    statement = lock_statement(db, user, statement_id)
+    return statement_totals(db, user, statement)
+
+
 @router.post("/statements/{statement_id}/close")
 def close_statement(
     statement_id: str,
@@ -463,7 +471,7 @@ def close_statement(
 @router.post("/statements/{statement_id}/reopen")
 def reopen(
     statement_id: str,
-    expected_revision: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+    expected_revision: str = Query(pattern=r"^[a-f0-9]{64}$"),
     user=Depends(current_user),
     db: Session = Depends(db_session),
 ):

@@ -80,13 +80,25 @@ def test_reconciliation_and_payment_do_not_double_expenses(client, login):
     )
     assert (
         client.post(
-            f"/api/statements/{s['id']}/close", json={"expected_cents": 9999}
+            f"/api/statements/{s['id']}/close",
+            json={
+                "expected_cents": 9999,
+                "expected_revision": client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 409
     )
     assert (
         client.post(
-            f"/api/statements/{s['id']}/close", json={"expected_cents": 10000}
+            f"/api/statements/{s['id']}/close",
+            json={
+                "expected_cents": 10000,
+                "expected_revision": client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 200
     )
@@ -115,7 +127,18 @@ def test_reconciliation_and_payment_do_not_double_expenses(client, login):
     assert data["cash_balance_cents"] == -6000
     assert data["balance_cents"] == -10000
     assert statement(client)["remaining_cents"] == 4000
-    assert client.post(f"/api/statements/{s['id']}/reopen").status_code == 409
+    assert (
+        client.post(
+            (
+                f"/api/statements/{s['id']}/reopen"
+                + "?expected_revision="
+                + client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64)
+            )
+        ).status_code
+        == 409
+    )
     assert (
         client.delete(
             "/api/statement-payments/"
@@ -125,7 +148,18 @@ def test_reconciliation_and_payment_do_not_double_expenses(client, login):
         ).status_code
         == 204
     )
-    assert client.post(f"/api/statements/{s['id']}/reopen").status_code == 200
+    assert (
+        client.post(
+            (
+                f"/api/statements/{s['id']}/reopen"
+                + "?expected_revision="
+                + client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64)
+            )
+        ).status_code
+        == 200
+    )
 
 
 def test_refund_reduces_consumption_and_full_payment(client, login):
@@ -135,7 +169,15 @@ def test_refund_reduces_consumption_and_full_payment(client, login):
     s = statement(client)
     assert s["total_cents"] == 7500
     assert client.get("/api/dashboard?month=2026-11").json()["expense_cents"] == 7500
-    client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 7500})
+    client.post(
+        f"/api/statements/{s['id']}/close",
+        json={
+            "expected_cents": 7500,
+            "expected_revision": client.get(f"/api/statements/{s['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     assert (
         client.post(
             f"/api/statements/{s['id']}/payments",
@@ -163,7 +205,13 @@ def test_pending_review_blocks_close_and_closed_bill_is_immutable(client, login)
     s = statement(client)
     assert (
         client.post(
-            f"/api/statements/{s['id']}/close", json={"expected_cents": 10001}
+            f"/api/statements/{s['id']}/close",
+            json={
+                "expected_cents": 10001,
+                "expected_revision": client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 409
     )
@@ -180,7 +228,13 @@ def test_pending_review_blocks_close_and_closed_bill_is_immutable(client, login)
     )
     assert (
         client.post(
-            f"/api/statements/{s['id']}/close", json={"expected_cents": 10001}
+            f"/api/statements/{s['id']}/close",
+            json={
+                "expected_cents": 10001,
+                "expected_revision": client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 200
     )
@@ -207,7 +261,15 @@ def test_pending_review_blocks_close_and_closed_bill_is_immutable(client, login)
 def test_batch_rolls_back_if_a_future_statement_is_closed(client, login):
     _, card = setup(client, login)
     s = client.post(f"/api/cards/{card['id']}/statements?month=2026-12").json()
-    client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 0})
+    client.post(
+        f"/api/statements/{s['id']}/close",
+        json={
+            "expected_cents": 0,
+            "expected_revision": client.get(f"/api/statements/{s['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     assert buy(client, card)[0].status_code == 409
     assert client.get("/api/statements?month=2026-11").json() == []
     assert client.get("/api/privacy/export").json()["card_charges"] == []
@@ -217,7 +279,15 @@ def test_operation_delete_is_atomic_across_installments(client, login):
     _, card = setup(client, login)
     response, _ = buy(client, card)
     s = statement(client, "2026-12")
-    client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 3334})
+    client.post(
+        f"/api/statements/{s['id']}/close",
+        json={
+            "expected_cents": 3334,
+            "expected_revision": client.get(f"/api/statements/{s['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     assert (
         delete_operation(
             client, "/api/card-operations/" + response.json()[0]["operation_id"]
@@ -225,7 +295,13 @@ def test_operation_delete_is_atomic_across_installments(client, login):
         == 409
     )
     assert len(client.get("/api/privacy/export").json()["card_charges"]) == 3
-    client.post(f"/api/statements/{s['id']}/reopen")
+    client.post(
+        (
+            f"/api/statements/{s['id']}/reopen"
+            + "?expected_revision="
+            + client.get(f"/api/statements/{s['id']}").json().get("revision", "0" * 64)
+        )
+    )
     assert (
         delete_operation(
             client, "/api/card-operations/" + response.json()[0]["operation_id"]
@@ -302,7 +378,15 @@ def test_all_statement_routes_enforce_owner(client, login):
     response, _ = buy(client, card, installments=1)
     charge = response.json()[0]
     s = statement(client)
-    client.post(f"/api/statements/{s['id']}/close", json={"expected_cents": 10001})
+    client.post(
+        f"/api/statements/{s['id']}/close",
+        json={
+            "expected_cents": 10001,
+            "expected_revision": client.get(f"/api/statements/{s['id']}")
+            .json()
+            .get("revision", "0" * 64),
+        },
+    )
     payment = {
         "request_id": str(uuid4()),
         "account_id": account["id"],
@@ -318,11 +402,28 @@ def test_all_statement_routes_enforce_owner(client, login):
     )
     assert (
         client.post(
-            f"/api/statements/{s['id']}/close", json={"expected_cents": 10001}
+            f"/api/statements/{s['id']}/close",
+            json={
+                "expected_cents": 10001,
+                "expected_revision": client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64),
+            },
         ).status_code
         == 404
     )
-    assert client.post(f"/api/statements/{s['id']}/reopen").status_code == 404
+    assert (
+        client.post(
+            (
+                f"/api/statements/{s['id']}/reopen"
+                + "?expected_revision="
+                + client.get(f"/api/statements/{s['id']}")
+                .json()
+                .get("revision", "0" * 64)
+            )
+        ).status_code
+        == 404
+    )
     assert (
         client.post(
             f"/api/statements/{s['id']}/import/preview", json={"content": CSV}

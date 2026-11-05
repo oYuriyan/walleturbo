@@ -62,9 +62,41 @@ with httpx.Client(
         assert len(statements) == 1 and statements[0]["total_cents"] == 10000
         s = statements[0]
         assert s["due_date"] == "2028-02-29"
+        close_body = {"expected_cents": 10000, "expected_revision": s["revision"]}
+
+        def close(_):
+            with httpx.Client(
+                base_url=url,
+                trust_env=False,
+                headers=headers,
+                cookies=cookies,
+                timeout=15,
+            ) as worker:
+                return worker.post(f"/api/statements/{s['id']}/close", json=close_body)
+
+        with ThreadPoolExecutor(2) as pool:
+            results = list(pool.map(close, range(2)))
+        assert sorted(r.status_code for r in results) == [200, 409]
+        closed = client.get(f"/api/statements/{s['id']}").json()
         assert (
             client.post(
-                f"/api/statements/{s['id']}/close", json={"expected_cents": 10000}
+                f"/api/statements/{s['id']}/reopen?expected_revision="
+                + closed["revision"]
+            ).status_code
+            == 200
+        )
+        reopened = client.get(f"/api/statements/{s['id']}").json()
+        assert (
+            reopened["version"] > s["version"] and reopened["revision"] != s["revision"]
+        )
+        assert (
+            client.post(f"/api/statements/{s['id']}/close", json=close_body).status_code
+            == 409
+        )
+        assert (
+            client.post(
+                f"/api/statements/{s['id']}/close",
+                json={**close_body, "expected_revision": reopened["revision"]},
             ).status_code
             == 200
         )

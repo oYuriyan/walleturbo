@@ -94,7 +94,19 @@ const base = "http://localhost:8000";
       (
         await context.request.post(
           base + `/api/statements/${statement.id}/close`,
-          { headers, data: { expected_cents: 15000 } },
+          {
+            headers,
+            data: {
+              expected_cents: 15000,
+              expected_revision: (
+                await (
+                  await context.request.get(
+                    base + "/api/statements/" + statement.id,
+                  )
+                ).json()
+              ).revision,
+            },
+          },
         )
       ).status(),
       200,
