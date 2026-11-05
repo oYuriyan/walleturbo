@@ -106,6 +106,7 @@ const fs = require("fs");
       .click();
     const correction = page.locator("#correction-form"),
       dialog = page.locator("#correction-dialog");
+    await dialog.waitFor({ state: "visible" });
     if (
       !(await correction
         .locator('[name="installments"]')
