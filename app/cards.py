@@ -18,6 +18,7 @@ from app.security import current_user
 from app.receipts import claim
 from app.db import RequestReceipt, Transaction
 from app.import_marks import reserve, remove as remove_import, result as import_result
+from app.import_review import candidates
 
 router = APIRouter(prefix="/api")
 MONTH_PATTERN = r"^(19\d{2}|[2-9]\d{3})-(0[1-9]|1[0-2])$"
@@ -596,7 +597,13 @@ def preview(
     statement = owned(db, Statement, user, statement_id)
     require_open(statement)
     active_statement_card(db, user, statement)
-    return {"entries": [e.model_dump() for e in csv_entries(body)]}
+    entries = csv_entries(body)
+    return {
+        "entries": [e.model_dump() for e in entries],
+        "possible_duplicates": candidates(
+            db, Charge, user, entries, Charge.statement_id == statement.id
+        ),
+    }
 
 
 @router.post("/statements/{statement_id}/import/confirm")
