@@ -147,6 +147,22 @@ const base = "http://localhost:8000";
     transaction = page
       .locator("#transaction-list .transaction")
       .filter({ hasText: "Origem CSV" });
+    await page.locator("#import-button").click();
+    await page.locator("#csv-file").setInputFiles({
+      name: "conferencia.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(csv),
+    });
+    await page
+      .locator("#import-preview")
+      .getByText(/Possíveis duplicatas:/)
+      .waitFor();
+    assert.equal(await page.locator("#confirm-import").isDisabled(), true);
+    await page.locator('#import-preview input[type="checkbox"]').check();
+    assert.equal(await page.locator("#confirm-import").isEnabled(), true);
+    await page.locator('#import-preview input[type="checkbox"]').uncheck();
+    assert.equal(await page.locator("#confirm-import").isDisabled(), true);
+    await page.locator("#import-dialog .close").click();
     page.once("dialog", (d) => d.accept());
     await transaction
       .getByRole("button", { name: "Excluir", exact: true })

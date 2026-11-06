@@ -48,6 +48,7 @@ from app.cards import (
     require_active,
 )
 from app.domain import GoalInput, parse_csv, import_keys, summarize
+from app.import_review import candidates
 from app.security import (
     SecurityMiddleware,
     BodyLimitMiddleware,
@@ -78,7 +79,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.14.0",
+    version="0.15.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -282,11 +283,19 @@ class CSVInput(BaseModel):
 
 
 @app.post("/api/import/preview")
-def preview(body: CSVInput, user=Depends(current_user)):
+def preview(body: CSVInput, user=Depends(current_user), db: DBSession = Depends(db_session)):
     try:
-        return {"entries": [e.model_dump() for e in parse_csv(body.content)]}
+        entries = parse_csv(body.content)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from None
+    if body.account_id:
+        require_active(owned(db, Account, user, body.account_id))
+    return {
+        "entries": [e.model_dump() for e in entries],
+        "possible_duplicates": candidates(
+            db, Transaction, user, entries, Transaction.account_id == body.account_id
+        ),
+    }
 
 
 @app.post("/api/import/confirm")

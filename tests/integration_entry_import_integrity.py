@@ -188,6 +188,19 @@ with httpx2.Client(**options) as client:
             len(exported["import_marks"]) == 3
             and sum(m["removed"] for m in exported["import_marks"]) == 2
         )
+        # Exercita a consulta com janela SQL no PostgreSQL real sem gravar.
+        existing = exported["transactions"][0]
+        cents = existing["amount_cents"]
+        value = f"{cents // 100},{cents % 100:02d}"
+        content = ("data;descricao;valor;tipo\n"
+                   f"{existing['date']};Outro documento;{value};despesa\n")
+        preview = client.post("/api/import/preview", json={
+            "content": content, "account_id": existing["account_id"],
+        })
+        assert preview.status_code == 200, preview.text
+        assert any(row["id"] == existing["id"]
+                   for row in preview.json()["possible_duplicates"][0]["matches"])
+        assert client.get("/api/privacy/export").json() == exported
         print(
             "PASS: UUID e edição/exclusão concorrentes, lotes em ordem inversa sem deadlock, correção importada e reimportação sem recriação no PostgreSQL."
         )
