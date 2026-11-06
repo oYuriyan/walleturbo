@@ -1,4 +1,4 @@
-# Plano consolidado de entrega — revisão de 05/11/2026
+# Plano consolidado de entrega — revisão de 06/11/2026
 
 ## Diretriz e evidência atual
 
@@ -170,4 +170,8 @@ Próxima entrega: concluir revisão do contrato financeiro/efeitos em faturas e 
 
 Entrega 0.12 homologada (CI 42085667177, PR #2 integrado à main): conferência/reabertura com revisão obrigatória, versão monotônica da fatura, migração 011 e recarga no diálogo. Cenários/orçamentos e contrato financeiro amplo permanecem na próxima prioridade; não concluir FIN-04/05 antes das respectivas evidências.
 
-Entrega 0.13 em validação: versão compartilhada de cenários/limites, histórico e recarga, migração 012. A próxima prioridade de FIN-04/05 continua sendo o contrato financeiro amplo e confirmação dos registros diante de mudanças financeiras; depois conciliação de documentos/fontes divergentes em IMP-02/03. Não declarar FIN-04/05 integralmente concluídos com essas configurações.
+Entrega 0.13 homologada (PR #3, CI 42091421775, 140 testes): versão compartilhada de cenários/limites, histórico e recarga, migração 012. A próxima prioridade de FIN-04/05 continua sendo o contrato financeiro amplo e confirmação dos registros diante de mudanças financeiras; depois conciliação de documentos/fontes divergentes em IMP-02/03. Não declarar FIN-04/05 integralmente concluídos com essas configurações.
+
+Entrega 0.14 homologada: confirmação vinculada aos registros lidos, incluindo mudanças sem diferença de totais, snapshot PostgreSQL e resposta com versão efetivamente gravada. PR #4 integrado à main; CI 42231788298, 142 testes.
+
+Consolidação seguinte: DOMINIO_FINANCEIRO.md reúne sinais, datas, competência, caixa, referências, correções, legado e idempotência. Novo cenário de três meses compara dashboard, planejamento e saldos com parcelas, estorno e pagamento corrigido entre contas/meses. Homologação será registrada no PR desta entrega. Próxima prioridade funcional: conciliação de documentos/fontes divergentes em IMP-02/03, antes de créditos e recorrências. FIN-04/05 continuam parciais para os casos ainda não suportados.
