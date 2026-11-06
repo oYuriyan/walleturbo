@@ -84,6 +84,7 @@ jobs:
           # Nova janela de cotas por IP, sem desabilitar os limites da aplicação.
           sleep 60
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_payment_corrections.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_planning_versions.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_payment_corrections.cjs
       - name: Validar lançamentos e origens de importação
         run: |

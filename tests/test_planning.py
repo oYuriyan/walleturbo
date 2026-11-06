@@ -64,7 +64,12 @@ def test_no_capacity_until_complete_and_reviewed(client, login):
     assert (
         client.put(
             "/api/planning/2026-11/plan",
-            json={"records_complete": True, "buffer_cents": 1000},
+            json={
+                **({"records_complete": True, "buffer_cents": 1000}),
+                "expected_version": client.get(
+                    ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
+                ).json()["version"],
+            },
         ).status_code
         == 200
     )
@@ -82,9 +87,16 @@ def test_reference_income_cannot_inflate_result_and_cash(client, login):
     client.put(
         "/api/planning/2026-11/plan",
         json={
-            "records_complete": True,
-            "income_reference_cents": 100000,
-            "buffer_cents": 1000,
+            **(
+                {
+                    "records_complete": True,
+                    "income_reference_cents": 100000,
+                    "buffer_cents": 1000,
+                }
+            ),
+            "expected_version": client.get(
+                ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
+            ).json()["version"],
         },
     )
     data = client.get("/api/planning/2026-11").json()
@@ -92,7 +104,12 @@ def test_reference_income_cannot_inflate_result_and_cash(client, login):
     assert data["figures"]["cash_change_cents"] == 10000
     client.put(
         "/api/planning/2026-11/plan",
-        json={"records_complete": True, "income_reference_cents": 3000},
+        json={
+            **({"records_complete": True, "income_reference_cents": 3000}),
+            "expected_version": client.get(
+                ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
+            ).json()["version"],
+        },
     )
     assert client.get("/api/planning/2026-11").json()["capacity_cents"] == 0
 
@@ -101,7 +118,12 @@ def test_expected_income_without_actual_income_cannot_fund_goals(client, login):
     login()
     client.put(
         "/api/planning/2026-11/plan",
-        json={"records_complete": True, "income_reference_cents": 100000},
+        json={
+            **({"records_complete": True, "income_reference_cents": 100000}),
+            "expected_version": client.get(
+                ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
+            ).json()["version"],
+        },
     )
     assert client.get("/api/planning/2026-11").json()["capacity_cents"] is None
 
@@ -114,7 +136,12 @@ def test_budgets_include_refunds_and_payments_do_not_duplicate(client, login):
     assert (
         client.put(
             "/api/planning/2026-11/budget",
-            json={"category": "Compras", "amount_cents": 7000},
+            json={
+                **({"category": "Compras", "amount_cents": 7000}),
+                "expected_version": client.get(
+                    ("/api/planning/2026-11/budget").rsplit("/", 1)[0]
+                ).json()["version"],
+            },
         ).status_code
         == 200
     )
@@ -123,8 +150,34 @@ def test_budgets_include_refunds_and_payments_do_not_duplicate(client, login):
         data["budgets"][0]["spent_cents"] == 8000
         and data["budgets"][0]["exceeded_cents"] == 1000
     )
-    assert client.delete("/api/planning/2026-11/budget/Compras").status_code == 204
-    assert client.delete("/api/planning/2026-11/budget/Compras").status_code == 404
+    assert (
+        client.delete(
+            (
+                "/api/planning/2026-11/budget/Compras"
+                + "?expected_version="
+                + str(
+                    client.get(
+                        ("/api/planning/2026-11/budget/Compras").split("/budget/")[0]
+                    ).json()["version"]
+                )
+            )
+        ).status_code
+        == 204
+    )
+    assert (
+        client.delete(
+            (
+                "/api/planning/2026-11/budget/Compras"
+                + "?expected_version="
+                + str(
+                    client.get(
+                        ("/api/planning/2026-11/budget/Compras").split("/budget/")[0]
+                    ).json()["version"]
+                )
+            )
+        ).status_code
+        == 404
+    )
 
 
 def test_recurrence_requires_distinct_months_and_excludes_installments(client, login):
@@ -160,12 +213,38 @@ def test_planning_owner_isolation_and_privacy(client, login):
     login()
     client.put(
         "/api/planning/2026-11/budget",
-        json={"category": "Compras", "amount_cents": 7000},
+        json={
+            **({"category": "Compras", "amount_cents": 7000}),
+            "expected_version": client.get(
+                ("/api/planning/2026-11/budget").rsplit("/", 1)[0]
+            ).json()["version"],
+        },
     )
-    client.put("/api/planning/2026-11/plan", json={"buffer_cents": 500})
+    client.put(
+        "/api/planning/2026-11/plan",
+        json={
+            **({"buffer_cents": 500}),
+            "expected_version": client.get(
+                ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
+            ).json()["version"],
+        },
+    )
     login("bob")
     assert client.get("/api/planning/2026-11").json()["budgets"] == []
-    assert client.delete("/api/planning/2026-11/budget/Compras").status_code == 404
+    assert (
+        client.delete(
+            (
+                "/api/planning/2026-11/budget/Compras"
+                + "?expected_version="
+                + str(
+                    client.get(
+                        ("/api/planning/2026-11/budget/Compras").split("/budget/")[0]
+                    ).json()["version"]
+                )
+            )
+        ).status_code
+        == 404
+    )
     assert client.get("/api/privacy/export").json()["month_plans"] == []
     login()
     assert len(client.get("/api/privacy/export").json()["budgets"]) == 1
@@ -187,11 +266,24 @@ def test_invalid_parameters_and_auth(client, login):
     assert (
         client.put(
             "/api/planning/2026-11/budget",
-            json={"category": "Renda", "amount_cents": 1000},
+            json={
+                **({"category": "Renda", "amount_cents": 1000}),
+                "expected_version": client.get(
+                    ("/api/planning/2026-11/budget").rsplit("/", 1)[0]
+                ).json()["version"],
+            },
         ).status_code
         == 422
     )
     assert (
-        client.put("/api/planning/2026-11/plan", json={"buffer_cents": -1}).status_code
+        client.put(
+            "/api/planning/2026-11/plan",
+            json={
+                **({"buffer_cents": -1}),
+                "expected_version": client.get(
+                    ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
+                ).json()["version"],
+            },
+        ).status_code
         == 422
     )

@@ -37,7 +37,12 @@ class PlanInput(BaseModel):
     records_complete: bool = Field(default=False, strict=True)
 
 
+class PlanEdit(PlanInput):
+    expected_version: int = Field(strict=True, ge=0, le=2147483646)
+
+
 class BudgetInput(BaseModel):
+    expected_version: int = Field(strict=True, ge=0, le=2147483646)
     model_config = ConfigDict(extra="forbid")
     category: str
     amount_cents: int = Field(strict=True, gt=0, le=99999999999)
@@ -359,6 +364,7 @@ def report(month: str, user=Depends(current_user), db: Session = Depends(db_sess
     )
     return {
         "month": month,
+        "version": plan.version if plan else 0,
         "as_of": reference,
         "method": "regras-v1",
         "plan": config,
@@ -375,22 +381,19 @@ def report(month: str, user=Depends(current_user), db: Session = Depends(db_sess
 @router.put("/{month}/plan")
 def save_plan(
     month: str,
-    body: PlanInput,
+    body: PlanEdit,
     user=Depends(current_user),
     db: Session = Depends(db_session),
 ):
     period(month)
-    plan = db.get(MonthPlan, (user, month))
-    if not plan:
-        plan = MonthPlan(owner=user, month=month)
-        db.add(plan)
-    for key, value in body.model_dump().items():
+    plan = lock_plan(db, user, month, body.expected_version)
+    for key, value in body.model_dump(exclude={"expected_version"}).items():
         setattr(plan, key, value)
     plan.stats_signature = (
         signature(monthly_figures(db, user, month)) if body.records_complete else None
     )
     db.commit()
-    return body.model_dump()
+    return {**body.model_dump(exclude={"expected_version"}), "version": plan.version}
 
 
 @router.put("/{month}/budget")
@@ -401,28 +404,55 @@ def save_budget(
     db: Session = Depends(db_session),
 ):
     period(month)
+    plan = lock_plan(db, user, month, body.expected_version)
     budget = db.get(Budget, (user, month, body.category))
     if not budget:
         budget = Budget(owner=user, month=month, category=body.category)
         db.add(budget)
     budget.amount_cents = body.amount_cents
     db.commit()
-    return body.model_dump()
+    return {**body.model_dump(exclude={"expected_version"}), "version": plan.version}
 
 
 @router.delete("/{month}/budget/{category}", status_code=204)
 def remove_budget(
     month: str,
     category: str,
+    expected_version: int = Query(ge=0, le=2147483646),
     user=Depends(current_user),
     db: Session = Depends(db_session),
 ):
     period(month)
-    result = db.execute(
-        delete(Budget).where(
-            Budget.owner == user, Budget.month == month, Budget.category == category
-        )
-    )
-    if not result.rowcount:
+    lock_plan(db, user, month, expected_version)
+    budget = db.get(Budget, (user, month, category))
+    if budget is None:
         raise HTTPException(404, "Orçamento não encontrado")
+    db.delete(budget)
     db.commit()
+
+
+def lock_plan(db, user, month, expected):
+    # O registro do mês permanece após remover limites: evita retorno à versão antiga.
+    if db.bind.dialect.name == "postgresql":
+        from sqlalchemy.dialects.postgresql import insert
+    else:
+        from sqlalchemy.dialects.sqlite import insert
+    db.execute(
+        insert(MonthPlan)
+        .values(
+            owner=user, month=month, version=0, buffer_cents=0, records_complete=False
+        )
+        .on_conflict_do_nothing()
+    )
+    plan = db.scalar(
+        select(MonthPlan)
+        .where(MonthPlan.owner == user, MonthPlan.month == month)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if plan.version != expected:
+        raise HTTPException(
+            409, "Planejamento alterado em outra sessão. Recarregue antes de salvar."
+        )
+    plan.version += 1
+    return plan

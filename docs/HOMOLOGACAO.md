@@ -175,3 +175,11 @@ Revisão adicional dos roteiros existentes: cartões aguardam os cadastros apare
 Artefato `revisao-pdf`, ID `13425460778`, SHA-256 `267c2e239b901fd81e18f9ab4d03cf72dd01e4db30f53e11caa1931b1f07f5b6`, retenção de sete dias. Inspecionadas `entry-import-mobile.png`, `import-correction-mobile.png` e `cards-mobile-dark.png`: aviso de origem excluída, valor/totais antes e depois, motivo, confirmação e fatura escura legíveis, sem overflow horizontal nos testes. O diálogo possui rolagem; a captura da correção prioriza os efeitos e a confirmação. Campos nativos de data/mês seguem o idioma do navegador de teste, enquanto valores e textos da aplicação estão em pt-BR. Isso não substitui UX-03/04 nem homologação WCAG. Revisão de singular/plural dos avisos permanece no acabamento UX-02.
 
 Documentação consolidada após essa execução não altera o código homologado. FIN-04/05 e REL-07 permanecem parciais nos limites de ROADMAP.md; não houve publicação, merge ou contratação.
+
+## Incremento 0.12 — conferência de faturas homologada
+
+Código 10bd122, CI aprovado https://github.com/oYuriyan/walleturbo/actions/runs/42085667177: 136 testes em container, PostgreSQL/Redis, migrações 001–011, concorrência de conferência, ciclo fechar/reabrir, conflito/recarga no navegador e regressões completas, incluindo Keycloak/TOTP. PR #2 integrado à main no commit c00f069. Documentação técnica em FATURAS.md. Cenários e contrato financeiro amplo permaneceram pendentes nesse incremento.
+
+## Incremento 0.13 — configurações mensais versionadas
+
+140 testes locais aprovados com avisos tratados como erro. Versão compartilhada de cenário/limites, exclusão/recriação sem retorno à versão antiga, histórico transacional e privacidade; novos roteiros de PostgreSQL e navegador aguardam CI. Contrato e limites em PLANEJAMENTO.md.

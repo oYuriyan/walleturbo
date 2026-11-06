@@ -8,6 +8,8 @@ from sqlalchemy import event, inspect, select, or_, and_
 from sqlalchemy.orm import Session
 from app.cards import owned, public
 from app.db import (
+    MonthPlan,
+    Budget,
     Account,
     Card,
     Charge,
@@ -23,6 +25,8 @@ from app.db import (
 from app.security import current_user
 
 ENTITIES = {
+    MonthPlan: "month_plan",
+    Budget: "budget",
     Account: "account",
     Card: "card",
     Goal: "goal",
@@ -33,7 +37,7 @@ ENTITIES = {
     OpeningBalance: "opening_balance",
     Transfer: "transfer",
 }
-PRIVATE_COLUMNS = {"owner", "payload_hash", "import_key"}
+PRIVATE_COLUMNS = {"owner", "payload_hash", "import_key", "stats_signature"}
 
 
 def snapshot(row):
@@ -80,7 +84,15 @@ def record(action):
                 id=str(uuid4()),
                 owner=row.owner,
                 entity=ENTITIES[type(row)],
-                entity_id=row.id,
+                entity_id=(
+                    row.month
+                    if isinstance(row, MonthPlan)
+                    else (
+                        row.month + ":" + row.category
+                        if isinstance(row, Budget)
+                        else row.id
+                    )
+                ),
                 action=action,
                 occurred_at=datetime.now(timezone.utc).isoformat(
                     timespec="microseconds"
@@ -106,6 +118,8 @@ for model in ENTITIES:
 
 router = APIRouter(prefix="/api")
 Entity = Literal[
+    "month_plan",
+    "budget",
     "account",
     "card",
     "goal",
