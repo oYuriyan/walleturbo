@@ -5,13 +5,15 @@ import json
 import re
 import unicodedata
 from collections import defaultdict
+from contextlib import contextmanager
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import select, func, delete
 from sqlalchemy.orm import Session
-from app.cards import ReviewInput, shift_month
+from sqlalchemy.exc import DBAPIError
+from app.cards import ReviewInput, shift_month, public
 from app.db import (
     Transaction,
     Charge,
@@ -38,6 +40,18 @@ class PlanInput(BaseModel):
 
 
 class PlanEdit(PlanInput):
+    expected_records_revision: str | None = Field(
+        default=None, pattern=r"^[a-f0-9]{64}$"
+    )
+
+    @model_validator(mode="after")
+    def reviewed_snapshot(self):
+        if self.records_complete and self.expected_records_revision is None:
+            raise ValueError(
+                "Recarregue os registros antes de confirmar sua completude"
+            )
+        return self
+
     expected_version: int = Field(strict=True, ge=0, le=2147483646)
 
 
@@ -295,87 +309,90 @@ def signature(figures):
 
 @router.get("/{month}")
 def report(month: str, user=Depends(current_user), db: Session = Depends(db_session)):
-    start, end = period(month)
-    if not re.fullmatch(MONTH, month):
-        raise HTTPException(422, "Mês inválido")
-    figures = monthly_figures(db, user, month)
-    plan = db.get(MonthPlan, (user, month))
-    config = (
-        {key: getattr(plan, key) for key in PlanInput.model_fields}
-        if plan
-        else PlanInput().model_dump()
-    )
-    warnings = []
-    if config["records_complete"] and plan.stats_signature != signature(figures):
-        config["records_complete"] = False
-        warnings.append(
-            "Os agregados do mês mudaram após a confirmação. Confira os registros novamente."
+    with consistent_view(db):
+        start, end = period(month)
+        if not re.fullmatch(MONTH, month):
+            raise HTTPException(422, "Mês inválido")
+        figures = monthly_figures(db, user, month)
+        records_revision = financial_revision(db, user, month)
+        plan = db.get(MonthPlan, (user, month))
+        config = (
+            {key: getattr(plan, key) for key in PlanInput.model_fields}
+            if plan
+            else PlanInput().model_dump()
         )
-    if not config["records_complete"]:
-        warnings.append(
-            "Confirme a completude dos registros do mês para simular aportes."
-        )
-    if figures["pending"]:
-        warnings.append("Revise as categorias pendentes antes de simular aportes.")
-    if figures["income_cents"] <= 0:
-        warnings.append(
-            "Não há receita positiva registrada no mês; renda de referência sozinha não autoriza sugestão de aporte."
-        )
-    reference_income = (
-        config["income_reference_cents"]
-        if config["income_reference_cents"] is not None
-        else figures["income_cents"]
-    )
-    # Nunca sugerir mais que o resultado registrado, o caixa registrado ou o cenário informado.
-    capacity = (
-        None
-        if warnings
-        else max(
-            0,
-            min(
-                figures["result_cents"],
-                figures["cash_change_cents"],
-                reference_income - figures["expense_cents"],
+        warnings = []
+        if config["records_complete"] and plan.stats_signature != records_revision:
+            config["records_complete"] = False
+            warnings.append(
+                "Os registros do mês mudaram após a confirmação. Confira os registros novamente."
             )
-            - config["buffer_cents"],
+        if not config["records_complete"]:
+            warnings.append(
+                "Confirme a completude dos registros do mês para simular aportes."
+            )
+        if figures["pending"]:
+            warnings.append("Revise as categorias pendentes antes de simular aportes.")
+        if figures["income_cents"] <= 0:
+            warnings.append(
+                "Não há receita positiva registrada no mês; renda de referência sozinha não autoriza sugestão de aporte."
+            )
+        reference_income = (
+            config["income_reference_cents"]
+            if config["income_reference_cents"] is not None
+            else figures["income_cents"]
         )
-    )
-    budgets = []
-    for budget in db.scalars(
-        select(Budget)
-        .where(Budget.owner == user, Budget.month == month)
-        .order_by(Budget.category)
-    ):
-        spent = figures["categories"].get(budget.category, 0)
-        budgets.append(
-            {
-                "category": budget.category,
-                "amount_cents": budget.amount_cents,
-                "spent_cents": spent,
-                "remaining_cents": budget.amount_cents - spent,
-                "exceeded_cents": max(0, spent - budget.amount_cents),
-            }
+        # Nunca sugerir mais que o resultado registrado, o caixa registrado ou o cenário informado.
+        capacity = (
+            None
+            if warnings
+            else max(
+                0,
+                min(
+                    figures["result_cents"],
+                    figures["cash_change_cents"],
+                    reference_income - figures["expense_cents"],
+                )
+                - config["buffer_cents"],
+            )
         )
-    subscriptions, extra = recurrence(db, user, month)
-    today = datetime.now(ZoneInfo("America/Sao_Paulo")).date()
-    reference = max(start, today)
-    goals = list(
-        db.scalars(select(Goal).where(Goal.owner == user, Goal.archived.is_(False)))
-    )
-    return {
-        "month": month,
-        "version": plan.version if plan else 0,
-        "as_of": reference,
-        "method": "regras-v1",
-        "plan": config,
-        "figures": figures,
-        "capacity_cents": capacity,
-        "budgets": budgets,
-        "recurrences": subscriptions,
-        "goals": goal_plan(goals, capacity, reference),
-        "warnings": warnings + extra,
-        "disclaimer": "Simulação com registros e metas atuais, sem consultar saldo bancário. Não considera gastos ausentes nem garante economia ou prazo. Não reserva dinheiro automaticamente.",
-    }
+        budgets = []
+        for budget in db.scalars(
+            select(Budget)
+            .where(Budget.owner == user, Budget.month == month)
+            .order_by(Budget.category)
+        ):
+            spent = figures["categories"].get(budget.category, 0)
+            budgets.append(
+                {
+                    "category": budget.category,
+                    "amount_cents": budget.amount_cents,
+                    "spent_cents": spent,
+                    "remaining_cents": budget.amount_cents - spent,
+                    "exceeded_cents": max(0, spent - budget.amount_cents),
+                }
+            )
+        subscriptions, extra = recurrence(db, user, month)
+        today = datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+        reference = max(start, today)
+        goals = list(
+            db.scalars(select(Goal).where(Goal.owner == user, Goal.archived.is_(False)))
+        )
+        return {
+            "month": month,
+            "version": plan.version if plan else 0,
+            "as_of": reference,
+            "method": "regras-v1",
+            "records_revision": records_revision,
+            "plan": config,
+            "figures": figures,
+            "capacity_cents": capacity,
+            "budgets": budgets,
+            "recurrences": subscriptions,
+            "goals": goal_plan(goals, capacity, reference),
+            "warnings": warnings + extra,
+            "disclaimer": "Simulação com registros e metas atuais, sem consultar saldo bancário. Não considera gastos ausentes nem garante economia ou prazo. Não reserva dinheiro automaticamente.",
+        }
 
 
 @router.put("/{month}/plan")
@@ -385,15 +402,30 @@ def save_plan(
     user=Depends(current_user),
     db: Session = Depends(db_session),
 ):
-    period(month)
-    plan = lock_plan(db, user, month, body.expected_version)
-    for key, value in body.model_dump(exclude={"expected_version"}).items():
-        setattr(plan, key, value)
-    plan.stats_signature = (
-        signature(monthly_figures(db, user, month)) if body.records_complete else None
-    )
-    db.commit()
-    return {**body.model_dump(exclude={"expected_version"}), "version": plan.version}
+    with consistent_view(db):
+        period(month)
+        plan = lock_plan(db, user, month, body.expected_version)
+        revision = (
+            financial_revision(db, user, month) if body.records_complete else None
+        )
+        if body.records_complete and body.expected_records_revision != revision:
+            raise HTTPException(
+                409,
+                "Registros alterados após a leitura. Recarregue e confira novamente.",
+            )
+        for key, value in body.model_dump(
+            exclude={"expected_version", "expected_records_revision"}
+        ).items():
+            setattr(plan, key, value)
+        plan.stats_signature = revision
+        accepted_version = plan.version
+        db.commit()
+        return {
+            **body.model_dump(
+                exclude={"expected_version", "expected_records_revision"}
+            ),
+            "version": accepted_version,
+        }
 
 
 @router.put("/{month}/budget")
@@ -410,8 +442,12 @@ def save_budget(
         budget = Budget(owner=user, month=month, category=body.category)
         db.add(budget)
     budget.amount_cents = body.amount_cents
+    accepted_version = plan.version
     db.commit()
-    return {**body.model_dump(exclude={"expected_version"}), "version": plan.version}
+    return {
+        **body.model_dump(exclude={"expected_version", "expected_records_revision"}),
+        "version": accepted_version,
+    }
 
 
 @router.delete("/{month}/budget/{category}", status_code=204)
@@ -456,3 +492,62 @@ def lock_plan(db, user, month, expected):
         )
     plan.version += 1
     return plan
+
+
+@contextmanager
+def consistent_view(db):
+    # Iniciar antes da primeira consulta; todas as leituras usam o mesmo snapshot.
+    if db.bind.dialect.name == "postgresql":
+        db.connection(execution_options={"isolation_level": "REPEATABLE READ"})
+    try:
+        yield
+    except DBAPIError as exc:
+        if getattr(exc.orig, "sqlstate", None) == "40001":
+            db.rollback()
+            raise HTTPException(
+                409,
+                "Planejamento alterado em outra sessão. Recarregue antes de salvar.",
+            ) from None
+        raise
+
+
+def financial_revision(db, user, month):
+    start, end = period(month)
+    groups = []
+    for model in (Transaction, StatementPayment):
+        groups.append(
+            [
+                public(row)
+                for row in db.scalars(
+                    select(model)
+                    .where(model.owner == user, model.date >= start, model.date < end)
+                    .order_by(model.id)
+                )
+            ]
+        )
+    statements = list(
+        db.scalars(
+            select(Statement)
+            .where(Statement.owner == user, Statement.month == month)
+            .order_by(Statement.id)
+        )
+    )
+    groups.append([public(row) for row in statements])
+    groups.append(
+        [
+            public(row)
+            for row in db.scalars(
+                select(Charge)
+                .where(
+                    Charge.owner == user,
+                    Charge.statement_id.in_([row.id for row in statements]),
+                )
+                .order_by(Charge.id)
+            )
+        ]
+    )
+    return hashlib.sha256(
+        json.dumps(
+            ["records-v2", user, month, groups], sort_keys=True, default=str
+        ).encode()
+    ).hexdigest()

@@ -60,6 +60,37 @@ with httpx2.Client(**options) as client:
             "created",
             "deleted",
         }
+        snapshot = client.get(path).json()
+        response = client.post(
+            "/api/transactions",
+            json={
+                "date": "2026-11-01",
+                "description": "Receita sintética",
+                "amount_cents": 1000,
+                "kind": "income",
+                "category": "Renda",
+                "reviewed": True,
+            },
+        )
+        assert response.status_code == 201
+        body = {
+            "expected_version": snapshot["version"],
+            "records_complete": True,
+            "expected_records_revision": snapshot["records_revision"],
+        }
+        assert client.put(path + "/plan", json=body).status_code == 409
+        refreshed = client.get(path).json()
+        assert refreshed["version"] == snapshot["version"]
+        assert (
+            client.put(
+                path + "/plan",
+                json={
+                    **body,
+                    "expected_records_revision": refreshed["records_revision"],
+                },
+            ).status_code
+            == 200
+        )
         print(
             "PASS: criação concorrente de orçamento, versão compartilhada, exclusão sem retorno à versão antiga e histórico no PostgreSQL."
         )
