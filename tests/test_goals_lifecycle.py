@@ -60,6 +60,9 @@ def test_archived_goal_does_not_consume_simulated_capacity_but_keeps_values(
         "/api/planning/2026-11/plan",
         json={
             **({"records_complete": True}),
+            "expected_records_revision": client.get("/api/planning/2026-11").json()[
+                "records_revision"
+            ],
             "expected_version": client.get(
                 ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
             ).json()["version"],

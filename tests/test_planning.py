@@ -66,6 +66,9 @@ def test_no_capacity_until_complete_and_reviewed(client, login):
             "/api/planning/2026-11/plan",
             json={
                 **({"records_complete": True, "buffer_cents": 1000}),
+                "expected_records_revision": client.get("/api/planning/2026-11").json()[
+                    "records_revision"
+                ],
                 "expected_version": client.get(
                     ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
                 ).json()["version"],
@@ -94,6 +97,9 @@ def test_reference_income_cannot_inflate_result_and_cash(client, login):
                     "buffer_cents": 1000,
                 }
             ),
+            "expected_records_revision": client.get("/api/planning/2026-11").json()[
+                "records_revision"
+            ],
             "expected_version": client.get(
                 ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
             ).json()["version"],
@@ -106,6 +112,9 @@ def test_reference_income_cannot_inflate_result_and_cash(client, login):
         "/api/planning/2026-11/plan",
         json={
             **({"records_complete": True, "income_reference_cents": 3000}),
+            "expected_records_revision": client.get("/api/planning/2026-11").json()[
+                "records_revision"
+            ],
             "expected_version": client.get(
                 ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
             ).json()["version"],
@@ -120,6 +129,9 @@ def test_expected_income_without_actual_income_cannot_fund_goals(client, login):
         "/api/planning/2026-11/plan",
         json={
             **({"records_complete": True, "income_reference_cents": 100000}),
+            "expected_records_revision": client.get("/api/planning/2026-11").json()[
+                "records_revision"
+            ],
             "expected_version": client.get(
                 ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
             ).json()["version"],
@@ -224,6 +236,9 @@ def test_planning_owner_isolation_and_privacy(client, login):
         "/api/planning/2026-11/plan",
         json={
             **({"buffer_cents": 500}),
+            "expected_records_revision": client.get("/api/planning/2026-11").json()[
+                "records_revision"
+            ],
             "expected_version": client.get(
                 ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
             ).json()["version"],
@@ -280,6 +295,9 @@ def test_invalid_parameters_and_auth(client, login):
             "/api/planning/2026-11/plan",
             json={
                 **({"buffer_cents": -1}),
+                "expected_records_revision": client.get("/api/planning/2026-11").json()[
+                    "records_revision"
+                ],
                 "expected_version": client.get(
                     ("/api/planning/2026-11/plan").rsplit("/", 1)[0]
                 ).json()["version"],

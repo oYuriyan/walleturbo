@@ -65,13 +65,41 @@ const fs = require("fs");
       .getByRole("button", { name: "Salvar limite", exact: true })
       .click();
     await page.getByText(/Excedido em R\$\s*50,00/).waitFor();
+    const added = await context.request.post(base + "/api/transactions", {
+      headers,
+      data: {
+        date: "2026-11-02",
+        description: "Receita adicional",
+        amount_cents: 100,
+        kind: "income",
+        category: "Renda",
+        reviewed: true,
+      },
+    });
+    if (added.status() !== 201) throw Error("Receita paralela falhou");
+    await page.locator("#plan-form [name=complete]").check();
+    await page
+      .getByRole("button", { name: "Salvar cenário", exact: true })
+      .click();
+    await page
+      .getByText(
+        "Registros alterados após a leitura. Recarregue e confira novamente.",
+        { exact: true },
+      )
+      .waitFor();
+    await page.locator("#reload-planning").click();
+    await page.waitForFunction(
+      () =>
+        !document.querySelector("#plan-form [name=complete]").checked &&
+        !document.querySelector("#plan-form [name=complete]").disabled,
+    );
     await page.locator("#plan-form [name=buffer]").fill("100,00");
     await page.locator("#plan-form [name=complete]").check();
     await page
       .getByRole("button", { name: "Salvar cenário", exact: true })
       .click();
     await page
-      .getByText(/Margem para a simulação de aportes: R\$\s*600,00/)
+      .getByText(/Margem para a simulação de aportes: R\$\s*601,00/)
       .waitFor();
     const current = await (
       await context.request.get(base + "/api/planning/2026-11")
@@ -82,6 +110,7 @@ const fs = require("fs");
         headers,
         data: {
           expected_version: current.version,
+          expected_records_revision: current.records_revision,
           buffer_cents: 20000,
           records_complete: true,
         },

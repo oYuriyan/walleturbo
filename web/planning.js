@@ -49,7 +49,11 @@ async function loadPlanning() {
   $("#planning-notice").textContent = "Calculando com os registros do mês…";
   const data = await api("/api/planning/" + $("#month").value);
   if (generation !== planningGeneration) return;
-  planningContext = { month: data.month, version: data.version };
+  planningContext = {
+    month: data.month,
+    version: data.version,
+    recordsRevision: data.records_revision,
+  };
   for (const form of [$("#plan-form"), $("#budget-form")])
     form
       .querySelectorAll("input,select,button")
@@ -176,6 +180,7 @@ $("#plan-form").onsubmit = (e) => {
         : null,
       buffer_cents: cents(f.elements.buffer.value),
       records_complete: f.elements.complete.checked,
+      expected_records_revision: context.recordsRevision,
     });
     if (generation !== planningGeneration) return;
     await loadPlanning();

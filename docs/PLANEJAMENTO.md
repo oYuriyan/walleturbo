@@ -47,3 +47,11 @@ Cenários e limites passam ao histórico ORM transacional. Eventos de cenário u
 Migração 012 adiciona version=0 aos cenários existentes, preservando parâmetros e limites. Não reconstrói eventos antigos. PostgreSQL verifica disputa da primeira criação. SQLite verifica conflitos, exclusão/recriação, isolamento, rollback e privacidade; navegador cobre edição em outra sessão e recarga. 140 testes locais aprovados; homologação completa depende do CI deste incremento.
 
 A versão protege configurações; não bloqueia lançamentos financeiros enquanto uma simulação é calculada. A confirmação de completude conserva a assinatura dos agregados do método existente, sem provar identidade de cada documento ou constituir snapshot bancário imutável. Revisão ampla de competência, confirmação entre alterações financeiras, projeções/recorrências e identidade de fontes continuam no roadmap.
+
+## Confirmação dos registros — 0.14
+
+O relatório fornece records_revision, vinculado ao usuário/mês e ao conteúdo, IDs e versões de lançamentos, faturas, compras e pagamentos relevantes. PUT plan com records_complete=true exige expected_records_revision. Ausência recebe 422; divergência recebe 409 sem avançar a versão do cenário. Salvar cenário não confirmado continua permitido sem esse campo. A interface envia a revisão carregada; em conflito exige recarga e nova conferência.
+
+A assinatura persistida passa a representar registros, incluindo alterações sem mudança dos agregados e retorno a valores anteriores. Confirmações antigas baseadas só em agregados deixam de ser aceitas como atuais e exigem reconferência. Não há alteração de valores financeiros ou migração destrutiva. PostgreSQL usa REPEATABLE READ para relatório e salvamento; conflitos de serialização recebem 409. Uma mudança financeira concorrente posterior ao snapshot pode invalidar a confirmação na consulta seguinte. Não há bloqueio permanente nem garantia de completude documental/bancária. O relatório ainda carrega registros do mês; limites de volume seguem em REL-04/08.
+
+142 testes locais aprovados com avisos tratados como erro; PostgreSQL e navegador ampliados aguardam CI. Esta entrega não conclui o contrato financeiro amplo nem a identidade entre documentos divergentes.
