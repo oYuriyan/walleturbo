@@ -418,12 +418,13 @@ def save_plan(
         ).items():
             setattr(plan, key, value)
         plan.stats_signature = revision
+        accepted_version = plan.version
         db.commit()
         return {
             **body.model_dump(
                 exclude={"expected_version", "expected_records_revision"}
             ),
-            "version": plan.version,
+            "version": accepted_version,
         }
 
 
@@ -441,10 +442,11 @@ def save_budget(
         budget = Budget(owner=user, month=month, category=body.category)
         db.add(budget)
     budget.amount_cents = body.amount_cents
+    accepted_version = plan.version
     db.commit()
     return {
         **body.model_dump(exclude={"expected_version", "expected_records_revision"}),
-        "version": plan.version,
+        "version": accepted_version,
     }
 
 
