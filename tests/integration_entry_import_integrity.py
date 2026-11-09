@@ -201,6 +201,11 @@ with httpx2.Client(**options) as client:
         assert any(row["id"] == existing["id"]
                    for row in preview.json()["possible_duplicates"][0]["matches"])
         assert client.get("/api/privacy/export").json() == exported
+        repeated = content + content.splitlines()[1] + "\n"
+        selection = {"content": repeated, "account_id": existing["account_id"], "excluded_indices": [0]}
+        assert client.post("/api/import/confirm", json=selection).json() == {"created": 1, "duplicates": 0, "skipped": 1}
+        assert client.post("/api/import/confirm", json=selection).json() == {"created": 0, "duplicates": 1, "skipped": 1}
+        assert client.post("/api/import/confirm", json={"content": repeated, "account_id": existing["account_id"]}).json() == {"created": 1, "duplicates": 1}
         print(
             "PASS: UUID e edição/exclusão concorrentes, lotes em ordem inversa sem deadlock, correção importada e reimportação sem recriação no PostgreSQL."
         )

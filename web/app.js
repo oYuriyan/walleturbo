@@ -744,10 +744,36 @@ $("#csv-file").onchange = () =>
         `${result.entries.length} lançamentos encontrados. Categorias sugeridas por regras; revise após importar.`,
       ),
     );
-    result.entries.forEach((t) =>
-      $("#import-preview").append(transactionNode(t, false)),
-    );
-    $("#confirm-import").disabled = false;
+    const selectionStatus = el("p");
+    selectionStatus.setAttribute("role", "status");
+    let acknowledged = !result.possible_duplicates?.length;
+    const updateSelection = () => {
+      if (version !== importVersion) return;
+      const count = $("#import-preview").querySelectorAll(
+        "input[data-source-index]:checked",
+      ).length;
+      selectionStatus.textContent = `${count} de ${result.entries.length} lançamentos selecionados.`;
+      $("#confirm-import").disabled =
+        !count ||
+        !acknowledged ||
+        $("#confirm-import").dataset.busy === String(version);
+    };
+    result.entries.forEach((t, index) => {
+      const label = el("label"),
+        selected = el("input");
+      selected.type = "checkbox";
+      selected.checked = true;
+      selected.dataset.sourceIndex = index;
+      selected.onchange = updateSelection;
+      label.append(
+        selected,
+        document.createTextNode(
+          ` Importar lançamento ${index + 1}: ${t.description}`,
+        ),
+      );
+      $("#import-preview").append(label, transactionNode(t, false));
+    });
+    $("#import-preview").append(selectionStatus);
     if (result.possible_duplicates?.length) {
       $("#confirm-import").disabled = true;
       $("#import-preview").append(
@@ -775,23 +801,31 @@ $("#csv-file").onchange = () =>
       const label = el("label"),
         acknowledgement = el("input");
       acknowledgement.type = "checkbox";
+      acknowledgement.id = "import-acknowledgement";
       acknowledgement.onchange = () => {
-        if (version === importVersion)
-          $("#confirm-import").disabled = !acknowledgement.checked;
+        acknowledged = acknowledgement.checked;
+        updateSelection();
       };
       label.append(
         acknowledgement,
         document.createTextNode(
-          " Conferi os sinais e desejo importar este arquivo. Para remover linhas, ajuste o CSV e selecione-o novamente.",
+          " Conferi os sinais e desejo importar os lançamentos selecionados.",
         ),
       );
       $("#import-preview").append(label);
     }
+    updateSelection();
   });
 $("#confirm-import").onclick = () =>
   action(async () => {
     if (!csvContent || $("#confirm-import").disabled) return;
     const version = importVersion;
+    const excluded = [
+      ...$("#import-preview").querySelectorAll(
+        "input[data-source-index]:not(:checked)",
+      ),
+    ].map((input) => Number(input.dataset.sourceIndex));
+    $("#confirm-import").dataset.busy = String(version);
     $("#confirm-import").disabled = true;
     try {
       const result = await api(
@@ -801,6 +835,7 @@ $("#confirm-import").onclick = () =>
         "POST",
         {
           content: csvContent,
+          excluded_indices: excluded,
           ...(!importStatementId
             ? { account_id: $("#import-account").value || null }
             : {}),
@@ -810,10 +845,16 @@ $("#confirm-import").onclick = () =>
       $("#import-dialog").close();
       await refresh();
       message(
-        `${result.created} lançamentos importados; ${result.duplicates} linhas já conhecidas ignoradas.${result.removed ? ` ${result.removed} excluídas anteriormente não foram recriadas.` : ""} Revise as categorias.`,
+        `${result.created} lançamentos importados; ${result.duplicates} linhas já conhecidas ignoradas.${result.skipped ? ` ${result.skipped} não selecionados nesta importação.` : ""}${result.removed ? ` ${result.removed} excluídas anteriormente não foram recriadas.` : ""} Revise as categorias.`,
       );
     } finally {
-      if (version === importVersion) $("#confirm-import").disabled = false;
+      if ($("#confirm-import").dataset.busy === String(version))
+        delete $("#confirm-import").dataset.busy;
+      if (version === importVersion) {
+        $("#import-preview input[data-source-index]")?.dispatchEvent(
+          new Event("change"),
+        );
+      }
     }
   });
 $("#logout").onclick = () =>

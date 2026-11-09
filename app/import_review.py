@@ -1,6 +1,32 @@
 """Sinais limitados de possível duplicidade; nunca equivalem a identidade."""
 
 from sqlalchemy import func, select, tuple_
+from typing import Annotated
+from pydantic import Field
+from fastapi import HTTPException
+
+ExcludedIndices = Annotated[
+    list[Annotated[int, Field(strict=True, ge=0, le=499)]], Field(max_length=500)
+]
+
+
+def select_rows(entries, keys, excluded):
+    if len(set(excluded)) != len(excluded) or any(i >= len(entries) for i in excluded):
+        raise HTTPException(422, "Seleção de linhas inválida. Refaça a prévia.")
+    ignored = set(excluded)
+    selected = [(entry, key) for i, (entry, key) in enumerate(zip(entries, keys))
+                if i not in ignored]
+    if not selected:
+        raise HTTPException(422, "Selecione pelo menos um lançamento para importar.")
+    return selected
+
+
+def selection_result(total, created, removed, skipped):
+    from app.import_marks import result
+    output = result(total - skipped, created, removed)
+    if skipped:
+        output["skipped"] = skipped
+    return output
 
 
 def candidates(db, model, owner, entries, context):

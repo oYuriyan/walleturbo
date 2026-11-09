@@ -158,9 +158,19 @@ const base = "http://localhost:8000";
       .getByText(/Possíveis duplicatas:/)
       .waitFor();
     assert.equal(await page.locator("#confirm-import").isDisabled(), true);
-    await page.locator('#import-preview input[type="checkbox"]').check();
+    await page.locator("#import-acknowledgement").check();
     assert.equal(await page.locator("#confirm-import").isEnabled(), true);
-    await page.locator('#import-preview input[type="checkbox"]').uncheck();
+    await page
+      .locator('#import-preview input[data-source-index="0"]')
+      .uncheck();
+    assert.equal(await page.locator("#confirm-import").isDisabled(), true);
+    await page
+      .locator("#import-preview")
+      .getByText("0 de 1 lançamentos selecionados.", { exact: true })
+      .waitFor();
+    await page.locator('#import-preview input[data-source-index="0"]').check();
+    assert.equal(await page.locator("#confirm-import").isEnabled(), true);
+    await page.locator("#import-acknowledgement").uncheck();
     assert.equal(await page.locator("#confirm-import").isDisabled(), true);
     await page.locator("#import-dialog .close").click();
     page.once("dialog", (d) => d.accept());

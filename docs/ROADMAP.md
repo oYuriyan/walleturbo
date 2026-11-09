@@ -177,3 +177,7 @@ Entrega 0.14 homologada: confirmação vinculada aos registros lidos, incluindo 
 Consolidação seguinte: DOMINIO_FINANCEIRO.md reúne sinais, datas, competência, caixa, referências, correções, legado e idempotência. Novo cenário de três meses compara dashboard, planejamento e saldos com parcelas, estorno e pagamento corrigido entre contas/meses. Homologação será registrada no PR desta entrega. Próxima prioridade funcional: conciliação de documentos/fontes divergentes em IMP-02/03, antes de créditos e recorrências. FIN-04/05 continuam parciais para os casos ainda não suportados.
 
 Entrega 0.15: prévia consultiva de possíveis duplicatas CSV por data/valor/tipo, no contexto selecionado, com conferência explícita na interface e descarte após troca de conta. Contrato em LANCAMENTOS_E_IMPORTACAO.md; homologação no PR da entrega. IMP-02/03 seguem parciais: decisões por linha e identidade persistente entre documentos/fontes divergentes são a próxima prioridade.
+
+0.15 homologada e integrada à main pelo PR #6: CI 42263106361, 147 testes em container e todas as etapas aprovadas.
+
+Entrega 0.16: selecionar lançamentos na prévia CSV sem editar arquivo externo, com contagem acessível e preservação das ocorrências originais. Não selecionadas podem ser importadas depois; nenhuma decisão é persistida como exclusão financeira. IMP-02/03 continuam parciais para identidade/vínculo durável entre fontes e PDF. Contrato em LANCAMENTOS_E_IMPORTACAO.md; homologação no PR.
