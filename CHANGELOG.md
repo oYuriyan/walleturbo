@@ -3,7 +3,7 @@
 - OFX bancário 1.x/2.x em BRL com conta obrigatória, prévia, seleção e identidade por FITID.
 - IDs distintos preservam despesas iguais; assinatura de origem recusa dados divergentes e conserva correções/exclusões.
 - Vínculo/desfazimento, histórico, recibos e marcas reutilizados; corpus sintético SGML/XML com resultados esperados.
-- Sem migração ou dependência nova; 225 testes locais, integração PostgreSQL/mobile e homologação no PR.
+- Sem migração ou dependência nova; 226 testes locais, integração PostgreSQL/mobile e homologação no PR.
 
 ## 0.19.0 — em validação
 

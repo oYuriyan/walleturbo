@@ -202,7 +202,8 @@ def tree(content):
 
 
 def field(node, name, required=True, maximum=255):
-    value = " ".join((node.findtext(name) or "").split())
+    raw = node.findtext(name) or ""
+    value = " ".join(raw.split()) if name in {"NAME", "MEMO"} else raw.strip()
     if (required and not value) or len(value) > maximum:
         raise ValueError(f"Campo {name} ausente ou excede o limite suportado.")
     return value

@@ -67,6 +67,15 @@ def test_rejects_ambiguous_unsupported_or_invalid_sources(old, new):
         parse_ofx(SGML.replace(old, new, 1))
 
 
+def test_identifiers_keep_internal_spaces_and_leading_zeros():
+    spaced = SGML.replace("SYNTHETIC-001", "ID A B").replace("SYNTHETIC-003", "ID A  B")
+    parsed = parse_ofx(spaced)
+    assert len(set(parsed.identities)) == 3
+    assert parsed.entries[0].model_dump() == parsed.entries[2].model_dump()
+    trimmed_account = parse_ofx(spaced.replace("<ACCTID>00001234", "<ACCTID>1234"))
+    assert not set(parsed.identities) & set(trimmed_account.identities)
+
+
 def test_limits_structure_multiple_accounts_and_entities():
     first = SGML[SGML.index("<STMTTRN>") : SGML.index("</STMTTRN>") + len("</STMTTRN>")]
     for invalid in (
