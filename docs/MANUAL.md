@@ -10,7 +10,7 @@ Selecione o mês no topo. O resultado mensal é receitas menos despesas diretas 
 
 A busca filtra descrição e categoria no mês selecionado. **Revisar** permite corrigir todos os campos. **Excluir** solicita confirmação antes de remover o lançamento.
 
-## Importação CSV
+## Importação CSV, OFX e PDF
 
 Baixe o modelo no diálogo de importação. Formato UTF-8 com ponto e vírgula:
 
@@ -26,7 +26,9 @@ Reimportar as mesmas linhas ignora duplicados. Compras idênticas no mesmo arqui
 
 A prévia CSV permite selecionar linhas e vincular uma origem a um registro existente de mesma conta/fatura, data, valor e tipo, mesmo com descrição diferente. Confira os sinais antes de confirmar. Para corrigir uma associação equivocada, abra o mesmo arquivo no mesmo contexto, informe o motivo e use **Desfazer vínculo**. O lançamento permanece; a nova prévia permite escolher outro destino ou importar uma ocorrência independente, que poderá criar outro lançamento. Origens primárias, registros excluídos e faturas conferidas não são liberados. Após conflito, selecione o arquivo novamente e confira o estado atual. Os passos acima descrevem o CSV; o fluxo PDF está descrito abaixo.
 
-Para PDF com texto selecionável, use **Ler PDF** na fatura e siga [Leitura assistida](PDF.md). Imagens, OCR e OFX ainda não são suportados. Não inclua cartão completo, CVV, senha ou dados desnecessários nas descrições. A importação real exige conta conectada; o modo demonstração admite lançamentos manuais.
+Para extrato bancário OFX, use **Importar CSV / OFX**, selecione o formato e uma conta de destino. Confira a conta mascarada do documento antes de confirmar. IDs de origem distintos preservam despesas iguais; um ID já recebido com outros valores é sinalizado, sem sobrescrever o lançamento. Desmarque a linha divergente para importar as demais. Reenvie na mesma conta local. Saldos do arquivo não alteram seu saldo inicial, e transferências/pagamentos não são inferidos. Consulte [OFX](OFX.md) para tipos e layouts suportados.
+
+Para PDF com texto selecionável, use **Ler PDF** na fatura e siga [Leitura assistida](PDF.md). Imagens, OCR e OFX de cartão ainda não são suportados. Não inclua cartão completo, CVV, senha ou dados desnecessários nas descrições. A importação real exige conta conectada; o modo demonstração admite lançamentos manuais.
 
 Na prévia PDF, escolha um destino existente para evitar duplicação quando a descrição do documento divergir. Depois de editar data, valor ou tipo, use **Atualizar possíveis vínculos** e confira novamente. Para corrigir uma associação, informe o motivo e use **Desfazer vínculo**: o lançamento permanece e o arquivo é relido; edições ainda não importadas são descartadas. Confira a nova prévia antes de remapear ou criar uma ocorrência independente. A prévia expira em dez minutos e só pode ser usada na sessão e fatura em que foi lida.
 

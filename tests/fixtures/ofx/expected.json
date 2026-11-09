@@ -1,0 +1,16 @@
+{
+  "bank-102.ofx": {
+    "format": "OFX 1.x SGML",
+    "dates": ["2026-11-03", "2026-11-04", "2026-11-03"],
+    "amounts_cents": [1234, 250000, 1234],
+    "kinds": ["expense", "income", "expense"],
+    "descriptions": ["Mercado sintético", "Receita sintética", "Mercado sintético"]
+  },
+  "bank-220.ofx": {
+    "format": "OFX 2.x XML",
+    "dates": ["2026-11-04", "2026-11-03", "2026-11-03"],
+    "amounts_cents": [250000, 1234, 1234],
+    "kinds": ["income", "expense", "expense"],
+    "descriptions": ["Receita sintética", "Mercado sintético", "Mercado sintético"]
+  }
+}

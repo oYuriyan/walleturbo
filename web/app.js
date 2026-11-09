@@ -374,6 +374,7 @@ function clearImports() {
   $("#csv-file").value = "";
   $("#import-preview").replaceChildren();
   $("#import-account").replaceChildren();
+  $("#import-format").value = "csv";
   $("#confirm-import").disabled = true;
   if ($("#import-dialog").open) $("#import-dialog").close();
 }
@@ -691,12 +692,16 @@ $("#import-button").onclick = () => openImport();
 function openImport(statementId = null) {
   importStatementId = statementId;
   $("#import-account-label").hidden = !!statementId;
+  $("#import-format-label").hidden = !!statementId;
+  $("#import-format").value = "csv";
+  $("#csv-file").accept = ".csv,text/csv";
+  $("#import-account-caption").textContent = "Conta de origem (opcional)";
   populateAccounts($("#import-account"), true);
   importVersion++;
   if (!allowed()) return;
   if (demo) {
     message(
-      "A importação CSV usa a API autenticada. Conecte sua conta; na demonstração, use lançamentos manuais.",
+      "A importação CSV / OFX exige conta conectada. Na demonstração, use lançamentos manuais.",
     );
     return;
   }
@@ -707,6 +712,27 @@ function openImport(statementId = null) {
   openDialog("#import-dialog");
 }
 let importVersion = 0;
+$("#import-format").onchange = () => {
+  importVersion++;
+  csvContent = "";
+  const ofx = $("#import-format").value === "ofx";
+  $("#csv-file").value = "";
+  $("#csv-file").accept = ofx
+    ? ".ofx,application/x-ofx,application/ofx"
+    : ".csv,text/csv";
+  $("#import-account-caption").textContent = ofx
+    ? "Conta de destino (obrigatória)"
+    : "Conta de origem (opcional)";
+  $("#import-preview").replaceChildren();
+  $("#confirm-import").disabled = true;
+};
+$("#import-dialog").addEventListener("close", () => {
+  importVersion++;
+  csvContent = "";
+  $("#csv-file").value = "";
+  $("#import-preview").replaceChildren();
+  $("#confirm-import").disabled = true;
+});
 $("#import-account").onchange = () => {
   importVersion++;
   csvContent = "";
@@ -723,21 +749,43 @@ $("#csv-file").onchange = () =>
     const file = $("#csv-file").files[0];
     if (!file) return;
     if (file.size > 256000) throw Error("Arquivo excede 256 KB.");
-    const content = await file.text(),
-      result = await api(
-        importStatementId
-          ? `/api/statements/${importStatementId}/import/preview`
-          : "/api/import/preview",
-        "POST",
-        {
-          content,
-          ...(!importStatementId
-            ? { account_id: $("#import-account").value || null }
-            : {}),
-        },
-      );
+    const ofx = !importStatementId && $("#import-format").value === "ofx",
+      accountId = $("#import-account").value || null,
+      base = importStatementId
+        ? `/api/statements/${importStatementId}/import`
+        : ofx
+          ? "/api/import/ofx"
+          : "/api/import";
+    if (ofx && !accountId)
+      throw Error("Selecione a conta de destino do extrato OFX.");
+    let content;
+    if (ofx) {
+      const bytes = new Uint8Array(await file.arrayBuffer()),
+        header = new TextDecoder()
+          .decode(bytes.slice(0, 2048))
+          .split(/<OFX\b/)[0],
+        windows =
+          !(bytes[0] === 239 && bytes[1] === 187 && bytes[2] === 191) &&
+          /CHARSET\s*:\s*1252|encoding=["'](?:windows-1252|cp1252)["']/i.test(
+            header,
+          );
+      try {
+        content = new TextDecoder(windows ? "windows-1252" : "utf-8", {
+          fatal: true,
+        }).decode(bytes);
+      } catch {
+        throw Error(
+          "Codificação OFX inválida. Use UTF-8 ou Windows-1252 declarado no cabeçalho.",
+        );
+      }
+    } else content = await file.text();
+    const result = await api(`${base}/preview`, "POST", {
+      content,
+      ...(!importStatementId ? { account_id: accountId } : {}),
+    });
     if (version !== importVersion) return;
     csvContent = content;
+    $("#import-preview").dataset.base = base;
     $("#import-preview").dataset.originVersions = JSON.stringify(
       result.origin_versions,
     );
@@ -749,16 +797,30 @@ $("#csv-file").onchange = () =>
     );
     const selectionStatus = el("p");
     selectionStatus.setAttribute("role", "status");
-    let acknowledged = !result.possible_duplicates?.length;
+    if (ofx)
+      $("#import-preview").append(
+        el(
+          "p",
+          `${result.format} · Banco ${result.bank_id} · Conta do arquivo ${result.source_account} · BRL. Confira a conta de destino. Saldos do arquivo não alteram seu saldo inicial; transferências e pagamentos não são inferidos.`,
+        ),
+      );
+    let acknowledged = !ofx && !result.possible_duplicates?.length;
     const updateSelection = () => {
       if (version !== importVersion) return;
       const count = $("#import-preview").querySelectorAll(
         "input[data-source-index]:checked",
       ).length;
+      const conflict = (result.source_conflicts || []).some(
+        (index) =>
+          $("#import-preview").querySelector(
+            `input[data-source-index="${index}"]`,
+          )?.checked,
+      );
       selectionStatus.textContent = `${count} de ${result.entries.length} lançamentos selecionados.`;
       $("#confirm-import").disabled =
         !count ||
         !acknowledged ||
+        conflict ||
         $("#confirm-import").dataset.busy === String(version);
     };
     result.entries.forEach((t, index) => {
@@ -775,6 +837,13 @@ $("#csv-file").onchange = () =>
         ),
       );
       $("#import-preview").append(label, transactionNode(t, false));
+      if (result.source_conflicts?.includes(index))
+        $("#import-preview").append(
+          el(
+            "p",
+            "Identificador de origem já recebido com outros dados. Desmarque esta linha e confira o extrato original; nenhum valor será sobrescrito.",
+          ),
+        );
       const origin = result.known_origins?.find(
         (item) => item.source_index === index,
       );
@@ -790,7 +859,7 @@ $("#csv-file").onchange = () =>
         if (origin.releasable) {
           const reasonLabel = el("label"),
             reason = el("input"),
-            release = el("button", "Desfazer vínculo");
+            release = el("button", "Desfazer vínculo", "button");
           reason.type = "text";
           reason.minLength = 3;
           reason.maxLength = 240;
@@ -826,25 +895,19 @@ $("#csv-file").onchange = () =>
               $("#confirm-import").dataset.busy = String(version);
               updateSelection();
               try {
-                await api(
-                  importStatementId
-                    ? `/api/statements/${importStatementId}/import/unlink`
-                    : "/api/import/unlink",
-                  "POST",
-                  {
-                    content,
-                    release: {
-                      source_index: index,
-                      resource_id: origin.resource_id,
-                      expected_version: origin.target.version,
-                      expected_origin_version: origin.version,
-                      reason: explanation,
-                    },
-                    ...(!importStatementId
-                      ? { account_id: $("#import-account").value || null }
-                      : {}),
+                await api(`${base}/unlink`, "POST", {
+                  content,
+                  release: {
+                    source_index: index,
+                    resource_id: origin.resource_id,
+                    expected_version: origin.target.version,
+                    expected_origin_version: origin.version,
+                    reason: explanation,
                   },
-                );
+                  ...(!importStatementId
+                    ? { account_id: $("#import-account").value || null }
+                    : {}),
+                });
                 if (version !== importVersion) return;
                 message(
                   "Vínculo desfeito; lançamento preservado. Confira o destino na nova prévia.",
@@ -870,7 +933,7 @@ $("#csv-file").onchange = () =>
       }
     });
     $("#import-preview").append(selectionStatus);
-    if (result.possible_duplicates?.length) {
+    if (ofx || result.possible_duplicates?.length) {
       $("#confirm-import").disabled = true;
       $("#import-preview").append(
         el(
@@ -878,11 +941,11 @@ $("#csv-file").onchange = () =>
           "Possíveis duplicatas: mesma data, valor e tipo. Descrições podem ser diferentes. Confira antes de importar; compras legítimas podem coincidir. Linhas já conhecidas continuam sujeitas à deduplicação existente.",
         ),
       );
-      for (const candidate of result.possible_duplicates) {
+      for (const candidate of result.possible_duplicates || []) {
         $("#import-preview").append(
           el(
             "p",
-            `Linha ${candidate.source_index + 2} do CSV: registros existentes para conferir${candidate.more ? " (mostrando os primeiros 5)" : ""}.`,
+            `${ofx ? `Lançamento ${candidate.source_index + 1} do OFX` : `Linha ${candidate.source_index + 2} do CSV`}: registros existentes para conferir${candidate.more ? " (mostrando os primeiros 5)" : ""}.`,
           ),
         );
         for (const match of candidate.matches) {
@@ -932,7 +995,9 @@ $("#csv-file").onchange = () =>
       label.append(
         acknowledgement,
         document.createTextNode(
-          " Conferi os sinais e desejo importar os lançamentos selecionados.",
+          ofx
+            ? " Conferi a conta de destino, os valores e os sinais do extrato OFX."
+            : " Conferi os sinais e desejo importar os lançamentos selecionados.",
         ),
       );
       $("#import-preview").append(label);
@@ -943,6 +1008,7 @@ $("#confirm-import").onclick = () =>
   action(async () => {
     if (!csvContent || $("#confirm-import").disabled) return;
     const version = importVersion;
+    const base = $("#import-preview").dataset.base;
     const excluded = [
       ...$("#import-preview").querySelectorAll(
         "input[data-source-index]:not(:checked)",
@@ -964,23 +1030,18 @@ $("#confirm-import").onclick = () =>
     $("#confirm-import").dataset.busy = String(version);
     $("#confirm-import").disabled = true;
     try {
-      const result = await api(
-        importStatementId
-          ? `/api/statements/${importStatementId}/import/confirm`
-          : "/api/import/confirm",
-        "POST",
-        {
-          content: csvContent,
-          excluded_indices: excluded,
-          links,
-          origin_versions: JSON.parse(
-            $("#import-preview").dataset.originVersions || "[]",
-          ),
-          ...(!importStatementId
-            ? { account_id: $("#import-account").value || null }
-            : {}),
-        },
-      );
+      const result = await api(`${base}/confirm`, "POST", {
+        content: csvContent,
+        ...(base === "/api/import/ofx" ? { reviewed: true } : {}),
+        excluded_indices: excluded,
+        links,
+        origin_versions: JSON.parse(
+          $("#import-preview").dataset.originVersions || "[]",
+        ),
+        ...(!importStatementId
+          ? { account_id: $("#import-account").value || null }
+          : {}),
+      });
       if (version !== importVersion) return;
       $("#import-dialog").close();
       await refresh();

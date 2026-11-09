@@ -168,7 +168,8 @@
             <p>Importe, revise e acompanhe cada lançamento.</p>
           </div>
           <div class="actions">
-            <button class="ghost" id="import-button">↑ Importar CSV</button
+            <button class="ghost" id="import-button">
+              ↑ Importar CSV / OFX</button
             ><button class="button" data-action="new-entry">
               + Novo lançamento
             </button>
@@ -641,9 +642,15 @@
         <button class="icon-button close" aria-label="Fechar">×</button>
       </div>
       <p>
-        CSV UTF-8, separado por ponto e vírgula. Até 500 linhas e 256 KB. Revise
-        a prévia antes de confirmar.
+        CSV separado por ponto e vírgula ou extrato OFX bancário em BRL. Até 500
+        lançamentos e 256 KB. Revise a prévia antes de confirmar.
       </p>
+      <label id="import-format-label"
+        >Formato<select id="import-format">
+          <option value="csv">CSV</option>
+          <option value="ofx">OFX bancário 1.x / 2.x</option>
+        </select></label
+      >
       <a href="/assets/exemplo.csv" download class="text-button"
         >Baixar modelo de CSV ↓</a
       ><label
@@ -653,10 +660,12 @@
           id="csv-file"
       /></label>
       <p>
-        PDF, OFX e leitura de imagens serão adicionados em uma próxima etapa.
+        PDF é lido pelo diálogo da fatura. OFX de cartão e leitura de imagens
+        ainda não são suportados.
       </p>
       <label id="import-account-label"
-        >Conta de origem (opcional)<select id="import-account"></select
+        ><span id="import-account-caption">Conta de origem (opcional)</span
+        ><select id="import-account"></select
       ></label>
       <div id="import-preview"></div>
       <button id="confirm-import" class="button full" disabled>
