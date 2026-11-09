@@ -52,6 +52,8 @@ def main():
     import os
     import secrets
     import time
+    from concurrent.futures import ThreadPoolExecutor
+    from uuid import uuid4
     import httpx2 as httpx
     from redis import Redis
 
@@ -63,7 +65,7 @@ def main():
     key = "session:" + hashlib.sha256(sid.encode()).hexdigest()
     redis.setex(
         key,
-        180,
+        600,
         json.dumps(
             {
                 "user": "pdf-synthetic-" + secrets.token_hex(16),
@@ -72,13 +74,14 @@ def main():
             }
         ),
     )
-    with httpx.Client(
+    options = dict(
         base_url=os.environ["SMOKE_BASE_URL"],
         trust_env=False,
         headers={"Origin": os.environ["BASE_URL"], "X-CSRF-Token": csrf},
         cookies={"walleturbo_session": sid},
         timeout=20,
-    ) as client:
+    )
+    with httpx.Client(**options) as client:
         try:
             card = client.post(
                 "/api/cards", json={"name": "Cartão PDF", "due_day": 10}
@@ -128,8 +131,110 @@ def main():
                 headers={"Content-Type": "application/pdf"},
             )
             assert scanned.status_code == 422 and "OCR" in scanned.json()["detail"]
+            # Janela independente para a disputa adicional, sem relaxar as cotas.
+            time.sleep(61)
+            manual = client.post(
+                "/api/card-purchases",
+                json={
+                    "request_id": str(uuid4()),
+                    "card_id": card["id"],
+                    "first_month": "2026-11",
+                    "date": "2026-11-03",
+                    "description": "Compra manual",
+                    "amount_cents": 12345,
+                    "installments": 1,
+                    "kind": "expense",
+                    "category": "Outros",
+                    "reviewed": True,
+                },
+            ).json()[0]
+            alias_doc = make_pdf(["03/11/2026 Outro documento 123,45"])
+            alias = client.post(
+                path + "preview",
+                content=alias_doc,
+                headers={"Content-Type": "application/pdf"},
+            ).json()
+            alias_body = {
+                "preview_token": alias["preview_token"],
+                "reviewed": True,
+                "entries": [
+                    {k: v for k, v in e.items() if k not in ("page", "line")}
+                    for e in alias["entries"]
+                ],
+            }
+            targets = [
+                next(row for row in summary["charges"] if row["kind"] == "expense"),
+                manual,
+            ]
+            payloads = [
+                {
+                    **alias_body,
+                    "links": [
+                        {
+                            "source_index": 0,
+                            "resource_id": row["id"],
+                            "expected_version": row["version"],
+                        }
+                    ],
+                }
+                for row in targets
+            ]
+            before = client.get("/api/privacy/export").json()["card_charges"]
+
+            def concurrent(suffix, payloads):
+                def call(payload):
+                    with httpx.Client(**options) as worker:
+                        return worker.post(path + suffix, json=payload)
+
+                with ThreadPoolExecutor(2) as pool:
+                    return list(pool.map(call, payloads))
+
+            linked = concurrent("confirm", payloads)
+            assert sorted(r.status_code for r in linked) == [200, 409], [
+                r.text for r in linked
+            ]
+            assert client.get("/api/privacy/export").json()["card_charges"] == before
+            reviewed = client.post(
+                path + "review",
+                json={
+                    "preview_token": alias["preview_token"],
+                    "entries": alias_body["entries"],
+                },
+            ).json()
+            origin = reviewed["known_origins"][0]
+            release = {
+                "preview_token": alias["preview_token"],
+                "release": {
+                    "source_index": 0,
+                    "resource_id": origin["resource_id"],
+                    "expected_version": origin["target"]["version"],
+                    "expected_origin_version": origin["version"],
+                    "reason": "Destino incorreto",
+                },
+            }
+            releases = concurrent("unlink", [release, release])
+            assert sorted(r.status_code for r in releases) == [200, 409], [
+                r.text for r in releases
+            ]
+            assert client.post(path + "confirm", json=alias_body).status_code == 409
+            fresh = client.post(
+                path + "preview",
+                content=alias_doc,
+                headers={"Content-Type": "application/pdf"},
+            ).json()
+            accepted = next(
+                payload for payload, r in zip(payloads, linked) if r.status_code == 200
+            )
+            remap = {
+                **accepted,
+                "preview_token": fresh["preview_token"],
+                "links": [{**accepted["links"][0], "expected_origin_version": 2}],
+            }
+            assert client.post(path + "confirm", json=remap).json()["linked"] == 1
+            assert client.post(path + "unlink", json=release).status_code == 409
+            assert client.get("/api/privacy/export").json()["card_charges"] == before
             print(
-                "PASS: PDF no leitor isolado, prévia sem gravação, revisão, estorno, deduplicação e recusa de PDF escaneado."
+                "PASS: PDF isolado, revisão/estorno, deduplicação, vínculo e desfazimento concorrentes, reenvio antigo recusado e remapeamento sem mudança financeira."
             )
         finally:
             assert (

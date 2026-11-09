@@ -1,5 +1,6 @@
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs");
+const { randomUUID } = require("crypto");
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8")),
     base = process.env.APP_URL || "http://localhost:8000";
@@ -181,9 +182,106 @@ const fs = require("fs");
     );
     if ((await repeatedCSV.json()).removed !== 1)
       throw Error("CSV não compartilhou a origem do PDF excluído");
+    // O ciclo adicional respeita as cotas de importação e de IP.
+    await new Promise((resolve) => setTimeout(resolve, 61000));
+    const manualResponse = await context.request.post(
+      base + "/api/card-purchases",
+      {
+        headers,
+        data: {
+          request_id: randomUUID(),
+          card_id: card.id,
+          first_month: "2026-11",
+          date: "2026-11-03",
+          description: "Compra manual para conciliar",
+          amount_cents: 12000,
+          installments: 1,
+          kind: "expense",
+          category: "Outros",
+          reviewed: true,
+        },
+      },
+    );
+    if (manualResponse.status() !== 201)
+      throw Error("Compra manual sintética falhou");
+    const manual = (await manualResponse.json())[0];
+    await page.getByRole("button", { name: "Ler PDF", exact: true }).click();
+    await page
+      .locator("#pdf-file")
+      .setInputFiles("artifacts/fatura-conciliacao-sintetica.pdf");
+    const aliasRow = page.locator(".pdf-row").first();
+    await aliasRow.locator("[name=amount]").fill("120,00");
+    await page.locator("#pdf-review-links").click();
+    await aliasRow.locator("select[data-pdf-link]").selectOption(manual.id);
+    await aliasRow.locator("[name=amount]").fill("120,01");
+    await aliasRow.locator("[name=include]").uncheck();
+    await aliasRow.locator("[name=include]").check();
+    if (
+      !(await aliasRow.locator("select[data-pdf-link]").isDisabled()) ||
+      (await aliasRow.locator("select[data-pdf-link]").inputValue()) !== ""
+    )
+      throw Error("Destino antigo continuou disponível após edição");
+    await aliasRow.locator("[name=amount]").fill("120,00");
+    await page.locator("#pdf-review-links").click();
+    await aliasRow.locator("select[data-pdf-link]").selectOption(manual.id);
+    await page.locator("#pdf-reviewed").check();
+    const linkedResponse = page.waitForResponse(
+      (r) => r.url().endsWith("/import/pdf/confirm") && r.status() === 200,
+    );
+    await page.locator("#pdf-confirm").click();
+    if ((await (await linkedResponse).json()).linked !== 1)
+      throw Error("PDF não vinculou o destino revisado");
+    await page.locator("#pdf-dialog").waitFor({ state: "hidden" });
+    await page.getByRole("button", { name: "Ler PDF", exact: true }).click();
+    await page
+      .locator("#pdf-file")
+      .setInputFiles("artifacts/fatura-conciliacao-sintetica.pdf");
+    const reason = page.locator('.pdf-row [name="release_reason"]');
+    await reason.fill("Destino conferido novamente");
+    await page
+      .getByRole("button", { name: "Desfazer vínculo", exact: true })
+      .scrollIntoViewIfNeeded();
+    await page.locator("#pdf-dialog").screenshot({
+      path: "artifacts/pdf-link-mobile.png",
+    });
+    page.once("dialog", (dialog) => dialog.accept());
+    const releasedResponse = page.waitForResponse(
+      (r) => r.url().endsWith("/import/pdf/unlink") && r.status() === 200,
+    );
+    await page
+      .getByRole("button", { name: "Desfazer vínculo", exact: true })
+      .click();
+    if ((await (await releasedResponse).json()).released !== 1)
+      throw Error("Desfazimento PDF falhou");
+    await reason.waitFor({ state: "detached" });
+    await page
+      .locator(".pdf-row")
+      .first()
+      .locator("[name=amount]")
+      .fill("120,00");
+    await page.locator("#pdf-review-links").click();
+    await page.locator("select[data-pdf-link]").selectOption(manual.id);
+    await page.locator("#pdf-reviewed").check();
+    const relinkedResponse = page.waitForResponse(
+      (r) => r.url().endsWith("/import/pdf/confirm") && r.status() === 200,
+    );
+    await page.locator("#pdf-confirm").click();
+    if ((await (await relinkedResponse).json()).linked !== 1)
+      throw Error("Remapeamento PDF falhou");
+    await page.locator("#pdf-dialog").waitFor({ state: "hidden" });
+    const finalCharges = (
+      await (await context.request.get(base + "/api/privacy/export")).json()
+    ).card_charges;
+    if (
+      finalCharges.length !== 2 ||
+      finalCharges.find((c) => c.id === manual.id).amount_cents !== 12000
+    )
+      throw Error(
+        "Conciliação alterou os valores ou a quantidade de lançamentos",
+      );
     if (errors.length) throw Error(errors.join("\n"));
     console.log(
-      "PASS: navegador com PDF real: prévia sem gravação, edição de descrição/valor, revisão, estorno, correção importada, proteção PDF/CSV após exclusão e mobile.",
+      "PASS: PDF real no navegador: revisão, estorno, correção, proteção após exclusão, consulta de destinos revisados, vínculo/desfazimento/releitura e nova associação sem alterar os valores no mobile.",
     );
   } finally {
     if (csrf) {

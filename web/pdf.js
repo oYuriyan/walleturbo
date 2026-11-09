@@ -1,9 +1,13 @@
 "use strict";
 let pdfStatementId = null,
   pdfToken = null,
-  pdfGeneration = 0;
+  pdfGeneration = 0,
+  pdfReviewVersion = 0,
+  pdfBusy = false;
 function clearPdf() {
   pdfGeneration++;
+  pdfReviewVersion++;
+  pdfBusy = false;
   pdfToken = null;
   pdfStatementId = null;
   $("#pdf-form").reset();
@@ -11,6 +15,7 @@ function clearPdf() {
   for (const id of ["#pdf-state", "#pdf-warnings", "#pdf-rows", "#pdf-totals"])
     $(id).replaceChildren();
   $("#pdf-confirm").disabled = true;
+  $("#pdf-review-links").disabled = true;
   if ($("#pdf-dialog").open) $("#pdf-dialog").close();
 }
 function openPdf(statementId) {
@@ -22,6 +27,8 @@ function openPdf(statementId) {
     return;
   }
   pdfGeneration++;
+  pdfReviewVersion++;
+  pdfBusy = false;
   pdfStatementId = statementId;
   pdfToken = null;
   $("#pdf-form").reset();
@@ -30,10 +37,12 @@ function openPdf(statementId) {
   $("#pdf-rows").replaceChildren();
   $("#pdf-totals").textContent = "";
   $("#pdf-confirm").disabled = true;
+  $("#pdf-review-links").disabled = true;
   openDialog("#pdf-dialog");
 }
 $("#pdf-dialog").addEventListener("close", () => {
   pdfGeneration++;
+  pdfReviewVersion++;
   pdfToken = null;
   $("#pdf-file").value = "";
   $("#pdf-rows").replaceChildren();
@@ -96,17 +105,28 @@ function candidateRow(entry) {
   row.append(description, fields);
   checkbox.onchange = () => {
     row
-      .querySelectorAll("input:not([name=include]),select")
-      .forEach((input) => (input.disabled = !checkbox.checked));
+      .querySelectorAll("input:not([name=include]),select,button")
+      .forEach(
+        (input) =>
+          (input.disabled =
+            !checkbox.checked || input.dataset.stale === "true"),
+      );
   };
-  row.addEventListener("input", () => {
+  const changed = (event) => {
+    pdfReviewVersion++;
     $("#pdf-reviewed").checked = false;
+    if (["date", "amount", "kind"].includes(event.target.name)) {
+      const destination = row.querySelector("select[data-pdf-link]");
+      if (destination) {
+        destination.value = "";
+        destination.disabled = true;
+        destination.dataset.stale = "true";
+      }
+    }
     updatePdfTotal();
-  });
-  row.addEventListener("change", () => {
-    $("#pdf-reviewed").checked = false;
-    updatePdfTotal();
-  });
+  };
+  row.addEventListener("input", changed);
+  row.addEventListener("change", changed);
   return row;
 }
 function selectedPdfEntries() {
@@ -130,15 +150,157 @@ function updatePdfTotal() {
       );
     $("#pdf-totals").textContent =
       `${rows.length} selecionado(s) · Total líquido: ${money(total)}`;
-    $("#pdf-confirm").disabled = !pdfToken || !rows.length;
+    $("#pdf-confirm").disabled = !pdfToken || !rows.length || pdfBusy;
+    $("#pdf-review-links").disabled = !pdfToken || !rows.length || pdfBusy;
   } catch {
     $("#pdf-totals").textContent = "Confira os valores antes de importar.";
     $("#pdf-confirm").disabled = true;
+    $("#pdf-review-links").disabled = true;
   }
 }
+function renderPdfLinks(data) {
+  for (const row of document.querySelectorAll(".pdf-row")) {
+    row.querySelector("[data-pdf-reconciliation]")?.remove();
+    const index = Number(row.dataset.index),
+      origin = data.known_origins?.find((item) => item.source_index === index),
+      candidate = data.possible_duplicates?.find(
+        (item) => item.source_index === index,
+      ),
+      area = el("div");
+    area.dataset.pdfReconciliation = "";
+    if (origin) {
+      area.append(
+        el(
+          "p",
+          origin.removed
+            ? "Origem conhecida sem registro disponível: não será recriada."
+            : `Origem já associada a: ${origin.target.description} · ${money(origin.target.amount_cents)}.`,
+        ),
+      );
+      if (origin.releasable) {
+        const label = field(
+            "Motivo para desfazer o vínculo",
+            "release_reason",
+            "",
+          ),
+          reason = label.querySelector("input"),
+          release = el("button", "Desfazer vínculo", "button");
+        reason.required = false;
+        reason.maxLength = 240;
+        release.type = "button";
+        release.onclick = () =>
+          action(async () => {
+            if (pdfBusy || !pdfToken) return;
+            const explanation = reason.value.trim();
+            if (explanation.length < 3)
+              throw Error("Informe o motivo (mínimo 3 caracteres).");
+            if (
+              !confirm(
+                "Desfazer somente o vínculo e reler o arquivo? O lançamento será preservado; edições ainda não importadas serão descartadas.",
+              )
+            )
+              return;
+            const generation = pdfGeneration;
+            pdfBusy = true;
+            updatePdfTotal();
+            release.disabled = true;
+            try {
+              await api(
+                `/api/statements/${pdfStatementId}/import/pdf/unlink`,
+                "POST",
+                {
+                  preview_token: pdfToken,
+                  release: {
+                    source_index: index,
+                    resource_id: origin.resource_id,
+                    expected_version: origin.target.version,
+                    expected_origin_version: origin.version,
+                    reason: explanation,
+                  },
+                },
+              );
+              if (generation !== pdfGeneration) return;
+              message(
+                "Vínculo desfeito; lançamento preservado. Confira a nova prévia.",
+              );
+              $("#pdf-file").onchange();
+            } finally {
+              if (generation === pdfGeneration) {
+                pdfToken = null;
+                pdfBusy = false;
+                $("#pdf-state").textContent =
+                  "Releia o arquivo antes de continuar.";
+                updatePdfTotal();
+              }
+            }
+          });
+        area.append(label, release);
+      }
+    }
+    if (candidate) {
+      area.append(
+        el(
+          "p",
+          `Possíveis duplicatas por data, valor e tipo. Confira o destino; compras legítimas podem coincidir.${candidate.more ? " Mostrando os primeiros 5." : ""}`,
+        ),
+      );
+      const label = el("label", "Destino do lançamento"),
+        destination = el("select"),
+        original = el("option", "Criar ou reconhecer pela origem");
+      original.value = "";
+      destination.dataset.pdfLink = index;
+      destination.dataset.originVersion = data.origin_versions[index];
+      destination.append(original);
+      for (const match of candidate.matches) {
+        const option = el(
+          "option",
+          `Vincular a: ${match.description} · ${money(match.amount_cents)} · ${match.id.slice(0, 8)}`,
+        );
+        option.value = match.id;
+        option.dataset.version = match.version;
+        destination.append(option);
+      }
+      label.append(destination);
+      area.append(label);
+    }
+    row.append(area);
+    if (!row.querySelector("[name=include]").checked)
+      area
+        .querySelectorAll("input,select,button")
+        .forEach((input) => (input.disabled = true));
+  }
+}
+$("#pdf-review-links").onclick = () =>
+  action(async () => {
+    if (!pdfToken || pdfBusy) return;
+    const generation = pdfGeneration,
+      revision = ++pdfReviewVersion;
+    pdfBusy = true;
+    $("#pdf-reviewed").checked = false;
+    updatePdfTotal();
+    try {
+      const data = await api(
+        `/api/statements/${pdfStatementId}/import/pdf/review`,
+        "POST",
+        {
+          preview_token: pdfToken,
+          entries: selectedPdfEntries(),
+        },
+      );
+      if (generation !== pdfGeneration || revision !== pdfReviewVersion) return;
+      renderPdfLinks(data);
+    } finally {
+      if (generation === pdfGeneration) {
+        pdfBusy = false;
+        updatePdfTotal();
+      }
+    }
+  });
 $("#pdf-file").onchange = () =>
   action(async () => {
     const generation = ++pdfGeneration;
+    pdfReviewVersion++;
+    pdfBusy = false;
     pdfToken = null;
     $("#pdf-confirm").disabled = true;
     $("#pdf-reviewed").checked = false;
@@ -187,6 +349,7 @@ $("#pdf-file").onchange = () =>
       data.entries.forEach((entry) =>
         $("#pdf-rows").append(candidateRow(entry)),
       );
+      renderPdfLinks(data);
       updatePdfTotal();
     } catch (error) {
       if (generation === pdfGeneration)
@@ -197,6 +360,7 @@ $("#pdf-file").onchange = () =>
 $("#pdf-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
+    if (pdfBusy) return;
     if (!pdfToken || !$("#pdf-reviewed").checked)
       throw Error("Leia o PDF e confirme a revisão antes de importar.");
     const entries = selectedPdfEntries();
@@ -206,19 +370,40 @@ $("#pdf-form").onsubmit = (e) => {
     )
       throw Error("Confira os lançamentos selecionados.");
     $("#pdf-confirm").disabled = true;
+    const generation = pdfGeneration;
+    const indices = new Set(entries.map((entry) => entry.source_index));
+    const links = [...document.querySelectorAll("select[data-pdf-link]")]
+      .filter(
+        (select) =>
+          select.value &&
+          !select.disabled &&
+          indices.has(Number(select.dataset.pdfLink)),
+      )
+      .map((select) => ({
+        source_index: Number(select.dataset.pdfLink),
+        resource_id: select.value,
+        expected_version: Number(select.selectedOptions[0].dataset.version),
+        expected_origin_version: Number(select.dataset.originVersion),
+      }));
+    pdfBusy = true;
+    updatePdfTotal();
     try {
       const result = await api(
         `/api/statements/${pdfStatementId}/import/pdf/confirm`,
         "POST",
-        { preview_token: pdfToken, reviewed: true, entries },
+        { preview_token: pdfToken, reviewed: true, entries, links },
       );
+      if (generation !== pdfGeneration) return;
       $("#pdf-dialog").close();
       await refresh();
       message(
-        `${result.created} lançamento(s) importado(s); ${result.duplicates} linha(s) já conhecida(s) ignorada(s).${result.removed ? ` ${result.removed} excluída(s) anteriormente não foram recriadas.` : ""} Confira agora o total da fatura.`,
+        `${result.created} lançamento(s) importado(s); ${result.duplicates} linha(s) já conhecida(s) ignorada(s).${result.linked ? ` ${result.linked} origem(ns) vinculada(s) a registros existentes.` : ""}${result.removed ? ` ${result.removed} excluída(s) anteriormente não foram recriadas.` : ""} Confira agora o total da fatura.`,
       );
     } finally {
-      if ($("#pdf-dialog").open) updatePdfTotal();
+      if (generation === pdfGeneration) {
+        pdfBusy = false;
+        if ($("#pdf-dialog").open) updatePdfTotal();
+      }
     }
   });
 };

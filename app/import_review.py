@@ -165,23 +165,39 @@ def release_link(db, model, owner, keys, body, context, scope, container):
 
 
 def apply_links(
-    db, model, owner, entries, keys, excluded, links, marks, context, scope, container
+    db,
+    model,
+    owner,
+    entries,
+    keys,
+    excluded,
+    links,
+    marks,
+    context,
+    scope,
+    container,
+    source_indices=None,
 ):
     from app.db import FinancialAudit
 
     indices = [link.source_index for link in links]
+    source_indices = (
+        source_indices if source_indices is not None else range(len(entries))
+    )
+    entry_by_index = dict(zip(source_indices, entries))
+    key_by_index = dict(zip(source_indices, keys))
     targets = [str(link.resource_id) for link in links]
     if (
         len(set(indices)) != len(indices)
         or len(set(targets)) != len(targets)
-        or any(i >= len(entries) or i in excluded for i in indices)
+        or any(i not in entry_by_index or i in excluded for i in indices)
     ):
         raise HTTPException(
             422, "Vínculos inválidos. Selecione cada origem e destino uma única vez."
         )
     linked = 0
     for link in sorted(links, key=lambda item: str(item.resource_id)):
-        key = keys[link.source_index]
+        key = key_by_index[link.source_index]
         mark = marks[key]
         target_id = str(link.resource_id)
         expected = link.expected_origin_version
@@ -203,7 +219,7 @@ def apply_links(
             raise HTTPException(
                 409, "Registro indisponível neste contexto. Refaça a prévia."
             )
-        entry = entries[link.source_index]
+        entry = entry_by_index[link.source_index]
         if target.version != link.expected_version or (
             target.date,
             target.amount_cents,
