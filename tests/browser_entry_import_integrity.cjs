@@ -173,13 +173,11 @@ const base = "http://localhost:8000";
     await page.locator("#import-acknowledgement").uncheck();
     assert.equal(await page.locator("#confirm-import").isDisabled(), true);
     const aliasCsv = csv.replace("Origem CSV", "Descrição em outro documento");
-    await page
-      .locator("#csv-file")
-      .setInputFiles({
-        name: "outra-origem.csv",
-        mimeType: "text/csv",
-        buffer: Buffer.from(aliasCsv),
-      });
+    await page.locator("#csv-file").setInputFiles({
+      name: "outra-origem.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(aliasCsv),
+    });
     await page.locator('#import-preview select[data-link-index="0"]').waitFor();
     const destination = page.locator(
       '#import-preview select[data-link-index="0"]',
@@ -209,6 +207,43 @@ const base = "http://localhost:8000";
     );
     assert.equal(aliasReplay.status(), 200);
     assert.equal((await aliasReplay.json()).created, 0);
+    // Nova janela para o ciclo adicional, preservando a cota real de importações.
+    await new Promise((resolve) => setTimeout(resolve, 61000));
+    // Uma escolha equivocada pode ser desfeita e refeita sem alterar os valores.
+    await page.locator("#import-button").click();
+    await page.locator("#csv-file").setInputFiles({
+      name: "outra-origem.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(aliasCsv),
+    });
+    await page
+      .locator('#import-preview input[data-release-reason="0"]')
+      .fill("Destino escolhido por engano");
+    page.once("dialog", (d) => d.accept());
+    const releasedResponse = page.waitForResponse(
+      (r) => r.url().endsWith("/api/import/unlink") && r.status() === 200,
+    );
+    await page
+      .locator('#import-preview button[data-release-index="0"]')
+      .click();
+    assert.equal((await (await releasedResponse).json()).released, 1);
+    await page
+      .locator('#import-preview button[data-release-index="0"]')
+      .waitFor({ state: "detached" });
+    await page
+      .locator('#import-preview select[data-link-index="0"]')
+      .selectOption(targetId);
+    await page.locator("#import-acknowledgement").check();
+    const relinkedResponse = page.waitForResponse(
+      (r) => r.url().endsWith("/api/import/confirm") && r.status() === 200,
+    );
+    await page.locator("#confirm-import").click();
+    assert.equal((await (await relinkedResponse).json()).linked, 1);
+    await page.locator("#import-dialog").waitFor({ state: "hidden" });
+    assert.equal(
+      await page.locator("#transaction-list .transaction").count(),
+      1,
+    );
     page.once("dialog", (d) => d.accept());
     await transaction
       .getByRole("button", { name: "Excluir", exact: true })

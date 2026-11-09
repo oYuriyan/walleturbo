@@ -283,6 +283,7 @@ class ImportMark(Base):
     container_id: Mapped[str] = mapped_column(String(36), primary_key=True)
     source_key: Mapped[str] = mapped_column(String(64), primary_key=True)
     resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     removed: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default="false"
     )

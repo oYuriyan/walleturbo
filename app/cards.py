@@ -25,6 +25,11 @@ from app.import_review import (
     apply_links,
     select_rows,
     selection_result,
+    CSVRelease,
+    origin_state,
+    release_link,
+    OriginVersions,
+    require_released_revision,
 )
 
 router = APIRouter(prefix="/api")
@@ -101,6 +106,7 @@ class CardCSV(Input):
     links: Links = Field(default_factory=list)
     excluded_indices: ExcludedIndices = Field(default_factory=list)
     content: str = Field(max_length=256000)
+    origin_versions: OriginVersions = Field(default_factory=list)
 
 
 def shift_month(month, offset):
@@ -609,10 +615,42 @@ def preview(
     entries = csv_entries(body)
     return {
         "entries": [e.model_dump() for e in entries],
+        **origin_state(
+            db,
+            Charge,
+            user,
+            import_keys(entries),
+            Charge.statement_id == statement.id,
+            "card",
+            statement.id,
+        ),
         "possible_duplicates": candidates(
             db, Charge, user, entries, Charge.statement_id == statement.id
         ),
     }
+
+
+@router.post("/statements/{statement_id}/import/unlink")
+def unlink_csv(
+    statement_id: str,
+    body: CSVRelease,
+    user=Depends(current_user),
+    db: Session = Depends(db_session),
+):
+    statement = lock_statement(db, user, statement_id)
+    require_open(statement)
+    active_statement_card(db, user, statement)
+    entries = csv_entries(body)
+    return release_link(
+        db,
+        Charge,
+        user,
+        import_keys(entries),
+        body.release,
+        Charge.statement_id == statement.id,
+        "card",
+        statement.id,
+    )
 
 
 @router.post("/statements/{statement_id}/import/confirm")
@@ -643,8 +681,10 @@ def import_statement(
         statement.id,
     )
     created = removed = 0
+    indices = {key: index for index, key in enumerate(keys)}
     for entry, key in selected:
         mark = marks[key]
+        require_released_revision(mark, body.origin_versions, indices[key])
         if mark.removed:
             removed += 1
             continue
@@ -670,6 +710,7 @@ def import_statement(
         db.add(row)
         db.flush()
         mark.resource_id = row.id
+        mark.version += 1
         created += 1
     db.commit()
     output = selection_result(

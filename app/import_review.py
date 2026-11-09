@@ -18,9 +18,150 @@ class Link(BaseModel):
     source_index: int = Field(strict=True, ge=0, le=499)
     resource_id: UUID
     expected_version: int = Field(strict=True, ge=1, le=2147483646)
+    expected_origin_version: int = Field(default=0, strict=True, ge=0, le=2147483646)
 
 
 Links = Annotated[list[Link], Field(max_length=500)]
+OriginVersions = Annotated[
+    list[Annotated[int, Field(strict=True, ge=0, le=2147483646)]], Field(max_length=500)
+]
+
+
+def require_released_revision(mark, versions, index):
+    if (
+        mark.version
+        and not mark.resource_id
+        and (index >= len(versions) or versions[index] != mark.version)
+    ):
+        raise HTTPException(409, "Origem desfeita. Refaça a prévia antes de importar.")
+
+
+class Release(Link):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    expected_origin_version: int = Field(strict=True, ge=1, le=2147483646)
+    reason: str = Field(min_length=3, max_length=240)
+
+
+class CSVRelease(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    content: str = Field(max_length=256000)
+    release: Release
+
+
+def lock_target(db, model, owner, target_id, context):
+    try:
+        return db.scalar(
+            select(model)
+            .where(model.owner == owner, model.id == target_id, context)
+            .with_for_update(nowait=True)
+            .execution_options(populate_existing=True)
+        )
+    except DBAPIError as exc:
+        if getattr(exc.orig, "sqlstate", None) != "55P03":
+            raise
+        db.rollback()
+        raise HTTPException(409, "Registro em alteração. Refaça a prévia.") from None
+
+
+def origin_state(db, model, owner, keys, context, scope, container):
+    from app.db import ImportMark
+
+    rows = db.execute(
+        select(ImportMark, model)
+        .outerjoin(
+            model,
+            (model.owner == ImportMark.owner)
+            & (model.id == ImportMark.resource_id)
+            & context,
+        )
+        .where(
+            ImportMark.owner == owner,
+            ImportMark.scope == scope,
+            ImportMark.container_id == container,
+            ImportMark.source_key.in_(keys),
+        )
+    )
+    states = {mark.source_key: (mark, target) for mark, target in rows}
+    versions, origins = [], []
+    for index, key in enumerate(keys):
+        mark, target = states.get(key, (None, None))
+        versions.append(mark.version if mark else 0)
+        if mark and mark.resource_id:
+            origins.append(
+                {
+                    "source_index": index,
+                    "resource_id": mark.resource_id,
+                    "version": mark.version,
+                    "removed": mark.removed or target is None,
+                    "releasable": bool(
+                        target and not mark.removed and target.import_key != key
+                    ),
+                    "target": (
+                        {
+                            "description": target.description,
+                            "date": target.date,
+                            "amount_cents": target.amount_cents,
+                            "version": target.version,
+                        }
+                        if target
+                        else None
+                    ),
+                }
+            )
+    return {"origin_versions": versions, "known_origins": origins}
+
+
+def release_link(db, model, owner, keys, body, context, scope, container):
+    from app.db import FinancialAudit
+    from app.import_marks import reserve
+
+    if body.source_index >= len(keys):
+        raise HTTPException(422, "Linha inválida. Refaça a prévia.")
+    key = keys[body.source_index]
+    mark = reserve(db, owner, scope, container, [key])[key]
+    if (
+        mark.version != body.expected_origin_version
+        or mark.removed
+        or mark.resource_id != str(body.resource_id)
+    ):
+        raise HTTPException(409, "Origem alterada ou indisponível. Refaça a prévia.")
+    target = lock_target(db, model, owner, mark.resource_id, context)
+    if (
+        target is None
+        or target.version != body.expected_version
+        or target.import_key == key
+    ):
+        raise HTTPException(
+            409, "Vínculo indisponível para desfazimento. Refaça a prévia."
+        )
+    before = {
+        "scope": scope,
+        "container_id": container,
+        "resource_id": mark.resource_id,
+        "origin_version": mark.version,
+        "source_index": body.source_index,
+    }
+    mark.resource_id = None
+    mark.version += 1
+    db.add(
+        FinancialAudit(
+            id=str(uuid4()),
+            owner=owner,
+            entity="import_link",
+            entity_id=target.id,
+            action="deleted",
+            occurred_at=datetime.now(timezone.utc).isoformat(timespec="microseconds"),
+            before=before,
+            after={
+                **before,
+                "resource_id": None,
+                "origin_version": mark.version,
+                "reason": body.reason,
+            },
+        )
+    )
+    db.commit()
+    return {"released": 1}
 
 
 def apply_links(
@@ -43,6 +184,11 @@ def apply_links(
         key = keys[link.source_index]
         mark = marks[key]
         target_id = str(link.resource_id)
+        expected = link.expected_origin_version
+        if mark.version not in (
+            (expected, expected + 1) if mark.resource_id else (expected,)
+        ):
+            raise HTTPException(409, "Origem alterada. Refaça a prévia.")
         if mark.resource_id and mark.resource_id != target_id:
             raise HTTPException(
                 409, "Origem já associada a outro registro. Refaça a prévia."
@@ -52,20 +198,7 @@ def apply_links(
         if mark.resource_id:
             linked += 1
             continue
-        try:
-            target = db.scalar(
-                select(model)
-                .where(model.owner == owner, model.id == target_id, context)
-                .with_for_update(nowait=True)
-                .execution_options(populate_existing=True)
-            )
-        except DBAPIError as exc:
-            if getattr(exc.orig, "sqlstate", None) != "55P03":
-                raise
-            db.rollback()
-            raise HTTPException(
-                409, "Registro em alteração. Refaça a prévia."
-            ) from None
+        target = lock_target(db, model, owner, target_id, context)
         if target is None:
             raise HTTPException(
                 409, "Registro indisponível neste contexto. Refaça a prévia."
@@ -80,6 +213,7 @@ def apply_links(
                 409, "Registro alterado ou incompatível. Refaça a prévia."
             )
         mark.resource_id = target.id
+        mark.version += 1
         db.add(
             FinancialAudit(
                 id=str(uuid4()),
@@ -96,6 +230,7 @@ def apply_links(
                     "container_id": container,
                     "resource_id": target.id,
                     "source_index": link.source_index,
+                    "origin_version": mark.version,
                 },
             )
         )

@@ -1,3 +1,10 @@
+## 0.18.0 — em validação
+
+- Prévia CSV mostra o vínculo atual e permite desfazê-lo com motivo, preservando o lançamento financeiro.
+- Nova prévia permite remapear ou importar ocorrência independente; revisões impedem restaurar vínculos por reenvios antigos.
+- Migração 013, histórico privado transacional, testes de isolamento, rollback, concorrência e fluxo mobile.
+- Nenhuma dependência ou serviço novo; homologação final registrada no PR da entrega.
+
 ## 0.13.0 — em validação
 
 - Cenários e limites mensais exigem versão atual, preservada após exclusão de limites.

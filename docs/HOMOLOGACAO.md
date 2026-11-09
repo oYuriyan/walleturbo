@@ -183,3 +183,9 @@ Código 10bd122, CI aprovado https://github.com/oYuriyan/walleturbo/actions/runs
 ## Incremento 0.13 — configurações mensais versionadas
 
 140 testes locais aprovados com avisos tratados como erro. Versão compartilhada de cenário/limites, exclusão/recriação sem retorno à versão antiga, histórico transacional e privacidade; novos roteiros de PostgreSQL e navegador aguardam CI. Contrato e limites em PLANEJAMENTO.md.
+
+## Incremento 0.18 — desfazimento/remapeamento CSV
+
+Validação local de 09/11/2026: 183 testes aprovados com avisos tratados como erro, JavaScript e diff sem erros. PostgreSQL/Redis reais em Compose: migração 013 preservou marcas legadas, repetição/checksum/rollback aprovados; dois desfazimentos concorrentes produziram 200/409, destino bloqueado foi recusado sem escrita, reenvios antigos não restauraram o vínculo e remapeamento para outro destino foi aceito com a revisão atual. Chromium do ambiente executou o roteiro mobile completo, incluindo desfazer/refazer sem alterar a quantidade de lançamentos e limpeza de sessão. A captura geral está no artefato local entry-import-mobile.png; não representa revisão WCAG nem todos os estados novos.
+
+Homologação integral do GitHub Actions em andamento no [PR #9](https://github.com/oYuriyan/walleturbo/pull/9); o resultado final e o commit validado serão registrados no PR. A evidência local não substitui a regressão integral com login real. Contrato, atualização coordenada do schema e limites em LANCAMENTOS_E_IMPORTACAO.md/MIGRACOES.md. Nenhum serviço/dependência de aplicação foi adicionado; publicação e contratação continuam fora desta entrega.
