@@ -211,6 +211,7 @@ function progress(value, max, label) {
   return wrap;
 }
 function transactionNode(t, editable) {
+  const positive = t.kind === "income" || t.kind === "refund";
   const row = el("div", undefined, "transaction"),
     info = el("div", undefined, "transaction-info");
   info.append(
@@ -218,13 +219,15 @@ function transactionNode(t, editable) {
     el("small", `${t.category} · ${t.date.split("-").reverse().join("/")}`),
   );
   if (!t.reviewed) info.append(el("div", "Revisão pendente", "pending"));
+  if (t.kind === "refund")
+    info.append(el("small", "Crédito a conferir como estorno"));
   row.append(
-    el("div", t.kind === "income" ? "↓" : "↑", "transaction-icon"),
+    el("div", positive ? "↓" : "↑", "transaction-icon"),
     info,
     el(
       "strong",
-      (t.kind === "income" ? "+ " : "− ") + money(t.amount_cents),
-      "transaction-amount " + (t.kind === "income" ? "positive" : ""),
+      (positive ? "+ " : "− ") + money(t.amount_cents),
+      "transaction-amount " + (positive ? "positive" : ""),
     ),
   );
   if (editable) {
@@ -692,7 +695,10 @@ $("#import-button").onclick = () => openImport();
 function openImport(statementId = null) {
   importStatementId = statementId;
   $("#import-account-label").hidden = !!statementId;
-  $("#import-format-label").hidden = !!statementId;
+  $("#import-format-label").hidden = false;
+  $("#import-format option[value=ofx]").textContent = statementId
+    ? "OFX de cartão 1.x / 2.x"
+    : "OFX bancário 1.x / 2.x";
   $("#import-format").value = "csv";
   $("#csv-file").accept = ".csv,text/csv";
   $("#import-account-caption").textContent = "Conta de origem (opcional)";
@@ -749,14 +755,15 @@ $("#csv-file").onchange = () =>
     const file = $("#csv-file").files[0];
     if (!file) return;
     if (file.size > 256000) throw Error("Arquivo excede 256 KB.");
-    const ofx = !importStatementId && $("#import-format").value === "ofx",
+    const ofx = $("#import-format").value === "ofx",
+      cardOfx = ofx && !!importStatementId,
       accountId = $("#import-account").value || null,
       base = importStatementId
-        ? `/api/statements/${importStatementId}/import`
+        ? `/api/statements/${importStatementId}/import${ofx ? "/ofx" : ""}`
         : ofx
           ? "/api/import/ofx"
           : "/api/import";
-    if (ofx && !accountId)
+    if (ofx && !importStatementId && !accountId)
       throw Error("Selecione a conta de destino do extrato OFX.");
     let content;
     if (ofx) {
@@ -801,16 +808,22 @@ $("#csv-file").onchange = () =>
       $("#import-preview").append(
         el(
           "p",
-          `${result.format} · Banco ${result.bank_id} · Conta do arquivo ${result.source_account} · BRL. Confira a conta de destino. Saldos do arquivo não alteram seu saldo inicial; transferências e pagamentos não são inferidos.`,
+          cardOfx
+            ? `${result.format} · Emissor ${result.bank_id} · Cartão do arquivo ${result.source_account} · Fatura ${result.statement_month} · BRL. Confira cartão e competência. Nenhuma parcela futura será criada.`
+            : `${result.format} · Banco ${result.bank_id} · Conta do arquivo ${result.source_account} · BRL. Confira a conta de destino. Saldos do arquivo não alteram seu saldo inicial; transferências e pagamentos não são inferidos.`,
         ),
       );
     let acknowledged = !ofx && !result.possible_duplicates?.length;
+    let creditsReviewed = false;
     const updateSelection = () => {
       if (version !== importVersion) return;
       const count = $("#import-preview").querySelectorAll(
         "input[data-source-index]:checked",
       ).length;
-      const conflict = (result.source_conflicts || []).some(
+      const conflict = [
+        ...(result.source_conflicts || []),
+        ...(result.context_conflicts || []),
+      ].some(
         (index) =>
           $("#import-preview").querySelector(
             `input[data-source-index="${index}"]`,
@@ -820,6 +833,15 @@ $("#csv-file").onchange = () =>
       $("#confirm-import").disabled =
         !count ||
         !acknowledged ||
+        (cardOfx &&
+          !creditsReviewed &&
+          result.entries.some(
+            (entry, index) =>
+              entry.kind === "refund" &&
+              $("#import-preview").querySelector(
+                `input[data-source-index="${index}"]`,
+              )?.checked,
+          )) ||
         conflict ||
         $("#confirm-import").dataset.busy === String(version);
     };
@@ -829,7 +851,14 @@ $("#csv-file").onchange = () =>
       selected.type = "checkbox";
       selected.checked = true;
       selected.dataset.sourceIndex = index;
-      selected.onchange = updateSelection;
+      selected.onchange = () => {
+        if (cardOfx) {
+          creditsReviewed = false;
+          const acknowledgement = $("#import-credits-reviewed");
+          if (acknowledgement) acknowledgement.checked = false;
+        }
+        updateSelection();
+      };
       label.append(
         selected,
         document.createTextNode(
@@ -837,6 +866,13 @@ $("#csv-file").onchange = () =>
         ),
       );
       $("#import-preview").append(label, transactionNode(t, false));
+      if (result.context_conflicts?.includes(index))
+        $("#import-preview").append(
+          el(
+            "p",
+            "Origem já reservada em outra fatura deste cartão. Confira a fatura original ou desmarque esta linha.",
+          ),
+        );
       if (result.source_conflicts?.includes(index))
         $("#import-preview").append(
           el(
@@ -933,6 +969,39 @@ $("#csv-file").onchange = () =>
       }
     });
     $("#import-preview").append(selectionStatus);
+    if (cardOfx && result.payments?.length) {
+      $("#import-preview").append(
+        el(
+          "p",
+          `${result.payments.length} pagamento(s) informado(s) pelo emissor: exibidos para conferência, não serão importados nem registrados no caixa.`,
+        ),
+      );
+      for (const payment of result.payments) {
+        const notice = el(
+          "p",
+          `${payment.date} · ${payment.description} · ${money(payment.amount_cents)} · Pagamento não importável`,
+        );
+        notice.dataset.ofxPayment = "";
+        $("#import-preview").append(notice);
+      }
+    }
+    if (cardOfx && result.entries.some((entry) => entry.kind === "refund")) {
+      const label = el("label", undefined, "checkbox"),
+        acknowledgement = el("input");
+      acknowledgement.type = "checkbox";
+      acknowledgement.id = "import-credits-reviewed";
+      acknowledgement.onchange = () => {
+        creditsReviewed = acknowledgement.checked;
+        updateSelection();
+      };
+      label.append(
+        acknowledgement,
+        document.createTextNode(
+          " Conferi que os créditos selecionados são estornos, não pagamentos do cartão.",
+        ),
+      );
+      $("#import-preview").append(label);
+    }
     if (ofx || result.possible_duplicates?.length) {
       $("#confirm-import").disabled = true;
       $("#import-preview").append(
@@ -996,7 +1065,9 @@ $("#csv-file").onchange = () =>
         acknowledgement,
         document.createTextNode(
           ofx
-            ? " Conferi a conta de destino, os valores e os sinais do extrato OFX."
+            ? cardOfx
+              ? " Conferi o cartão, a fatura e os lançamentos selecionados do OFX."
+              : " Conferi a conta de destino, os valores e os sinais do extrato OFX."
             : " Conferi os sinais e desejo importar os lançamentos selecionados.",
         ),
       );
@@ -1032,7 +1103,12 @@ $("#confirm-import").onclick = () =>
     try {
       const result = await api(`${base}/confirm`, "POST", {
         content: csvContent,
-        ...(base === "/api/import/ofx" ? { reviewed: true } : {}),
+        ...(base.endsWith("/ofx") ? { reviewed: true } : {}),
+        ...(importStatementId && base.endsWith("/ofx")
+          ? {
+              credits_reviewed: $("#import-credits-reviewed")?.checked || false,
+            }
+          : {}),
         excluded_indices: excluded,
         links,
         origin_versions: JSON.parse(

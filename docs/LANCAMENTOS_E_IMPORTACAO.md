@@ -102,3 +102,7 @@ O PDF textual passa a consultar destinos compatíveis com os campos revisados e 
 ## Identidade OFX — 0.20
 
 Extrato bancário OFX usa FITID e contexto bancário/conta local para distinguir origens, inclusive compras idênticas legítimas. Reutiliza marcas do escopo transaction e recibos do novo escopo ofx para assinatura original imutável, sem nova tabela. Edição/exclusão de lançamentos continua protegida pelo protocolo existente; arquivo original não sobrescreve correções nem recria exclusões. Arquivo alterado para uma origem conhecida recebe conflito atômico. Seleção, vínculo, desfazimento, histórico, exportação e expurgo mantêm seus contratos. Tipos, limites e corpus em [OFX.md](OFX.md); identidade universal entre bancos e colisões legadas CSV/PDF continuam pendentes.
+
+## OFX de cartão — 0.21
+
+As marcas de cartão continuam na fatura; o recibo `ofx_card` reserva a origem ao primeiro contexto aceito, com `resource_id` apontando para a fatura, inclusive após excluir ou desfazer. Outra fatura do mesmo cartão recebe conflito. Vínculos e revisões do CSV são preservados; pagamentos do emissor não viram lançamentos e créditos selecionados exigem revisão adicional como estorno. Não há realocação de origem ou expansão de parcelas. Contrato e limites em [OFX_CARTAO.md](OFX_CARTAO.md), sem alteração de schema.

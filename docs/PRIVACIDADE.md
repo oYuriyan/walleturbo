@@ -35,6 +35,8 @@ Na leitura assistida de PDF, original e texto completo são processados transito
 
 No OFX bancário, o arquivo é processado em memória e descartado, sem persistência do original ou de identificadores bancários/FITIDs brutos. A interface mostra a conta do documento mascarada. Marcas e recibos existentes retêm identificadores derivados e assinatura da origem para proteger reenvios, correções e exclusões; continuam sujeitos à proteção, exportação e expurgo do titular. Descrições financeiras revisadas entram nos lançamentos, como no CSV. O sistema não comprova autenticidade bancária. Contrato em OFX.md.
 
+No OFX de cartão, o final do cartão é mascarado e as descrições extraídas ocultam sequências semelhantes a PAN. Texto livre ainda exige revisão. O recibo técnico retém a fatura reservada e assinatura da origem; pagamento exibido à parte não cria registro financeiro ou recibo de origem. Exportação/expurgo incluem reservas e histórico, sem armazenar o arquivo bruto. Consulte OFX_CARTAO.md; esse tratamento não certifica conformidade ou autenticidade do documento.
+
 Planejamento: renda de referência opcional, margem preservada, confirmação mensal e limites por categoria são usados para simulações determinísticas. Não são enviados a terceiros. Estão incluídos na exportação e exclusão financeira.
 
 Saldos e transferências: referências iniciais, motivos e versões de correção, contas de origem/destino e datas de reversão ficam no banco financeiro e integram exportação/exclusão. Não há envio dessas informações a bancos, modelos de IA ou outros fornecedores. Não coletar dados sensíveis desnecessários no motivo/descrição.

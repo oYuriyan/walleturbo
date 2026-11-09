@@ -219,7 +219,7 @@ function renderFinance() {
         const archived = financeCards.find((c) => c.id === s.card_id)?.archived;
         if (!archived)
           actions.append(
-            button("Importar CSV", () => openImport(s.id)),
+            button("Importar CSV / OFX", () => openImport(s.id)),
             button("Ler PDF", () => openPdf(s.id)),
           );
         actions.append(

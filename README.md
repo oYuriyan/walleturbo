@@ -28,6 +28,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - Marcas de origem preservam importações reconhecidas após correção/exclusão; correção de importados mantém fatura e parcela única.
 - CSV UTF-8 com prévia, limites de tamanho, validação integral e deduplicação.
 - OFX bancário 1.x/2.x em BRL, conta obrigatória e identidade por FITID; corpus sintético, sem homologação de bancos reais.
+- OFX de cartão na fatura selecionada, com revisão de créditos e reserva de origem entre meses; pagamentos exibidos não são importados.
 - PDF com texto selecionável: leitor isolado sem rede e candidatos editáveis, com revisão obrigatória. Formato limitado, sem OCR.
 - Sugestões de categoria por regras, sempre pendentes de revisão.
 - Alertas de assinaturas e despesas acima das receitas; sem promessas de economia.
@@ -59,6 +60,7 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 - [Matriz de requisitos e testes](docs/MATRIZ.md)
 - [Leitura assistida de PDF e limites](docs/PDF.md)
 - [Importação OFX, identidade e limites](docs/OFX.md)
+- [OFX de cartão e reserva da fatura](docs/OFX_CARTAO.md)
 - [Migrações preservando dados](docs/MIGRACOES.md)
 - [Planejamento, limites e recorrências](docs/PLANEJAMENTO.md)
 - [Plano de entrega e critérios de aceite](docs/ROADMAP.md)

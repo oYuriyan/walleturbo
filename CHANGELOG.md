@@ -1,3 +1,10 @@
+## 0.21.0 — em validação
+
+- OFX de cartão BRL na fatura selecionada, com origem reservada contra duplicação em outro mês.
+- Créditos exigem conferência como estorno; pagamentos são exibidos sem importação ou movimento no caixa.
+- Máscara, corpus SGML/XML, vínculos/revisões/histórico e proteção após exclusão reutilizados.
+- Sem migração ou dependência nova; 244 testes locais e homologação completa no PR.
+
 ## 0.20.0 — em validação
 
 - OFX bancário 1.x/2.x em BRL com conta obrigatória, prévia, seleção e identidade por FITID.
