@@ -172,7 +172,43 @@ const base = "http://localhost:8000";
     assert.equal(await page.locator("#confirm-import").isEnabled(), true);
     await page.locator("#import-acknowledgement").uncheck();
     assert.equal(await page.locator("#confirm-import").isDisabled(), true);
-    await page.locator("#import-dialog .close").click();
+    const aliasCsv = csv.replace("Origem CSV", "Descrição em outro documento");
+    await page
+      .locator("#csv-file")
+      .setInputFiles({
+        name: "outra-origem.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from(aliasCsv),
+      });
+    await page.locator('#import-preview select[data-link-index="0"]').waitFor();
+    const destination = page.locator(
+      '#import-preview select[data-link-index="0"]',
+    );
+    const targetId = await destination
+      .locator("option")
+      .nth(1)
+      .getAttribute("value");
+    await destination.selectOption(targetId);
+    await page.locator("#import-acknowledgement").check();
+    const linkedResponse = page.waitForResponse(
+      (r) => r.url().endsWith("/api/import/confirm") && r.status() === 200,
+    );
+    await page.locator("#confirm-import").click();
+    assert.equal((await (await linkedResponse).json()).linked, 1);
+    await page.locator("#import-dialog").waitFor({ state: "hidden" });
+    await page
+      .getByText(/1 origens vinculadas a registros existentes/)
+      .waitFor();
+    assert.equal(
+      await page.locator("#transaction-list .transaction").count(),
+      1,
+    );
+    const aliasReplay = await context.request.post(
+      base + "/api/import/confirm",
+      { headers, data: { content: aliasCsv } },
+    );
+    assert.equal(aliasReplay.status(), 200);
+    assert.equal((await aliasReplay.json()).created, 0);
     page.once("dialog", (d) => d.accept());
     await transaction
       .getByRole("button", { name: "Excluir", exact: true })

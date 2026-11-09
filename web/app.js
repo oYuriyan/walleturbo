@@ -797,6 +797,31 @@ $("#csv-file").onchange = () =>
             ),
           );
         }
+        const destinationLabel = el("label"),
+          destination = el("select");
+        destination.dataset.linkIndex = candidate.source_index;
+        const createOption = el(
+          "option",
+          "Criar ou reconhecer pela origem (sem novo vínculo)",
+        );
+        createOption.value = "";
+        destination.append(createOption);
+        for (const match of candidate.matches) {
+          const option = el(
+            "option",
+            `Vincular a: ${match.description} · ${money(match.amount_cents)} · ${match.id.slice(0, 8)}`,
+          );
+          option.value = match.id;
+          option.dataset.version = match.version;
+          destination.append(option);
+        }
+        destinationLabel.append(
+          document.createTextNode(
+            `Destino do lançamento ${candidate.source_index + 1}`,
+          ),
+          destination,
+        );
+        $("#import-preview").append(destinationLabel);
       }
       const label = el("label"),
         acknowledgement = el("input");
@@ -825,6 +850,18 @@ $("#confirm-import").onclick = () =>
         "input[data-source-index]:not(:checked)",
       ),
     ].map((input) => Number(input.dataset.sourceIndex));
+    const links = [
+      ...$("#import-preview").querySelectorAll("select[data-link-index]"),
+    ]
+      .filter(
+        (select) =>
+          select.value && !excluded.includes(Number(select.dataset.linkIndex)),
+      )
+      .map((select) => ({
+        source_index: Number(select.dataset.linkIndex),
+        resource_id: select.value,
+        expected_version: Number(select.selectedOptions[0].dataset.version),
+      }));
     $("#confirm-import").dataset.busy = String(version);
     $("#confirm-import").disabled = true;
     try {
@@ -836,6 +873,7 @@ $("#confirm-import").onclick = () =>
         {
           content: csvContent,
           excluded_indices: excluded,
+          links,
           ...(!importStatementId
             ? { account_id: $("#import-account").value || null }
             : {}),
@@ -845,7 +883,7 @@ $("#confirm-import").onclick = () =>
       $("#import-dialog").close();
       await refresh();
       message(
-        `${result.created} lançamentos importados; ${result.duplicates} linhas já conhecidas ignoradas.${result.skipped ? ` ${result.skipped} não selecionados nesta importação.` : ""}${result.removed ? ` ${result.removed} excluídas anteriormente não foram recriadas.` : ""} Revise as categorias.`,
+        `${result.created} lançamentos importados; ${result.duplicates} linhas já conhecidas ignoradas.${result.linked ? ` ${result.linked} origens vinculadas a registros existentes.` : ""}${result.skipped ? ` ${result.skipped} não selecionados nesta importação.` : ""}${result.removed ? ` ${result.removed} excluídas anteriormente não foram recriadas.` : ""} Revise as categorias.`,
       );
     } finally {
       if ($("#confirm-import").dataset.busy === String(version))

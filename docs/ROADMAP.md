@@ -181,3 +181,7 @@ Entrega 0.15: prévia consultiva de possíveis duplicatas CSV por data/valor/tip
 0.15 homologada e integrada à main pelo PR #6: CI 42263106361, 147 testes em container e todas as etapas aprovadas.
 
 Entrega 0.16: selecionar lançamentos na prévia CSV sem editar arquivo externo, com contagem acessível e preservação das ocorrências originais. Não selecionadas podem ser importadas depois; nenhuma decisão é persistida como exclusão financeira. IMP-02/03 continuam parciais para identidade/vínculo durável entre fontes e PDF. Contrato em LANCAMENTOS_E_IMPORTACAO.md; homologação no PR.
+
+0.16 homologada: PR #7 integrado à main, CI 42619599544, 157 testes e todas as etapas aprovadas. O roteiro ampliado respeita a janela da cota real de importação.
+
+Entrega 0.17: vínculo explícito CSV com registro existente por usuário/contexto, versão e identidade financeira compatíveis; origem persistente, histórico e expurgo. IMP-02/03 seguem parciais: desfazimento/remapeamento, PDF e identidade de emissor/OFX, corpus e colisões de ocorrências legítimas continuam pendentes. Homologação no PR da entrega.
