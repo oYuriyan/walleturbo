@@ -248,6 +248,10 @@ def confirm(
         canonical = f"{entry.date}|{entry.description.casefold()}|{entry.amount_cents}|{entry.kind}"
         key = metadata["source_keys"][entry.source_index]
         mark = marks[key]
+        if mark.version and not mark.resource_id:
+            raise HTTPException(
+                409, "Origem desfeita. Revise o vínculo pela importação CSV."
+            )
         if mark.removed:
             removed += 1
             continue
@@ -286,6 +290,7 @@ def confirm(
         db.add(row)
         db.flush()
         mark.resource_id = row.id
+        mark.version += 1
         created += 1
     db.commit()
     return import_result(len(entries), created, removed)

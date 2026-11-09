@@ -55,6 +55,11 @@ from app.import_review import (
     apply_links,
     select_rows,
     selection_result,
+    CSVRelease,
+    origin_state,
+    release_link,
+    OriginVersions,
+    require_released_revision,
 )
 from app.security import (
     SecurityMiddleware,
@@ -86,7 +91,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.17.0",
+    version="0.18.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -141,7 +146,7 @@ def ready(db: DBSession = Depends(db_session)):
         db.execute(select(MonthPlan.version).limit(1))
         db.execute(select(Transaction.account_id).limit(1))
         db.execute(select(RequestReceipt.request_id).limit(1))
-        db.execute(select(ImportMark.resource_id).limit(1))
+        db.execute(select(ImportMark.resource_id, ImportMark.version).limit(1))
         db.execute(select(Transaction.version, Transaction.request_id).limit(1))
         db.execute(select(Charge.correction_reason).limit(1))
         db.execute(
@@ -289,6 +294,44 @@ class CSVInput(BaseModel):
     account_id: str | None = Field(default=None, max_length=36)
     excluded_indices: ExcludedIndices = Field(default_factory=list)
     links: Links = Field(default_factory=list)
+    origin_versions: OriginVersions = Field(default_factory=list)
+
+
+class TransactionCSVRelease(CSVRelease):
+    account_id: str | None = Field(default=None, max_length=36)
+
+
+def transaction_import_keys(entries, account_id):
+    keys = import_keys(entries)
+    return (
+        [hashlib.sha256((account_id + "|" + key).encode()).hexdigest() for key in keys]
+        if account_id
+        else keys
+    )
+
+
+@app.post("/api/import/unlink")
+def unlink_csv(
+    body: TransactionCSVRelease,
+    user=Depends(current_user),
+    db: DBSession = Depends(db_session),
+):
+    try:
+        entries = parse_csv(body.content)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+    if body.account_id:
+        require_active(owned(db, Account, user, body.account_id, lock=True))
+    return release_link(
+        db,
+        Transaction,
+        user,
+        transaction_import_keys(entries, body.account_id),
+        body.release,
+        Transaction.account_id == body.account_id,
+        "transaction",
+        "",
+    )
 
 
 @app.post("/api/import/preview")
@@ -303,6 +346,15 @@ def preview(
         require_active(owned(db, Account, user, body.account_id))
     return {
         "entries": [e.model_dump() for e in entries],
+        **origin_state(
+            db,
+            Transaction,
+            user,
+            transaction_import_keys(entries, body.account_id),
+            Transaction.account_id == body.account_id,
+            "transaction",
+            "",
+        ),
         "possible_duplicates": candidates(
             db, Transaction, user, entries, Transaction.account_id == body.account_id
         ),
@@ -319,12 +371,7 @@ def confirm(
         raise HTTPException(422, str(exc)) from None
     if body.account_id:
         require_active(owned(db, Account, user, body.account_id, lock=True))
-    keys = import_keys(entries)
-    if body.account_id:
-        keys = [
-            hashlib.sha256((body.account_id + "|" + key).encode()).hexdigest()
-            for key in keys
-        ]
+    keys = transaction_import_keys(entries, body.account_id)
     selected = select_rows(entries, keys, body.excluded_indices)
     marks = reserve(db, user, "transaction", "", [key for _, key in selected])
     linked = apply_links(
@@ -341,8 +388,10 @@ def confirm(
         "",
     )
     created = removed = 0
+    indices = {key: index for index, key in enumerate(keys)}
     for entry, key in selected:
         mark = marks[key]
+        require_released_revision(mark, body.origin_versions, indices[key])
         if mark.removed:
             removed += 1
             continue
@@ -360,6 +409,7 @@ def confirm(
         db.add(row)
         db.flush()
         mark.resource_id = row.id
+        mark.version += 1
         created += 1
     db.commit()
     output = selection_result(

@@ -132,7 +132,7 @@ try:
             )
         ).one() == (1234, "legacy-account")
         assert (
-            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 12
+            conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar() == 13
         )
     with test_engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM opening_balances")).scalar() == 0
@@ -196,7 +196,7 @@ try:
         ).one() == (1, None, None)
         marks = conn.execute(
             text(
-                "SELECT scope,source_key,resource_id,removed FROM import_marks ORDER BY scope"
+                "SELECT scope,source_key,resource_id,removed,version FROM import_marks ORDER BY scope"
             )
         ).all()
         assert len(marks) == 2 and {m.resource_id for m in marks} == {
@@ -206,12 +206,13 @@ try:
         assert {m.source_key for m in marks} == {"c" * 64, "d" * 64} and not any(
             m.removed for m in marks
         )
+        assert all(m.version == 1 for m in marks)
     original = migrate.DIRECTORY
     with tempfile.TemporaryDirectory() as tmp:
         migrate.DIRECTORY = Path(tmp)
         for file in original.glob("*.sql"):
             (migrate.DIRECTORY / file.name).write_bytes(file.read_bytes())
-        broken = migrate.DIRECTORY / "013_test_failure.sql"
+        broken = migrate.DIRECTORY / "014_test_failure.sql"
         broken.write_text(
             "CREATE TABLE must_rollback(id integer); SELECT missing_column;"
         )
@@ -229,7 +230,7 @@ try:
             )
             assert (
                 conn.execute(text("SELECT count(*) FROM schema_migrations")).scalar()
-                == 12
+                == 13
             )
         broken.unlink()
         with (migrate.DIRECTORY / "001_initial.sql").open("a") as file:

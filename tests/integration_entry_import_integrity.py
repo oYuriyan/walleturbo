@@ -307,6 +307,63 @@ with httpx2.Client(**options) as client:
                 )
             assert client.get("/api/privacy/export").json() == before_busy
             assert confirm_selected(busy_payload)["linked"] == 1
+
+            # Desfazer disputa a mesma origem e recusa replay de versões anteriores.
+            def import_request(suffix, body):
+                response = client.post("/api/import/" + suffix, json=body)
+                if response.status_code == 429:
+                    time.sleep(int(response.headers["Retry-After"]) + 1)
+                    response = client.post("/api/import/" + suffix, json=body)
+                return response
+
+            preview_body = {
+                "content": busy_payload["content"],
+                "account_id": existing["account_id"],
+            }
+            origin = import_request("preview", preview_body).json()["known_origins"][0]
+            release = {
+                **preview_body,
+                "release": {
+                    "source_index": 0,
+                    "resource_id": origin["resource_id"],
+                    "expected_version": origin["target"]["version"],
+                    "expected_origin_version": origin["version"],
+                    "reason": "Escolha de destino incorreta",
+                },
+            }
+            # O NOWAIT deve recusar destino ocupado e reverter a marca.
+            before_release = client.get("/api/privacy/export").json()
+            with engine.begin() as connection:
+                connection.execute(
+                    text(
+                        "SELECT id FROM transactions WHERE owner=:owner AND id=:id FOR UPDATE"
+                    ),
+                    {"owner": owner, "id": existing["id"]},
+                )
+                assert import_request("unlink", release).status_code == 409
+            assert client.get("/api/privacy/export").json() == before_release
+            rate_key = "rate:import:" + hashlib.sha256(owner.encode()).hexdigest()
+            if int(redis.get(rate_key) or 0) > 7:
+                time.sleep(max(1, redis.ttl(rate_key) + 1))
+            releases = concurrent("POST", "/api/import/unlink", [release, release])
+            assert sorted(r.status_code for r in releases) == [200, 409], [
+                r.text for r in releases
+            ]
+            assert import_request("confirm", busy_payload).status_code == 409
+            assert import_request("confirm", preview_body).status_code == 409
+            revised = {
+                **busy_payload,
+                "links": [
+                    {
+                        **busy_payload["links"][0],
+                        "resource_id": other_target["id"],
+                        "expected_version": other_target["version"],
+                        "expected_origin_version": 2,
+                    }
+                ],
+            }
+            assert import_request("confirm", revised).json()["linked"] == 1
+            assert import_request("unlink", release).status_code == 409
         finally:
             engine.dispose()
         print(

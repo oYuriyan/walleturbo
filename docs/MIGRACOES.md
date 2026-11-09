@@ -53,3 +53,7 @@ Adiciona version=1 e correction_reason nullable aos pagamentos legados, preserva
 Adiciona version=1, request_id nullable e motivo a transactions, com unicidade de UUID por proprietário. Cria import_marks e copia chaves de origem ativas de lançamentos/linhas de cartão sem recalcular identidades. Dados financeiros e IDs são preservados. Não inventa marcas de exclusões antigas sem chave de origem. O upgrade testa origens legadas de movimentação e cartão.
 
 Atualize clientes/API junto do schema e interrompa escritores antigos: PUT/DELETE de lançamento, revisão de categoria e DELETE de operação de cartão passam a exigir os dados de versão/revisão documentados em LANCAMENTOS_E_IMPORTACAO.md. Readiness verifica as novas colunas/tabela. Não remova volumes para atualizar.
+
+## Migração 013 — revisões das origens de importação
+
+Adiciona `import_marks.version` inteiro, inicializando associações existentes em 1 e marcas livres em 0. Preserva identidade, destino, exclusões e valores financeiros. Novas associações e desfazimentos incrementam a revisão para impedir reenvios antigos. O teste de upgrade verifica as marcas legadas na revisão 1, repetição, checksum e rollback. Readiness exige a coluna. Pare escritores antigos antes da migração e atualize API/interface juntas; rollback operacional requer restaurar código e backup compatíveis, sem apagar volumes para contornar schema.

@@ -185,3 +185,9 @@ Entrega 0.16: selecionar lançamentos na prévia CSV sem editar arquivo externo,
 0.16 homologada: PR #7 integrado à main, CI 42619599544, 157 testes e todas as etapas aprovadas. O roteiro ampliado respeita a janela da cota real de importação.
 
 Entrega 0.17: vínculo explícito CSV com registro existente por usuário/contexto, versão e identidade financeira compatíveis; origem persistente, histórico e expurgo. IMP-02/03 seguem parciais: desfazimento/remapeamento, PDF e identidade de emissor/OFX, corpus e colisões de ocorrências legítimas continuam pendentes. Homologação no PR da entrega.
+
+0.17 homologada e integrada à main pelo PR #8, com 168 testes e integração PostgreSQL/navegador aprovadas.
+
+Plano de continuação de 09/11/2026 — incremento 0.18: (1) expor vínculo atual na prévia CSV; (2) desfazer somente associações explícitas com motivo e revisões da origem/destino; (3) refazer a prévia para remapear ou importar uma ocorrência independente; (4) validar concorrência, reenvios antigos, isolamento, histórico, migração e interface; (5) registrar evidências no PR e versionar. Reutilizar marcas, histórico e diálogo existentes; nenhuma dependência ou serviço novo.
+
+Entrega 0.18: desfazimento versionado e remapeamento CSV em duas decisões explícitas, sem alterar o registro financeiro existente. Migração 013 preserva marcas e valores. Origem primária, destino excluído/fora do contexto e fatura conferida não são liberados. IMP-02/03 permanecem parciais: próxima prioridade funcional é ampliar a conciliação explícita à prévia PDF; depois identidade de emissor/OFX, corpus e colisões legítimas. Créditos e recorrências continuam na sequência já definida. Homologação no PR desta entrega.

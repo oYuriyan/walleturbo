@@ -738,6 +738,9 @@ $("#csv-file").onchange = () =>
       );
     if (version !== importVersion) return;
     csvContent = content;
+    $("#import-preview").dataset.originVersions = JSON.stringify(
+      result.origin_versions,
+    );
     $("#import-preview").append(
       el(
         "p",
@@ -772,6 +775,99 @@ $("#csv-file").onchange = () =>
         ),
       );
       $("#import-preview").append(label, transactionNode(t, false));
+      const origin = result.known_origins?.find(
+        (item) => item.source_index === index,
+      );
+      if (origin) {
+        $("#import-preview").append(
+          el(
+            "p",
+            origin.removed
+              ? "Origem conhecida sem registro disponível: não será recriada."
+              : `Origem já associada a: ${origin.target.description} · ${money(origin.target.amount_cents)}.`,
+          ),
+        );
+        if (origin.releasable) {
+          const reasonLabel = el("label"),
+            reason = el("input"),
+            release = el("button", "Desfazer vínculo");
+          reason.type = "text";
+          reason.minLength = 3;
+          reason.maxLength = 240;
+          reason.dataset.releaseReason = index;
+          reasonLabel.append(
+            document.createTextNode(
+              `Motivo para desfazer o vínculo do lançamento ${index + 1}`,
+            ),
+            reason,
+          );
+          release.type = "button";
+          release.dataset.releaseIndex = index;
+          release.onclick = () =>
+            action(async () => {
+              if (
+                version !== importVersion ||
+                release.disabled ||
+                $("#confirm-import").dataset.busy === String(version)
+              )
+                return;
+              const explanation = reason.value.trim();
+              if (explanation.length < 3)
+                throw Error(
+                  "Informe o motivo para desfazer o vínculo (mínimo 3 caracteres).",
+                );
+              if (
+                !confirm(
+                  "Desfazer somente o vínculo? O lançamento será preservado. Uma nova importação poderá criar outro lançamento; confira o destino na nova prévia.",
+                )
+              )
+                return;
+              release.disabled = true;
+              $("#confirm-import").dataset.busy = String(version);
+              updateSelection();
+              try {
+                await api(
+                  importStatementId
+                    ? `/api/statements/${importStatementId}/import/unlink`
+                    : "/api/import/unlink",
+                  "POST",
+                  {
+                    content,
+                    release: {
+                      source_index: index,
+                      resource_id: origin.resource_id,
+                      expected_version: origin.target.version,
+                      expected_origin_version: origin.version,
+                      reason: explanation,
+                    },
+                    ...(!importStatementId
+                      ? { account_id: $("#import-account").value || null }
+                      : {}),
+                  },
+                );
+                if (version !== importVersion) return;
+                message(
+                  "Vínculo desfeito; lançamento preservado. Confira o destino na nova prévia.",
+                );
+                $("#csv-file").onchange();
+              } finally {
+                if (version === importVersion) {
+                  // Resultado incerto ou conflito também exige nova prévia.
+                  importVersion++;
+                  csvContent = "";
+                  $("#confirm-import").disabled = true;
+                  $("#import-preview").replaceChildren(
+                    el(
+                      "p",
+                      "Refaça a prévia selecionando o arquivo novamente.",
+                    ),
+                  );
+                }
+              }
+            });
+          $("#import-preview").append(reasonLabel, release);
+        }
+      }
     });
     $("#import-preview").append(selectionStatus);
     if (result.possible_duplicates?.length) {
@@ -800,6 +896,8 @@ $("#csv-file").onchange = () =>
         const destinationLabel = el("label"),
           destination = el("select");
         destination.dataset.linkIndex = candidate.source_index;
+        destination.dataset.originVersion =
+          result.origin_versions[candidate.source_index];
         const createOption = el(
           "option",
           "Criar ou reconhecer pela origem (sem novo vínculo)",
@@ -861,6 +959,7 @@ $("#confirm-import").onclick = () =>
         source_index: Number(select.dataset.linkIndex),
         resource_id: select.value,
         expected_version: Number(select.selectedOptions[0].dataset.version),
+        expected_origin_version: Number(select.dataset.originVersion),
       }));
     $("#confirm-import").dataset.busy = String(version);
     $("#confirm-import").disabled = true;
@@ -874,6 +973,9 @@ $("#confirm-import").onclick = () =>
           content: csvContent,
           excluded_indices: excluded,
           links,
+          origin_versions: JSON.parse(
+            $("#import-preview").dataset.originVersions || "[]",
+          ),
           ...(!importStatementId
             ? { account_id: $("#import-account").value || null }
             : {}),
