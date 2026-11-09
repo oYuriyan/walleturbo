@@ -106,6 +106,14 @@ jobs:
           done
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_ofx.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_ofx.cjs
+      - name: Validar OFX de cartão no PostgreSQL e navegador
+        run: |
+          sleep 60
+          for ofx_fixture in card-102.ofx card-220.ofx; do
+            docker compose exec -T api sh -c "cat > /tmp/$ofx_fixture" < "tests/fixtures/ofx/$ofx_fixture"
+          done
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_ofx_card.py
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_ofx_card.cjs
       - name: Salvar evidências sintéticas de interface
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24

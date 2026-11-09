@@ -205,3 +205,11 @@ Homologação integral e commit final serão registrados no PR desta entrega. Co
 226 testes locais aprovados com avisos tratados como erro, incluindo 29 novos casos OFX. Corpus sintético SGML 102/XML 220 e expected.json fixam três origens equivalentes, datas civis, sinais e valores em centavos. PostgreSQL/Redis reais aprovaram confirmação concorrente/reordenada sem duplicação, assinatura divergente atômica, exclusão versus reenvio e NOWAIT no destino, preservando valores em vínculo/desfazimento. Chromium mobile aprovou Windows-1252, troca de conta, revisão, seleção, identidade entre formatos e bloqueio da origem divergente, com limpeza da prévia após fechamento. Captura sintética ofx-mobile.png inspecionada localmente. Homologação integral e commit final serão registrados no PR.
 
 Sem migração, serviço ou dependência nova. Escopo e limites em OFX.md; bancos reais, OFX de cartão, outros layouts e correções bancárias automáticas não estão homologados nesta entrega.
+
+0.20 homologada no CI 42646344711 e integrada à main pelo PR #11; 226 testes e regressão integral aprovados.
+
+## Incremento 0.21 — OFX de cartão
+
+244 testes locais aprovados com avisos tratados como erro, incluindo 18 casos novos e corpus SGML/XML com três origens financeiras, crédito revisável e pagamento não importável. PostgreSQL/Redis aprovaram a disputa entre duas faturas (200/409), reordenação, exclusão/reenvio, assinatura divergente e NOWAIT com rollback, sem registros de pagamento ou parcelas futuras. Chromium mobile aprovou máscara, confirmação adicional dos créditos, vínculo/desfazimento/reenvio e bloqueio em outro mês; captura ofx-card-mobile.png inspecionada, sem corte horizontal ou impedimento à confirmação. Homologação integral e commit final serão registrados no PR.
+
+Sem migração, serviço ou dependência nova. Contrato em OFX_CARTAO.md. Realocação de origem, ciclos de crédito transportado, bancos reais e layouts adicionais continuam pendentes; os cenários não constituem homologação WCAG ou autenticação bancária.

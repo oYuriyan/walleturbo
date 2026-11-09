@@ -28,14 +28,17 @@ from app.security import current_user
 router = APIRouter(prefix="/api/import/ofx")
 
 
-class OFXInput(BaseModel):
+class OFXReview(BaseModel):
     model_config = ConfigDict(extra="forbid")
     content: str = Field(max_length=256000)
-    account_id: str = Field(min_length=1, max_length=36)
     excluded_indices: ExcludedIndices = Field(default_factory=list)
     links: Links = Field(default_factory=list)
     origin_versions: OriginVersions = Field(default_factory=list)
     reviewed: bool = Field(default=False, strict=True)
+
+
+class OFXInput(OFXReview):
+    account_id: str = Field(min_length=1, max_length=36)
 
 
 class OFXRelease(CSVRelease):
@@ -58,34 +61,50 @@ def receipt_id(key):
     return str(uuid5(NAMESPACE_URL, "walleturbo/ofx/" + key))
 
 
+def source_state(db, user, scope, keys, fingerprints, container=None):
+    identifiers = [receipt_id(key) for key in keys]
+    receipts = {
+        row.request_id: row
+        for row in db.scalars(
+            select(RequestReceipt).where(
+                RequestReceipt.owner == user,
+                RequestReceipt.scope == scope,
+                RequestReceipt.request_id.in_(identifiers),
+            )
+        )
+    }
+    return {
+        "source_conflicts": [
+            i
+            for i, (identifier, fingerprint) in enumerate(
+                zip(identifiers, fingerprints)
+            )
+            if identifier in receipts
+            and receipts[identifier].payload_hash != fingerprint
+        ],
+        "context_conflicts": [
+            i
+            for i, identifier in enumerate(identifiers)
+            if container
+            and identifier in receipts
+            and receipts[identifier].resource_id
+            and receipts[identifier].resource_id != container
+        ],
+    }
+
+
 @router.post("/preview")
 def preview(
     body: OFXInput, user=Depends(current_user), db: Session = Depends(db_session)
 ):
     parsed, keys = load(db, user, body)
-    identifiers = [receipt_id(key) for key in keys]
-    receipts = dict(
-        db.execute(
-            select(RequestReceipt.request_id, RequestReceipt.payload_hash).where(
-                RequestReceipt.owner == user,
-                RequestReceipt.scope == "ofx",
-                RequestReceipt.request_id.in_(identifiers),
-            )
-        ).all()
-    )
     return {
         "format": parsed.format,
         "bank_id": parsed.bank_id,
         "source_account": parsed.masked_account,
         "currency": "BRL",
         "entries": [entry.model_dump() for entry in parsed.entries],
-        "source_conflicts": [
-            index
-            for index, (identifier, fingerprint) in enumerate(
-                zip(identifiers, parsed.fingerprints)
-            )
-            if identifier in receipts and receipts[identifier] != fingerprint
-        ],
+        **source_state(db, user, "ofx", keys, parsed.fingerprints),
         **origin_state(
             db,
             Transaction,

@@ -1,19 +1,20 @@
-"""Leitor limitado de extratos OFX bancários; sem rede, inferência ou arredondamento."""
+"""Leitor limitado de OFX bancário/cartão; sem rede ou arredondamento."""
 
 import hashlib
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field as datafield
 from datetime import datetime
 from decimal import Decimal
 from html import unescape
 from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
+from typing import Literal
 from app.domain import Entry, suggest_category
 
 MAX_BYTES = 256000
 SCHEMA = {
-    "OFX": {"SIGNONMSGSRSV1", "BANKMSGSRSV1"},
+    "OFX": {"SIGNONMSGSRSV1", "BANKMSGSRSV1", "CREDITCARDMSGSRSV1"},
     "SIGNONMSGSRSV1": {"SONRS"},
     "SONRS": {"STATUS", "DTSERVER", "LANGUAGE", "FI", "INTU.BID"},
     "STATUS": {"CODE", "SEVERITY", "MESSAGE"},
@@ -22,6 +23,10 @@ SCHEMA = {
     "STMTTRNRS": {"TRNUID", "STATUS", "STMTRS"},
     "STMTRS": {"CURDEF", "BANKACCTFROM", "BANKTRANLIST", "LEDGERBAL", "AVAILBAL"},
     "BANKACCTFROM": {"BANKID", "BRANCHID", "ACCTID", "ACCTTYPE", "ACCTKEY"},
+    "CREDITCARDMSGSRSV1": {"CCSTMTTRNRS"},
+    "CCSTMTTRNRS": {"TRNUID", "STATUS", "CCSTMTRS"},
+    "CCSTMTRS": {"CURDEF", "CCACCTFROM", "BANKTRANLIST", "LEDGERBAL", "AVAILBAL"},
+    "CCACCTFROM": {"ACCTID", "ACCTKEY"},
     "BANKTRANLIST": {"DTSTART", "DTEND", "STMTTRN"},
     "STMTTRN": {
         "TRNTYPE",
@@ -49,6 +54,11 @@ POSTED = re.compile(
 )
 DEBITS = {"DEBIT", "POS", "CHECK", "FEE", "SRVCHG", "DIRECTDEBIT"}
 CREDITS = {"CREDIT", "DEP", "DIRECTDEP", "DIV"}
+PAN = re.compile(r"(?<!\d)(?:\d[ -]?){12,19}(?!\d)")
+
+
+class CardEntry(Entry):
+    kind: Literal["expense", "refund"]
 
 
 def digest(value):
@@ -238,39 +248,62 @@ class Document:
     entries: list[Entry]
     identities: list[str]
     fingerprints: list[str]
+    payments: list[dict] = datafield(default_factory=list)
 
 
-def parse_ofx(content):
+def parse_ofx(content, card=False):
     root, format_name = tree(content)
     for status in root.findall(".//STATUS"):
         if field(status, "CODE") != "0" or field(status, "SEVERITY", False) == "ERROR":
             raise ValueError("O OFX informa uma resposta de erro do emissor.")
-    response = root.find("BANKMSGSRSV1/STMTTRNRS")
-    if response is None or response.find("STATUS") is None:
-        raise ValueError("OFX exige uma única resposta de extrato bancário com status.")
-    statement = response.find("STMTRS")
-    if statement is None or field(statement, "CURDEF") != "BRL":
-        raise ValueError("Somente extratos bancários em BRL são suportados.")
-    account, transactions = statement.find("BANKACCTFROM"), statement.find(
-        "BANKTRANLIST"
+    groups = [node.tag for node in root if node.tag != "SIGNONMSGSRSV1"]
+    expected = "CREDITCARDMSGSRSV1" if card else "BANKMSGSRSV1"
+    if groups != [expected]:
+        raise ValueError(
+            "Selecione OFX de cartão na fatura ou OFX bancário na conta, sem misturar extratos."
+        )
+    response = root.find(
+        "CREDITCARDMSGSRSV1/CCSTMTTRNRS" if card else "BANKMSGSRSV1/STMTTRNRS"
     )
+    if response is None or response.find("STATUS") is None:
+        raise ValueError("OFX exige uma única resposta de extrato com status.")
+    statement = response.find("CCSTMTRS" if card else "STMTRS")
+    if statement is None or field(statement, "CURDEF") != "BRL":
+        raise ValueError("Somente extratos em BRL são suportados.")
+    account, transactions = statement.find(
+        "CCACCTFROM" if card else "BANKACCTFROM"
+    ), statement.find("BANKTRANLIST")
     if account is None or transactions is None:
         raise ValueError("Conta bancária ou lista de lançamentos ausente.")
-    bank, branch, account_id, account_type = (
-        field(account, "BANKID", maximum=64),
-        field(account, "BRANCHID", False, 64),
-        field(account, "ACCTID", maximum=64),
-        field(account, "ACCTTYPE"),
-    )
-    if account_type not in {"CHECKING", "SAVINGS"}:
-        raise ValueError("OFX aceita contas correntes e poupança nesta versão.")
+    if card:
+        issuer = root.find("SIGNONMSGSRSV1/SONRS/FI")
+        if issuer is None:
+            raise ValueError("OFX de cartão exige identificação FI do emissor.")
+        org, fid = field(issuer, "ORG", False), field(issuer, "FID", False)
+        if not (org or fid):
+            raise ValueError("Emissor OFX sem ORG/FID.")
+        bank, branch, account_id, account_type = (
+            org or fid,
+            "",
+            field(account, "ACCTID", maximum=64),
+            "CARD",
+        )
+    else:
+        bank, branch, account_id, account_type = (
+            field(account, "BANKID", maximum=64),
+            field(account, "BRANCHID", False, 64),
+            field(account, "ACCTID", maximum=64),
+            field(account, "ACCTTYPE"),
+        )
+        if account_type not in {"CHECKING", "SAVINGS"}:
+            raise ValueError("OFX aceita contas correntes e poupança nesta versão.")
     start, end = civil_date(field(transactions, "DTSTART")), civil_date(
         field(transactions, "DTEND")
     )
     rows = transactions.findall("STMTTRN")
     if start > end or not 1 <= len(rows) <= 500:
         raise ValueError("OFX exige período válido e entre 1 e 500 lançamentos.")
-    entries, identities, fingerprints, seen = [], [], [], set()
+    entries, identities, fingerprints, payments, seen = [], [], [], [], set()
     for index, row in enumerate(rows, 1):
         identifier = field(row, "FITID")
         if identifier in seen:
@@ -291,31 +324,58 @@ def parse_ofx(content):
                 f"Lançamento {index}: valor OFX inválido, sem arredondamento."
             )
         cents = int(Decimal(amount) * 100)
-        if (
-            kind not in DEBITS | CREDITS | {"INT"}
-            or not cents
-            or (kind in DEBITS and cents > 0)
-            or (kind in CREDITS and cents < 0)
-        ):
-            raise ValueError(
-                f"Lançamento {index}: tipo/sinal não suportado. Transferências e pagamentos não são inferidos."
-            )
         day = civil_date(field(row, "DTPOSTED"))
         if not start <= day <= end:
             raise ValueError(
                 f"Lançamento {index}: data fora do período civil declarado."
             )
         description = field(row, "MEMO", False, 160) or field(row, "NAME", maximum=160)
-        entry = Entry(
+        displayed = PAN.sub("[número oculto]", description) if card else description
+        if card and kind == "PAYMENT":
+            if cents <= 0:
+                raise ValueError("Pagamento OFX de cartão exige crédito positivo.")
+            payments.append(
+                {
+                    "date": day.isoformat(),
+                    "description": displayed,
+                    "amount_cents": cents,
+                }
+            )
+            continue
+        debits, credits = (
+            ({"DEBIT", "POS", "FEE", "SRVCHG", "INT"}, {"CREDIT"})
+            if card
+            else (DEBITS, CREDITS)
+        )
+        if (
+            kind not in debits | credits | (set() if card else {"INT"})
+            or not cents
+            or (kind in debits and cents > 0)
+            or (kind in credits and cents < 0)
+        ):
+            raise ValueError(
+                f"Lançamento {index}: tipo/sinal não suportado. Transferências e pagamentos não são inferidos."
+            )
+        entry = (CardEntry if card else Entry)(
             date=day,
-            description=description,
+            description=displayed,
             amount_cents=abs(cents),
-            kind="income" if cents > 0 else "expense",
-            category="Renda" if cents > 0 else suggest_category(description),
+            kind=("refund" if card else "income") if cents > 0 else "expense",
+            category="Renda" if cents > 0 and not card else suggest_category(displayed),
         )
         entries.append(entry)
-        identities.append(digest([bank, branch, account_id, account_type, identifier]))
+        identities.append(
+            digest(["card", org, fid, account_id, identifier])
+            if card
+            else digest([bank, branch, account_id, account_type, identifier])
+        )
         fingerprints.append(digest([day.isoformat(), cents, kind, description]))
     return Document(
-        format_name, bank, "••••" + account_id[-4:], entries, identities, fingerprints
+        format_name,
+        PAN.sub("[número oculto]", bank) if card else bank,
+        "••••" + account_id[-4:],
+        entries,
+        identities,
+        fingerprints,
+        payments,
     )

@@ -1,0 +1,16 @@
+{
+  "card-102.ofx": {
+    "dates": ["2026-11-03", "2026-11-04", "2026-11-03"],
+    "amounts_cents": [12345, 2000, 12345],
+    "kinds": ["expense", "refund", "expense"],
+    "payment_amounts_cents": [5000],
+    "net_charges_cents": 22690
+  },
+  "card-220.ofx": {
+    "dates": ["2026-11-04", "2026-11-03", "2026-11-03"],
+    "amounts_cents": [2000, 12345, 12345],
+    "kinds": ["refund", "expense", "expense"],
+    "payment_amounts_cents": [5000],
+    "net_charges_cents": 22690
+  }
+}
