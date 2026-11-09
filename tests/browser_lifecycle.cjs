@@ -147,6 +147,7 @@ const base = "http://localhost:8000";
     );
     // Dados preenchidos devem sumir ao expirar a sessão.
     await manage(card.id, "cards");
+    assert(await dialog.isVisible());
     assert.equal(
       (
         await context.request.delete(base + "/api/privacy/data", {
@@ -156,10 +157,13 @@ const base = "http://localhost:8000";
       200,
     );
     headers = null;
-    await form
-      .getByRole("button", { name: "Salvar cadastro", exact: true })
-      .click();
+    // Uma atualização anterior pode receber 401 e fechar o diálogo antes de um
+    // clique. Faça o cliente da página observar a expiração em ambos os casos.
+    await page.evaluate(async () => {
+      await api("/api/accounts").catch(() => {});
+    });
     await dialog.waitFor({ state: "hidden" });
+    assert.equal(await page.locator("#mode").textContent(), "Sessão encerrada");
     assert.equal(await form.locator('[name="name"]').inputValue(), "");
     assert.equal(await page.locator("#card-list [data-entity-id]").count(), 0);
     console.log(
