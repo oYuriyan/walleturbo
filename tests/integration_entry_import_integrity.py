@@ -201,6 +201,21 @@ with httpx2.Client(**options) as client:
         assert any(row["id"] == existing["id"]
                    for row in preview.json()["possible_duplicates"][0]["matches"])
         assert client.get("/api/privacy/export").json() == exported
+        def confirm_selected(payload):
+            response = client.post("/api/import/confirm", json=payload)
+            if response.status_code == 429:
+                assert response.json() == {"detail": "Limite de importações atingido"}, response.text
+                assert response.headers["Retry-After"] == "60"
+                print("INFO: cota de importação preservada; aguardando janela antes de continuar seleção.", flush=True)
+                time.sleep(61)
+                response = client.post("/api/import/confirm", json=payload)
+            assert response.status_code == 200, (response.status_code, response.text)
+            return response.json()
+        repeated = content + content.splitlines()[1] + "\n"
+        selection = {"content": repeated, "account_id": existing["account_id"], "excluded_indices": [0]}
+        assert confirm_selected(selection) == {"created": 1, "duplicates": 0, "skipped": 1}
+        assert confirm_selected(selection) == {"created": 0, "duplicates": 1, "skipped": 1}
+        assert confirm_selected({"content": repeated, "account_id": existing["account_id"]}) == {"created": 1, "duplicates": 1}
         print(
             "PASS: UUID e edição/exclusão concorrentes, lotes em ordem inversa sem deadlock, correção importada e reimportação sem recriação no PostgreSQL."
         )
