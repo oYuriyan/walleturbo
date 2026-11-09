@@ -118,6 +118,7 @@ for model in ENTITIES:
 
 router = APIRouter(prefix="/api")
 Entity = Literal[
+    "import_link",
     "month_plan",
     "budget",
     "account",

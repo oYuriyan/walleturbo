@@ -48,7 +48,14 @@ from app.cards import (
     require_active,
 )
 from app.domain import GoalInput, parse_csv, import_keys, summarize
-from app.import_review import candidates, ExcludedIndices, select_rows, selection_result
+from app.import_review import (
+    candidates,
+    ExcludedIndices,
+    Links,
+    apply_links,
+    select_rows,
+    selection_result,
+)
 from app.security import (
     SecurityMiddleware,
     BodyLimitMiddleware,
@@ -79,7 +86,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.16.0",
+    version="0.17.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -281,10 +288,13 @@ class CSVInput(BaseModel):
     content: str = Field(max_length=256000)
     account_id: str | None = Field(default=None, max_length=36)
     excluded_indices: ExcludedIndices = Field(default_factory=list)
+    links: Links = Field(default_factory=list)
 
 
 @app.post("/api/import/preview")
-def preview(body: CSVInput, user=Depends(current_user), db: DBSession = Depends(db_session)):
+def preview(
+    body: CSVInput, user=Depends(current_user), db: DBSession = Depends(db_session)
+):
     try:
         entries = parse_csv(body.content)
     except ValueError as exc:
@@ -317,6 +327,19 @@ def confirm(
         ]
     selected = select_rows(entries, keys, body.excluded_indices)
     marks = reserve(db, user, "transaction", "", [key for _, key in selected])
+    linked = apply_links(
+        db,
+        Transaction,
+        user,
+        entries,
+        keys,
+        body.excluded_indices,
+        body.links,
+        marks,
+        Transaction.account_id == body.account_id,
+        "transaction",
+        "",
+    )
     created = removed = 0
     for entry, key in selected:
         mark = marks[key]
@@ -339,7 +362,12 @@ def confirm(
         mark.resource_id = row.id
         created += 1
     db.commit()
-    return selection_result(len(entries), created, removed, len(body.excluded_indices))
+    output = selection_result(
+        len(entries), created, removed, len(body.excluded_indices)
+    )
+    if linked:
+        output["linked"] = linked
+    return output
 
 
 @app.post("/api/goals", status_code=201)

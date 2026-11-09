@@ -18,7 +18,14 @@ from app.security import current_user
 from app.receipts import claim
 from app.db import RequestReceipt, Transaction
 from app.import_marks import reserve, remove as remove_import, result as import_result
-from app.import_review import candidates, ExcludedIndices, select_rows, selection_result
+from app.import_review import (
+    candidates,
+    ExcludedIndices,
+    Links,
+    apply_links,
+    select_rows,
+    selection_result,
+)
 
 router = APIRouter(prefix="/api")
 MONTH_PATTERN = r"^(19\d{2}|[2-9]\d{3})-(0[1-9]|1[0-2])$"
@@ -91,6 +98,7 @@ class PaymentInput(Input):
 
 
 class CardCSV(Input):
+    links: Links = Field(default_factory=list)
     excluded_indices: ExcludedIndices = Field(default_factory=list)
     content: str = Field(max_length=256000)
 
@@ -621,6 +629,19 @@ def import_statement(
     keys = import_keys(entries)
     selected = select_rows(entries, keys, body.excluded_indices)
     marks = reserve(db, user, "card", statement.id, [key for _, key in selected])
+    linked = apply_links(
+        db,
+        Charge,
+        user,
+        entries,
+        keys,
+        body.excluded_indices,
+        body.links,
+        marks,
+        Charge.statement_id == statement.id,
+        "card",
+        statement.id,
+    )
     created = removed = 0
     for entry, key in selected:
         mark = marks[key]
@@ -651,7 +672,12 @@ def import_statement(
         mark.resource_id = row.id
         created += 1
     db.commit()
-    return selection_result(len(entries), created, removed, len(body.excluded_indices))
+    output = selection_result(
+        len(entries), created, removed, len(body.excluded_indices)
+    )
+    if linked:
+        output["linked"] = linked
+    return output
 
 
 def monthly_card_summary(db, user, month):

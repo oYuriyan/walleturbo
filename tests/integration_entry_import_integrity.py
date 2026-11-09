@@ -8,6 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 import httpx2
+from sqlalchemy import create_engine, text
 from redis import Redis
 
 if os.environ.get("WALLETURBO_INTEGRATION") != "1":
@@ -192,30 +193,122 @@ with httpx2.Client(**options) as client:
         existing = exported["transactions"][0]
         cents = existing["amount_cents"]
         value = f"{cents // 100},{cents % 100:02d}"
-        content = ("data;descricao;valor;tipo\n"
-                   f"{existing['date']};Outro documento;{value};despesa\n")
-        preview = client.post("/api/import/preview", json={
-            "content": content, "account_id": existing["account_id"],
-        })
+        content = (
+            "data;descricao;valor;tipo\n"
+            f"{existing['date']};Outro documento;{value};despesa\n"
+        )
+        preview = client.post(
+            "/api/import/preview",
+            json={
+                "content": content,
+                "account_id": existing["account_id"],
+            },
+        )
         assert preview.status_code == 200, preview.text
-        assert any(row["id"] == existing["id"]
-                   for row in preview.json()["possible_duplicates"][0]["matches"])
+        assert any(
+            row["id"] == existing["id"]
+            for row in preview.json()["possible_duplicates"][0]["matches"]
+        )
         assert client.get("/api/privacy/export").json() == exported
+
         def confirm_selected(payload):
             response = client.post("/api/import/confirm", json=payload)
             if response.status_code == 429:
-                assert response.json() == {"detail": "Limite de importações atingido"}, response.text
+                assert response.json() == {
+                    "detail": "Limite de importações atingido"
+                }, response.text
                 assert response.headers["Retry-After"] == "60"
-                print("INFO: cota de importação preservada; aguardando janela antes de continuar seleção.", flush=True)
+                print(
+                    "INFO: cota de importação preservada; aguardando janela antes de continuar seleção.",
+                    flush=True,
+                )
                 time.sleep(61)
                 response = client.post("/api/import/confirm", json=payload)
             assert response.status_code == 200, (response.status_code, response.text)
             return response.json()
+
         repeated = content + content.splitlines()[1] + "\n"
-        selection = {"content": repeated, "account_id": existing["account_id"], "excluded_indices": [0]}
-        assert confirm_selected(selection) == {"created": 1, "duplicates": 0, "skipped": 1}
-        assert confirm_selected(selection) == {"created": 0, "duplicates": 1, "skipped": 1}
-        assert confirm_selected({"content": repeated, "account_id": existing["account_id"]}) == {"created": 1, "duplicates": 1}
+        selection = {
+            "content": repeated,
+            "account_id": existing["account_id"],
+            "excluded_indices": [0],
+        }
+        assert confirm_selected(selection) == {
+            "created": 1,
+            "duplicates": 0,
+            "skipped": 1,
+        }
+        assert confirm_selected(selection) == {
+            "created": 0,
+            "duplicates": 1,
+            "skipped": 1,
+        }
+        assert confirm_selected(
+            {"content": repeated, "account_id": existing["account_id"]}
+        ) == {"created": 1, "duplicates": 1}
+        linked_content = content.replace("Outro documento", "Origem vinculada")
+        other_target = client.post(
+            "/api/transactions",
+            json={
+                **original,
+                "request_id": str(uuid4()),
+                "date": existing["date"],
+                "amount_cents": cents,
+                "account_id": existing["account_id"],
+            },
+        ).json()
+        bodies = [
+            {
+                "content": linked_content,
+                "account_id": existing["account_id"],
+                "links": [
+                    {
+                        "source_index": 0,
+                        "resource_id": target["id"],
+                        "expected_version": target["version"],
+                    }
+                ],
+            }
+            for target in (existing, other_target)
+        ]
+        linked_results = concurrent("POST", "/api/import/confirm", bodies)
+        assert sorted(r.status_code for r in linked_results) == [200, 409], [
+            (r.status_code, r.text) for r in linked_results
+        ]
+        assert confirm_selected(
+            {"content": linked_content, "account_id": existing["account_id"]}
+        ) == {"created": 0, "duplicates": 1}
+        assert len(client.get("/api/history?entity=import_link").json()["items"]) == 1
+        engine = create_engine(os.environ["DATABASE_URL"])
+        busy_payload = {
+            "content": content.replace("Outro documento", "Origem bloqueada"),
+            "account_id": existing["account_id"],
+            "links": [
+                {
+                    "source_index": 0,
+                    "resource_id": existing["id"],
+                    "expected_version": existing["version"],
+                }
+            ],
+        }
+        before_busy = client.get("/api/privacy/export").json()
+        try:
+            with engine.begin() as connection:
+                connection.execute(
+                    text(
+                        "SELECT id FROM transactions WHERE owner=:owner AND id=:id FOR UPDATE"
+                    ),
+                    {"owner": owner, "id": existing["id"]},
+                )
+                busy = client.post("/api/import/confirm", json=busy_payload)
+                assert busy.status_code == 409, (busy.status_code, busy.text)
+                assert (
+                    busy.json()["detail"] == "Registro em alteração. Refaça a prévia."
+                )
+            assert client.get("/api/privacy/export").json() == before_busy
+            assert confirm_selected(busy_payload)["linked"] == 1
+        finally:
+            engine.dispose()
         print(
             "PASS: UUID e edição/exclusão concorrentes, lotes em ordem inversa sem deadlock, correção importada e reimportação sem recriação no PostgreSQL."
         )

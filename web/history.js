@@ -9,6 +9,7 @@ function clearHistory() {
   $("#more-history").hidden = true;
 }
 const historyEntities = {
+  import_link: "Vínculo de importação",
   month_plan: "Cenário mensal",
   budget: "Limite mensal",
   account: "Conta",
