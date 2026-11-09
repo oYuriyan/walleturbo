@@ -707,6 +707,13 @@ function openImport(statementId = null) {
   openDialog("#import-dialog");
 }
 let importVersion = 0;
+$("#import-account").onchange = () => {
+  importVersion++;
+  csvContent = "";
+  $("#import-preview").replaceChildren();
+  $("#confirm-import").disabled = true;
+  if ($("#csv-file").files[0]) $("#csv-file").onchange();
+};
 $("#csv-file").onchange = () =>
   action(async () => {
     const version = ++importVersion;
@@ -741,9 +748,50 @@ $("#csv-file").onchange = () =>
       $("#import-preview").append(transactionNode(t, false)),
     );
     $("#confirm-import").disabled = false;
+    if (result.possible_duplicates?.length) {
+      $("#confirm-import").disabled = true;
+      $("#import-preview").append(
+        el(
+          "p",
+          "Possíveis duplicatas: mesma data, valor e tipo. Descrições podem ser diferentes. Confira antes de importar; compras legítimas podem coincidir. Linhas já conhecidas continuam sujeitas à deduplicação existente.",
+        ),
+      );
+      for (const candidate of result.possible_duplicates) {
+        $("#import-preview").append(
+          el(
+            "p",
+            `Linha ${candidate.source_index + 2} do CSV: registros existentes para conferir${candidate.more ? " (mostrando os primeiros 5)" : ""}.`,
+          ),
+        );
+        for (const match of candidate.matches) {
+          $("#import-preview").append(
+            el(
+              "p",
+              `${match.date} · ${match.description} · ${money(match.amount_cents)}`,
+            ),
+          );
+        }
+      }
+      const label = el("label"),
+        acknowledgement = el("input");
+      acknowledgement.type = "checkbox";
+      acknowledgement.onchange = () => {
+        if (version === importVersion)
+          $("#confirm-import").disabled = !acknowledgement.checked;
+      };
+      label.append(
+        acknowledgement,
+        document.createTextNode(
+          " Conferi os sinais e desejo importar este arquivo. Para remover linhas, ajuste o CSV e selecione-o novamente.",
+        ),
+      );
+      $("#import-preview").append(label);
+    }
   });
 $("#confirm-import").onclick = () =>
   action(async () => {
+    if (!csvContent || $("#confirm-import").disabled) return;
+    const version = importVersion;
     $("#confirm-import").disabled = true;
     try {
       const result = await api(
@@ -758,13 +806,14 @@ $("#confirm-import").onclick = () =>
             : {}),
         },
       );
+      if (version !== importVersion) return;
       $("#import-dialog").close();
       await refresh();
       message(
         `${result.created} lançamentos importados; ${result.duplicates} linhas já conhecidas ignoradas.${result.removed ? ` ${result.removed} excluídas anteriormente não foram recriadas.` : ""} Revise as categorias.`,
       );
     } finally {
-      $("#confirm-import").disabled = false;
+      if (version === importVersion) $("#confirm-import").disabled = false;
     }
   });
 $("#logout").onclick = () =>
