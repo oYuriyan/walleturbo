@@ -1,3 +1,10 @@
+## 0.19.0 — em validação
+
+- PDF textual oferece possíveis duplicatas e vínculo explícito a compra/estorno existente na mesma fatura, usando os campos revisados.
+- Consulta após edição, desfazimento com motivo e releitura para refazer a decisão; identidade original preservada em seleções parciais.
+- Histórico, revisões e locks reutilizados do CSV; reenvios antigos não recuperam vínculos desfeitos.
+- Sem migração ou dependência nova; 197 testes locais, com regressão completa e evidências no PR da entrega.
+
 ## 0.18.0 — em validação
 
 - Prévia CSV mostra o vínculo atual e permite desfazê-lo com motivo, preservando o lançamento financeiro.

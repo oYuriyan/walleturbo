@@ -189,3 +189,11 @@ Código 10bd122, CI aprovado https://github.com/oYuriyan/walleturbo/actions/runs
 Validação local de 09/11/2026: 183 testes aprovados com avisos tratados como erro, JavaScript e diff sem erros. PostgreSQL/Redis reais em Compose: migração 013 preservou marcas legadas, repetição/checksum/rollback aprovados; dois desfazimentos concorrentes produziram 200/409, destino bloqueado foi recusado sem escrita, reenvios antigos não restauraram o vínculo e remapeamento para outro destino foi aceito com a revisão atual. Chromium do ambiente executou o roteiro mobile completo, incluindo desfazer/refazer sem alterar a quantidade de lançamentos e limpeza de sessão. A captura geral está no artefato local entry-import-mobile.png; não representa revisão WCAG nem todos os estados novos.
 
 Homologação integral do GitHub Actions em andamento no [PR #9](https://github.com/oYuriyan/walleturbo/pull/9); o resultado final e o commit validado serão registrados no PR. A evidência local não substitui a regressão integral com login real. Contrato, atualização coordenada do schema e limites em LANCAMENTOS_E_IMPORTACAO.md/MIGRACOES.md. Nenhum serviço/dependência de aplicação foi adicionado; publicação e contratação continuam fora desta entrega.
+
+0.18 homologada no CI 42627254915 e integrada à main pelo PR #9; 183 testes e regressão integral aprovados, conforme evidência final no PR.
+
+## Incremento 0.19 — conciliação PDF
+
+197 testes locais aprovados com avisos tratados como erro, incluindo 14 novos casos de conciliação PDF; JavaScript validado. PostgreSQL/Redis e parser isolado aprovados: duas associações concorrentes para destinos diferentes e dois desfazimentos produziram 200/409, sem mudança financeira; envio antigo foi recusado e nova leitura permitiu refazer a associação. Chromium com viewport mobile aprovou consulta dos campos editados, vínculo, motivo, desfazimento, releitura e nova associação, preservando quantidade/valores. A captura sintética pdf-link-mobile.png foi inspecionada; os campos nativos seguem o idioma do navegador e o diálogo tem rolagem.
+
+Homologação integral e commit final serão registrados no PR desta entrega. Contrato e limites em PDF.md; não há migração, novo serviço ou dependência de aplicação. A evidência não constitui homologação de layouts de emissor, OCR, OFX ou WCAG, nem autorização de publicação.

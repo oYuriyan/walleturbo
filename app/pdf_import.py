@@ -21,6 +21,15 @@ from app.cards import (
 )
 from app.db import Statement, Charge, db_session
 from app.import_marks import reserve, result as import_result
+from app.import_review import (
+    candidates as duplicate_candidates,
+    origin_state,
+    apply_links,
+    release_link,
+    require_released_revision,
+    Links,
+    Release,
+)
 from app.domain import suggest_category
 from app.pdf_protocol import MAX_PDF_BYTES, extract_isolated
 
@@ -122,7 +131,7 @@ def preview_key(token):
     return "pdf-preview:" + hashlib.sha256(token.encode()).hexdigest()
 
 
-async def prepare_pdf(statement_id, content, user, session):
+async def prepare_pdf(statement_id, content, user, session, db):
     if not content.startswith(b"%PDF-") or len(content) > MAX_PDF_BYTES:
         raise HTTPException(422, "Selecione um PDF válido de até 2 MB")
     try:
@@ -148,17 +157,27 @@ async def prepare_pdf(statement_id, content, user, session):
         source_keys.append(
             hashlib.sha256(f"{canonical}|{occurrences[canonical]}".encode()).hexdigest()
         )
+    entries = [
+        ReviewedCandidate.model_validate(
+            {k: v for k, v in entry.items() if k not in ("page", "line")}
+        )
+        for entry in output["entries"]
+    ]
+    state = await run_in_threadpool(
+        reconciliation_state, db, user, statement_id, entries, source_keys
+    )
     metadata = {
         "owner": user,
         "statement_id": statement_id,
         "count": len(output["entries"]),
         "source_keys": source_keys,
+        "origin_versions": state["origin_versions"],
         "session": hashlib.sha256(session["csrf"].encode()).hexdigest(),
     }
     await run_in_threadpool(
         security.store.setex, preview_key(token), PREVIEW_TTL, json.dumps(metadata)
     )
-    return {**output, "preview_token": token, "expires_in": PREVIEW_TTL}
+    return {**output, **state, "preview_token": token, "expires_in": PREVIEW_TTL}
 
 
 @router.post("/{statement_id}/import/pdf/preview")
@@ -175,7 +194,9 @@ async def preview(
     if request.headers.get("content-type", "").split(";")[0] != "application/pdf":
         raise HTTPException(415, "Envie o arquivo com Content-Type application/pdf")
     await run_in_threadpool(db.rollback)  # Libera a conexão enquanto o leitor trabalha.
-    return await prepare_pdf(statement_id, await request.body(), user, request.session)
+    return await prepare_pdf(
+        statement_id, await request.body(), user, request.session, db
+    )
 
 
 class ReviewedCandidate(BaseModel):
@@ -200,11 +221,112 @@ class ReviewedCandidate(BaseModel):
         return ReviewInput.valid_category(value)
 
 
-class Confirmation(BaseModel):
+class Review(BaseModel):
     model_config = ConfigDict(extra="forbid")
     preview_token: str = Field(pattern=r"^[a-f0-9]{64}$")
-    reviewed: bool = Field(strict=True)
     entries: list[ReviewedCandidate] = Field(min_length=1, max_length=500)
+
+
+class Confirmation(Review):
+    reviewed: bool = Field(strict=True)
+    links: Links = Field(default_factory=list)
+
+
+class PDFRelease(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    preview_token: str = Field(pattern=r"^[a-f0-9]{64}$")
+    release: Release
+
+
+def read_metadata(token, request, user, statement_id):
+    raw = security.store.get(preview_key(token))
+    metadata = json.loads(raw) if raw else {}
+    if (
+        metadata.get("owner") != user
+        or metadata.get("statement_id") != statement_id
+        or metadata.get("session")
+        != hashlib.sha256(request.session["csrf"].encode()).hexdigest()
+    ):
+        raise HTTPException(
+            410,
+            "Prévia expirada ou não pertence a esta sessão/fatura. Leia o arquivo novamente.",
+        )
+    return metadata
+
+
+def reviewed_entries(body, metadata):
+    indexes = [entry.source_index for entry in body.entries]
+    if len(set(indexes)) != len(indexes) or max(indexes) >= metadata["count"]:
+        raise HTTPException(
+            422, "Revise os candidatos e confirme a seleção sem repetir linhas"
+        )
+    return sorted(body.entries, key=lambda entry: entry.source_index)
+
+
+def reconciliation_state(db, user, statement_id, entries, keys):
+    statement = owned(db, Statement, user, statement_id)
+    require_open(statement)
+    active_statement_card(db, user, statement)
+    matches = duplicate_candidates(
+        db, Charge, user, entries, Charge.statement_id == statement_id
+    )
+    for match in matches:
+        match["source_index"] = entries[match["source_index"]].source_index
+    return {
+        "possible_duplicates": matches,
+        **origin_state(
+            db,
+            Charge,
+            user,
+            keys,
+            Charge.statement_id == statement_id,
+            "card",
+            statement_id,
+        ),
+    }
+
+
+@router.post("/{statement_id}/import/pdf/review")
+def review(
+    statement_id: str,
+    body: Review,
+    request: Request,
+    user=Depends(security.current_user),
+    db: Session = Depends(db_session),
+):
+    owned(db, Statement, user, statement_id)
+    metadata = read_metadata(body.preview_token, request, user, statement_id)
+    return reconciliation_state(
+        db,
+        user,
+        statement_id,
+        reviewed_entries(body, metadata),
+        metadata["source_keys"],
+    )
+
+
+@router.post("/{statement_id}/import/pdf/unlink")
+def unlink(
+    statement_id: str,
+    body: PDFRelease,
+    request: Request,
+    user=Depends(security.current_user),
+    db: Session = Depends(db_session),
+):
+    statement = lock_statement(db, user, statement_id)
+    require_open(statement)
+    active_statement_card(db, user, statement)
+    metadata = read_metadata(body.preview_token, request, user, statement_id)
+    return release_link(
+        db,
+        Charge,
+        user,
+        metadata["source_keys"],
+        body.release,
+        Charge.statement_id == statement_id,
+        "card",
+        statement_id,
+    )
 
 
 @router.post("/{statement_id}/import/pdf/confirm")
@@ -218,40 +340,35 @@ def confirm(
     statement = lock_statement(db, user, statement_id)
     require_open(statement)
     active_statement_card(db, user, statement)
-    raw = security.store.get(preview_key(body.preview_token))
-    metadata = json.loads(raw) if raw else {}
-    if (
-        metadata.get("owner") != user
-        or metadata.get("statement_id") != statement_id
-        or metadata.get("session")
-        != hashlib.sha256(request.session["csrf"].encode()).hexdigest()
-    ):
-        raise HTTPException(
-            410,
-            "Prévia expirada ou não pertence a esta sessão/fatura. Leia o arquivo novamente.",
-        )
-    indexes = [entry.source_index for entry in body.entries]
-    if (
-        not body.reviewed
-        or len(set(indexes)) != len(indexes)
-        or max(indexes) >= metadata["count"]
-    ):
-        raise HTTPException(
-            422, "Revise os candidatos e confirme a seleção sem repetir linhas"
-        )
-    # Ordem original preserva a contagem de ocorrências mesmo se o cliente reordenar a lista.
-    entries = sorted(body.entries, key=lambda entry: entry.source_index)
+    metadata = read_metadata(body.preview_token, request, user, statement_id)
+    if not body.reviewed:
+        raise HTTPException(422, "Revise os candidatos antes de confirmar.")
+    # Os índices continuam referindo-se à origem completa, inclusive em seleção parcial.
+    entries = reviewed_entries(body, metadata)
     keys = [metadata["source_keys"][entry.source_index] for entry in entries]
     marks = reserve(db, user, "card", statement_id, keys)
+    linked = apply_links(
+        db,
+        Charge,
+        user,
+        entries,
+        keys,
+        [],
+        body.links,
+        marks,
+        Charge.statement_id == statement_id,
+        "card",
+        statement_id,
+        source_indices=[entry.source_index for entry in entries],
+    )
     created = removed = 0
     for entry in entries:
         canonical = f"{entry.date}|{entry.description.casefold()}|{entry.amount_cents}|{entry.kind}"
         key = metadata["source_keys"][entry.source_index]
         mark = marks[key]
-        if mark.version and not mark.resource_id:
-            raise HTTPException(
-                409, "Origem desfeita. Revise o vínculo pela importação CSV."
-            )
+        require_released_revision(
+            mark, metadata.get("origin_versions", []), entry.source_index
+        )
         if mark.removed:
             removed += 1
             continue
@@ -270,7 +387,7 @@ def confirm(
             continue
         if existing:
             previous = f"{existing.date}|{existing.description.casefold()}|{existing.amount_cents}|{existing.kind}"
-            if previous != canonical:
+            if existing.import_key == key and previous != canonical:
                 raise HTTPException(
                     409,
                     "Uma linha já importada foi alterada. Corrija o lançamento existente antes de reimportar.",
@@ -293,4 +410,7 @@ def confirm(
         mark.version += 1
         created += 1
     db.commit()
-    return import_result(len(entries), created, removed)
+    output = import_result(len(entries), created, removed)
+    if linked:
+        output["linked"] = linked
+    return output

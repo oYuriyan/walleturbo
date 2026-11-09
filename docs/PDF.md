@@ -40,3 +40,24 @@ Os testes unitários usam apenas PDFs sintéticos. `tests/integration_pdf.py` ex
 ## Origem após correção/exclusão — 0.11
 
 A marca da linha original permanece ligada ao registro, mesmo quando a prévia ou o lançamento forem corrigidos. Confirmar PDF com outros valores para uma origem já gravada recebe 409. Origens excluídas são ignoradas e contadas em removed, sem recriar registros; CSV/PDF compartilham marcas quando seus campos canônicos/contexto coincidem. Diferenças de texto e contexto ainda exigem conferência. Detalhes em LANCAMENTOS_E_IMPORTACAO.md.
+
+## Conciliação explícita — 0.19
+
+A prévia mostra possíveis duplicatas por data, valor e tipo, até cinco destinos por linha, sempre do mesmo usuário e fatura. Compras e estornos são comparados separadamente. O sinal não comprova identidade; mantenha **Criar ou reconhecer pela origem** para uma ocorrência independente ou escolha um destino compatível. A associação não altera valores, categorias, parcelas ou IDs financeiros e não expande parcelas futuras.
+
+Após corrigir data, valor ou tipo, o destino selecionado é limpo e desabilitado. Use **Atualizar possíveis vínculos** para consultar os campos revisados, selecione o destino e confirme novamente a revisão. Respostas atrasadas são descartadas após nova edição, leitura, fechamento ou perda da sessão. Essa consulta não grava lançamentos, não renova o token e não prolonga os dez minutos da prévia.
+
+Origens já associadas mostram seu destino atual. **Desfazer vínculo** exige motivo, revisões atuais e confirmação; preserva o lançamento financeiro e usa o mesmo histórico privado transacional do CSV. Depois do sucesso o arquivo é relido, descartando edições ainda não importadas. Confira a nova prévia para remapear ou importar uma ocorrência independente. O remapeamento tem duas transações; falha na segunda deixa a origem liberada. Não libera identidade primária de importação, registro excluído, cadastro arquivado ou fatura conferida.
+
+### API e identidade
+
+- `POST /api/statements/{id}/import/pdf/preview`: conserva upload binário, token, entradas e avisos; acrescenta `possible_duplicates`, `known_origins` e `origin_versions` na ordem completa da origem.
+- `POST .../import/pdf/review`: recebe `preview_token` e `entries` revisadas/selecionadas, com índices originais únicos. Retorna os sinais e estados atuais, sem alterar a revisão capturada pelo token. Para confirmar uma ocorrência liberada é necessário novo upload, não apenas nova consulta de vínculos.
+- `POST .../import/pdf/confirm`: aceita `links` opcional com `source_index` original, `resource_id`, `expected_version` do destino e `expected_origin_version` (padrão 0 para primeira associação). As linhas vinculadas precisam estar na seleção; origem e destino não podem se repetir no envio. Data, valor e tipo revisados devem coincidir com o destino na primeira associação. `linked` é subconjunto de `duplicates`, não de `created`.
+- `POST .../import/pdf/unlink`: recebe `preview_token` e `release`, com os mesmos campos de revisão do vínculo e `reason` de 3–240 caracteres após remoção de espaços externos.
+
+Seleções parciais/reordenadas conservam os índices e hashes do PDF original. O vínculo sobrevive a correções do destino; reenvios de aliases conhecidos não sobrescrevem esses valores, mesmo se a descrição divergir. A comparação estrita de valores continua para a identidade primária de uma linha importada. Ausência do destino preserva a proteção contra recriação. Associação/liberação reserva marcas em ordem estável e usa NOWAIT no destino; conflitos retornam 409 e revertem o lote inteiro, inclusive histórico e lançamentos novos.
+
+Token expirado ou de outra sessão/fatura recebe 410; acesso a fatura de outro usuário recebe 404. Estrutura ou seleção inválida recebe 422. O Redis guarda apenas os metadados já descritos e a revisão numérica das origens no momento da leitura, sem novos textos financeiros. Tokens antigos não recuperam decisões desfeitas. Confirmação sem `links` mantém o comportamento anterior para origens comuns.
+
+Sem migração ou dependência nova. Esta entrega cobre PDF textual genérico → registro manual/importado existente na mesma fatura. Identidade bancária por emissor/OFX, corpus homologado, OCR, associação entre contextos e colisões legítimas da chave legada permanecem no roadmap.
