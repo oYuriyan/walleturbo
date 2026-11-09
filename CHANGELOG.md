@@ -1,3 +1,10 @@
+## 0.22.0 — em validação
+
+- Correção de competência do lançamento OFX primário junto com sua origem, preservando identidade e correções.
+- Simulação das duas faturas, motivo, revisão explícita, versões, idempotência e histórico atômico.
+- Bloqueios para parcelas, vínculos adicionais, exclusões, contexto inválido e faturas conferidas.
+- Sem migração/dependência nova; 257 testes locais, PostgreSQL/mobile e homologação integral no PR.
+
 ## 0.21.0 — em validação
 
 - OFX de cartão BRL na fatura selecionada, com origem reservada contra duplicação em outro mês.
