@@ -33,6 +33,8 @@ Não habilitar cookies analíticos/marketing ou integrações de oferta automati
 
 Na leitura assistida de PDF, original e texto completo são processados transitoriamente em memória pelo serviço isolado. O Redis retém metadados pseudônimos e hashes de linhas da prévia por até dez minutos. Não há envio a IA. Consulte PDF.md para limites e retenção.
 
+No OFX bancário, o arquivo é processado em memória e descartado, sem persistência do original ou de identificadores bancários/FITIDs brutos. A interface mostra a conta do documento mascarada. Marcas e recibos existentes retêm identificadores derivados e assinatura da origem para proteger reenvios, correções e exclusões; continuam sujeitos à proteção, exportação e expurgo do titular. Descrições financeiras revisadas entram nos lançamentos, como no CSV. O sistema não comprova autenticidade bancária. Contrato em OFX.md.
+
 Planejamento: renda de referência opcional, margem preservada, confirmação mensal e limites por categoria são usados para simulações determinísticas. Não são enviados a terceiros. Estão incluídos na exportação e exclusão financeira.
 
 Saldos e transferências: referências iniciais, motivos e versões de correção, contas de origem/destino e datas de reversão ficam no banco financeiro e integram exportação/exclusão. Não há envio dessas informações a bancos, modelos de IA ou outros fornecedores. Não coletar dados sensíveis desnecessários no motivo/descrição.

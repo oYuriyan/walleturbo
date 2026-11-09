@@ -98,3 +98,7 @@ Migração 013 inicia marcas associadas na revisão 1 e marcas livres na 0, sem 
 ## Extensão ao PDF — 0.19
 
 O PDF textual passa a consultar destinos compatíveis com os campos revisados e a reutilizar associação/desfazimento, revisões de origem/destino, histórico privado e locks do CSV. Índices e chaves continuam sendo os da linha original do PDF, inclusive em seleção parcial ou reordenada. Após desfazer, um novo upload captura a revisão atual antes de recriar ou remapear; uma consulta ao token antigo não permite recriação. Aliases reconhecidos preservam correções do destino, enquanto a identidade primária mantém a comparação estrita do PDF. Sem alteração de schema. Contrato, passos da interface e limites em [PDF.md](PDF.md).
+
+## Identidade OFX — 0.20
+
+Extrato bancário OFX usa FITID e contexto bancário/conta local para distinguir origens, inclusive compras idênticas legítimas. Reutiliza marcas do escopo transaction e recibos do novo escopo ofx para assinatura original imutável, sem nova tabela. Edição/exclusão de lançamentos continua protegida pelo protocolo existente; arquivo original não sobrescreve correções nem recria exclusões. Arquivo alterado para uma origem conhecida recebe conflito atômico. Seleção, vínculo, desfazimento, histórico, exportação e expurgo mantêm seus contratos. Tipos, limites e corpus em [OFX.md](OFX.md); identidade universal entre bancos e colisões legadas CSV/PDF continuam pendentes.

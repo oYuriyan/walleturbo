@@ -197,3 +197,11 @@ Homologação integral do GitHub Actions em andamento no [PR #9](https://github.
 197 testes locais aprovados com avisos tratados como erro, incluindo 14 novos casos de conciliação PDF; JavaScript validado. PostgreSQL/Redis e parser isolado aprovados: duas associações concorrentes para destinos diferentes e dois desfazimentos produziram 200/409, sem mudança financeira; envio antigo foi recusado e nova leitura permitiu refazer a associação. Chromium com viewport mobile aprovou consulta dos campos editados, vínculo, motivo, desfazimento, releitura e nova associação, preservando quantidade/valores. A captura sintética pdf-link-mobile.png foi inspecionada; os campos nativos seguem o idioma do navegador e o diálogo tem rolagem.
 
 Homologação integral e commit final serão registrados no PR desta entrega. Contrato e limites em PDF.md; não há migração, novo serviço ou dependência de aplicação. A evidência não constitui homologação de layouts de emissor, OCR, OFX ou WCAG, nem autorização de publicação.
+
+0.19 homologada no CI 42635465140 e integrada à main pelo PR #10; 197 testes e regressão integral aprovados.
+
+## Incremento 0.20 — OFX bancário com identidade de origem
+
+225 testes locais aprovados com avisos tratados como erro, incluindo 28 novos casos OFX. Corpus sintético SGML 102/XML 220 e expected.json fixam três origens equivalentes, datas civis, sinais e valores em centavos. PostgreSQL/Redis reais aprovaram confirmação concorrente/reordenada sem duplicação, assinatura divergente atômica, exclusão versus reenvio e NOWAIT no destino, preservando valores em vínculo/desfazimento. Chromium mobile aprovou Windows-1252, troca de conta, revisão, seleção, identidade entre formatos e bloqueio da origem divergente, com limpeza da prévia após fechamento. Captura sintética ofx-mobile.png inspecionada localmente. Homologação integral e commit final serão registrados no PR.
+
+Sem migração, serviço ou dependência nova. Escopo e limites em OFX.md; bancos reais, OFX de cartão, outros layouts e correções bancárias automáticas não estão homologados nesta entrega.

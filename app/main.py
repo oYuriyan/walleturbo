@@ -23,6 +23,7 @@ from app.lifecycle import router as lifecycle_router
 from app.balances import router as balances_router
 from app.planning import router as planning_router
 from app.pdf_import import router as pdf_router
+from app.ofx_import import router as ofx_router
 from app.db import (
     Transaction,
     Goal,
@@ -91,7 +92,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.19.0",
+    version="0.20.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -116,6 +117,7 @@ app.include_router(operations_router)
 app.include_router(entries_router)
 app.include_router(payment_corrections_router)
 app.include_router(pdf_router)
+app.include_router(ofx_router)
 app.include_router(planning_router)
 
 
