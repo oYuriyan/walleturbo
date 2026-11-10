@@ -217,3 +217,7 @@ Sem migração, serviço ou dependência nova. Contrato em OFX_CARTAO.md. Realoc
 ## Incremento 0.22 — competência OFX
 
 257 testes locais aprovados com avisos como erro, incluindo 13 casos novos de preservação de correções, ida/volta, versões, isolamento, pagamentos, vínculos, exclusão e rollback de auditoria. PostgreSQL aprovou concorrência entre duas competências (200/409), preservação de ID/versões/histórico, reenvio no destino, recusa no contexto anterior e NOWAIT com rollback. Chromium mobile aprovou simulação, revisão invalidada ao editar, preservação de ID/histórico, reenvio sem duplicação e descarte de resposta após fechar; captura ofx-relocation-mobile.png inspecionada. Homologação integral/commit final serão registrados no PR. Sem migração, serviço ou dependência nova; limites em OFX_REALOCACAO.md.
+
+## Incremento 0.23 — primeiro uso e escopo básico
+
+A jornada mobile browser_first_steps.cjs cadastra uma conta pelos atalhos, define referência de R$ 1.000 em 01/11/2026 e registra despesa de R$ 25 em 02/11/2026, reconciliando saldo de R$ 975 no fim do mês. Verifica foco na consulta de saldos, ausência de corte horizontal, guia recolhido no retorno e oculto após expiração/demonstração. Captura first-steps-mobile.png inspecionada. Usa formulários/API existentes; nenhuma persistência, serviço ou dependência nova. CI integral e commit final registrados no PR. V1_BASICA.md define o recorte e os pacotes ainda pendentes; esta entrega não declara a V1 pronta.

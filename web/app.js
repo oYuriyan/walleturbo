@@ -161,6 +161,15 @@ async function refresh() {
     await loadPlanning();
 }
 function render(data) {
+  const guide = $("#first-steps");
+  guide.hidden = !csrf || demo;
+  if (guide.hidden) {
+    guide.open = false;
+    delete guide.dataset.initialized;
+  } else if (!guide.dataset.initialized) {
+    guide.open = financeAccounts.length === 0;
+    guide.dataset.initialized = "true";
+  }
   $("#cash-result").textContent =
     "Movimentação líquida de caixa: " +
     money(data.cash_balance_cents ?? data.balance_cents);
@@ -441,6 +450,14 @@ function cents(value) {
   return Number(whole) * 100 + Number(decimal.padEnd(2, "0"));
 }
 categories.forEach((c) => $("#category-options").append(el("option", c)));
+$("#start-account").onclick = () => {
+  showView("finance");
+  openSetup("account");
+};
+$("#start-balances").onclick = () => {
+  showView("finance");
+  $("#balance-date").focus();
+};
 document
   .querySelectorAll("[data-view]")
   .forEach((b) => (b.onclick = () => showView(b.dataset.view)));

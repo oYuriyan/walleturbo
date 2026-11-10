@@ -94,7 +94,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Walleturbo",
-    version="0.22.0",
+    version="0.23.0",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,

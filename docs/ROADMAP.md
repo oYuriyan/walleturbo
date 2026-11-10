@@ -8,6 +8,10 @@ Base de código homologada: `8124548`, [CI 42045260683](https://github.com/oYuri
 
 Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOMOLOGACAO.md são históricos. Uma tarefa só passa a concluída com comportamento implementado, critérios de aceite atendidos, evidências e documentação atualizada. As fases abaixo estão pendentes ou parciais; não são entregas prontas.
 
+## Recorte vigente para a primeira versão — 10/11/2026
+
+Por decisão do responsável, a primeira versão será o núcleo financeiro local, com recuperação e jornada básica comprovadas. O escopo e os quatro pacotes de aceite estão em [V1_BASICA.md](V1_BASICA.md). Este recorte prevalece sobre a exigência anterior de concluir integralmente as fases 1–5 para a V1. IA, ofertas, OCR, integrações externas, recorrências e regras financeiras avançadas permanecem no backlog, fora desta primeira entrega. Segurança dos dados, precisão e recuperação continuam necessárias.
+
 ## O que já existe
 
 | Área | Entrega existente | Limite atual |
@@ -215,3 +219,8 @@ Entrega 0.21: CCSTMTTRNRS sintético SGML/XML, reserva na primeira fatura, confi
 Plano de 09/11/2026 — incremento 0.22: (1) realocar o lançamento OFX primário junto com sua origem entre faturas em revisão do mesmo cartão; (2) simular totais/restantes das duas faturas com motivo; (3) revalidar versões/revisões e registrar histórico atômico/idempotente; (4) bloquear exclusões, parcelas e vínculos adicionais; (5) validar PostgreSQL/mobile, documentar e homologar no PR. Reutilizar recibos, marcas e histórico, sem novo schema/dependência.
 
 Entrega 0.22: correção explícita de competência OFX preserva o lançamento e move a reserva da origem com versões monotônicas; reenvio só reconhece a origem na fatura atual. Contrato/limites em OFX_REALOCACAO.md. Abrange somente a origem primária OFX disponível, sem parcelas ou vínculos adicionais. Realocação de CSV/PDF/vínculos manuais, colisões de ocorrências idênticas nas chaves legadas e homologação de emissores reais continuam pendentes em FIN-04/IMP-03/04; não declarar a fase concluída. Próxima análise funcional: resolver colisões legítimas na identidade de ocorrências CSV antes de ampliar realocação aos formatos legados. Créditos transportados e recorrências seguem na fase 2.
+
+
+0.22 homologada e integrada pelo PR #13, CI 42679157365, com 257 testes.
+
+Plano de 10/11/2026 — 0.23: (1) registrar o recorte econômico da V1; (2) orientar conta, saldo inicial e lançamento com atalhos aos formulários existentes; (3) validar a jornada mobile e saldo esperado, incluindo sessão/demonstração; (4) documentar e homologar no PR. Sem nova persistência, serviço ou dependência. Colisões CSV deixam de ser a próxima prioridade: recuperação local e jornada básica passam à frente, conforme V1_BASICA.md.
