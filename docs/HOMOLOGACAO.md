@@ -221,3 +221,7 @@ Sem migração, serviço ou dependência nova. Contrato em OFX_CARTAO.md. Realoc
 ## Incremento 0.23 — primeiro uso e escopo básico
 
 A jornada mobile browser_first_steps.cjs cadastra uma conta pelos atalhos, define referência de R$ 1.000 em 01/11/2026 e registra despesa de R$ 25 em 02/11/2026, reconciliando saldo de R$ 975 no fim do mês. Verifica foco na consulta de saldos, ausência de corte horizontal, guia recolhido no retorno e oculto após expiração/demonstração. Captura first-steps-mobile.png inspecionada. Usa formulários/API existentes; nenhuma persistência, serviço ou dependência nova. CI integral e commit final registrados no PR. V1_BASICA.md define o recorte e os pacotes ainda pendentes; esta entrega não declara a V1 pronta.
+
+## Incremento 0.24 — recuperação local
+
+265 testes locais aprovados com avisos como erro, incluindo oito casos de nomes/caminhos, symlinks, chave privada, destino existente e reativação dos mesmos containers após falha do dump. Ensaio PostgreSQL financeiro com linha sintética: backup GPG, restauração em projeto novo e comparação de todas as tabelas/configurações; chave incorreta, corrupção e repetição recusadas; origem preservada e API reativada. Duração local do ensaio: 17 segundos, sem garantia para bases reais. CI inclui ensaio completo com identidade Keycloak inicializada, comparando realm/usuários/credenciais/clientes além das finanças. Commit e resultado integral registrados no PR; promoção/login no ambiente recuperado e volume real exigem conferência local. Procedimento e limites em RECUPERACAO_LOCAL.md.
