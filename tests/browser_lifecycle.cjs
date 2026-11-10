@@ -63,14 +63,33 @@ const base = "http://localhost:8000";
         .click();
     };
     const save = async () => {
-      const saved = await form.evaluate(f => ({kind: f.elements.kind.value, id: f.elements.id.value, version: Number(f.elements.version.value)}));
-      const completed = page.waitForResponse(response => response.request().method() === "PUT" && response.url().endsWith(`/api/${saved.kind}/${saved.id}`));
+      const saved = await form.evaluate((f) => ({
+        kind: f.elements.kind.value,
+        id: f.elements.id.value,
+        version: Number(f.elements.version.value),
+      }));
+      const completed = page.waitForResponse(
+        (response) =>
+          response.request().method() === "PUT" &&
+          response.url().endsWith(`/api/${saved.kind}/${saved.id}`),
+      );
       await form
         .getByRole("button", { name: "Salvar cadastro", exact: true })
         .click();
-      assert.equal((await completed).status(), 200, "Salvar cadastro deve ser aceito antes de fechar o diálogo");
+      assert.equal(
+        (await completed).status(),
+        200,
+        "Salvar cadastro deve ser aceito antes de fechar o diálogo",
+      );
       await dialog.waitFor({ state: "hidden" });
-      await page.waitForFunction(({kind, id, version}) => (kind === "accounts" ? financeAccounts : financeCards).some(row => row.id === id && row.version > version), saved);
+      await page.waitForFunction(
+        ({ id, version }) =>
+          Number(
+            document.querySelector(`[data-entity-id="${id}"]`)?.dataset
+              .entityVersion,
+          ) > version,
+        saved,
+      );
     };
     await manage(account.id, "accounts");
     // Simular outra sessão antes de salvar; a interface deve exigir recarga explícita.
@@ -108,7 +127,7 @@ const base = "http://localhost:8000";
     await save();
     await page
       .locator(`[data-entity-id="${account.id}"]`)
-      .getByText("Reserva arquivada · Arquivada", { exact: true })
+      .getByRole("heading", { name: "Reserva arquivada", exact: true })
       .waitFor();
     await manage(account.id, "accounts");
     await form.locator('[name="archived"]').uncheck();

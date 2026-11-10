@@ -28,7 +28,7 @@ const base = "http://localhost:8000";
     headers = { Origin: base, "X-CSRF-Token": csrf };
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
-    await page.locator('[data-view="goals"]').click();
+    await page.locator('.nav[data-view="goals"]').click();
     await page.locator('#goals [data-action="new-goal"]').click();
     const form = page.locator("#goal-form"),
       dialog = page.locator("#goal-dialog");
@@ -150,6 +150,7 @@ const base = "http://localhost:8000";
       ).status(),
       201,
     );
+    await page.locator("#history-panel > summary").click();
     await page.locator("#refresh-history").click();
     await page
       .locator("#history-list")
@@ -175,7 +176,7 @@ const base = "http://localhost:8000";
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     );
-    await page.locator('[data-view="goals"]').click();
+    await page.locator('.nav[data-view="goals"]').click();
     await page.locator('#goals [data-action="new-goal"]').click();
     await form.locator('[name="name"]').fill("Não deve persistir na tela");
     await form.locator('[name="target"]').fill("10,00");

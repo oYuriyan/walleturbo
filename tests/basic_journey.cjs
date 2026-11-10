@@ -198,7 +198,7 @@ async function buildJourney(context, page, csrf) {
         .getByText("Conta conectada", { exact: true })
         .waitFor({ timeout: 8000 });
       await page.locator("#month").fill("2026-11");
-      await page.locator("#month").dispatchEvent("change");
+      await page.locator("#month").blur();
       await page.waitForFunction(
         () => /1\.935,00/.test(document.querySelector("#balance").textContent),
         null,

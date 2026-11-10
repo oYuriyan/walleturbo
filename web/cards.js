@@ -2,7 +2,9 @@
 let financeAccounts = [],
   financeCards = [],
   financeStatements = [];
+let financeGeneration = 0;
 function clearFinance() {
+  financeGeneration++;
   for (const name of [
     "setup",
     "purchase",
@@ -48,13 +50,21 @@ function seedFinance() {
 }
 async function loadFinance() {
   if (demo || !csrf) return;
-  const expectedCsrf = csrf;
+  const expectedCsrf = csrf,
+    generation = ++financeGeneration,
+    month = $("#month").value;
   const data = await Promise.all([
     api("/api/accounts"),
     api("/api/cards"),
-    api("/api/statements?month=" + $("#month").value),
+    api("/api/statements?month=" + month),
   ]);
-  if (csrf !== expectedCsrf || demo) return;
+  if (
+    csrf !== expectedCsrf ||
+    demo ||
+    generation !== financeGeneration ||
+    month !== $("#month").value
+  )
+    return;
   [financeAccounts, financeCards, financeStatements] = data;
 }
 function totals(statement) {
@@ -143,25 +153,13 @@ function renderFinance() {
   accounts.replaceChildren();
   cards.replaceChildren();
   statements.replaceChildren();
-  accounts.append(el("span", "Contas cadastradas", "subtle"));
-  financeAccounts.forEach((a) => {
-    const row = el("div", undefined, "account-management");
-    row.dataset.entityId = a.id;
-    row.append(
-      el("span", a.name + (a.archived ? " · Arquivada" : ""), "badge"),
+  accounts.hidden = !demo;
+  if (demo) {
+    accounts.append(el("span", "Contas de demonstração", "subtle"));
+    financeAccounts.forEach((a) =>
+      accounts.append(el("span", a.name, "badge")),
     );
-    if (csrf && !demo && typeof manageEntity === "function")
-      row.append(button("Gerenciar conta", () => manageEntity(a, "accounts")));
-    accounts.append(row);
-  });
-  if (!financeAccounts.length)
-    accounts.append(
-      el(
-        "span",
-        "Cadastre uma conta para vincular lançamentos e pagamentos.",
-        "subtle",
-      ),
-    );
+  }
   financeCards.forEach((c) => {
     const panel = el("article", undefined, "panel");
     panel.append(
@@ -173,6 +171,7 @@ function renderFinance() {
       ),
     );
     panel.dataset.entityId = c.id;
+    panel.dataset.entityVersion = c.version;
     if (c.archived)
       panel.append(
         el("p", "Cartão arquivado · faturas e pagamentos preservados", "badge"),
@@ -344,7 +343,11 @@ function renderFinance() {
               await refresh();
             }),
           );
-          row.append(tools);
+          const menu = el("details", undefined, "row-menu"),
+            summary = el("summary", "Ações");
+          summary.setAttribute("aria-label", `Ações de ${c.description}`);
+          menu.append(summary, tools);
+          row.append(menu);
         }
         panel.append(row);
       });

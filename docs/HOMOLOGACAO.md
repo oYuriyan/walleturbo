@@ -229,3 +229,12 @@ A jornada mobile browser_first_steps.cjs cadastra uma conta pelos atalhos, defin
 ## Jornada básica integrada — 10/11/2026
 
 Cenário financeiro local aprovado com sessão sintética: resultado R$ 1.935, movimentação de caixa R$ 1.965 e saldo total R$ 2.965; reenvios preservam correções e não duplicam compras, pagamentos ou transferência. A ampliação da CI exige dois logins reais com TOTP, recusas de acesso/vínculo cruzado, limpeza ao sair e exportação idêntica após novo login. Roteiro em JORNADA_BASICA.md; evidência final/commit no PR. Nenhum endpoint, schema, dependência ou serviço de produto novo.
+
+
+## Incremento 0.25 — interface e usabilidade
+
+Revisão das seis áreas existentes: paleta sóbria em claro/escuro, fonte do sistema, contraste, títulos consistentes, campos de 16 px e controles de toque. O resumo mostra uma meta e recolhe informações secundárias; contas passam a ser gerenciadas junto ao saldo, compras exibem ações sob demanda e histórico fica recolhido. Sem fonte remota, framework, migração ou dependência nova de aplicação.
+
+265 testes locais aprovados com avisos tratados como erro. Chromium local aprovou a jornada autenticada sintética e a demonstração, seis áreas nos dois temas, axe-core 4.10.3 sem violações WCAG A/AA detectadas nos estados exercitados, navegação em 320/390/768 px sem corte horizontal e diálogo com nome/foco/Tab/Escape. Capturas ui-chromium-desktop.png, ui-chromium-mobile.png e ui-chromium-dark.png inspecionadas. O teste retém resposta de dezembro, carrega novembro e libera a resposta antiga, preservando resumo/fatura do mês atual. Gerenciamento de conta/cartão e importação OFX mobile também aprovados localmente.
+
+Firefox local não pôde ser instalado porque os domínios de download foram recusados pela política de rede do ambiente; o workflow instala e executa esse motor no runner do GitHub. Resultado integral e commit final serão registrados no PR. axe é ferramenta de teste, não dependência da aplicação; ausência de violações automáticas não certifica WCAG nem substitui avaliação com tecnologias assistivas. Recuperação promovida, volume declarado e aceite final permanecem conforme V1_BASICA.md.

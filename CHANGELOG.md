@@ -1,3 +1,11 @@
+## 0.25.0 — em validação
+
+- Interface com hierarquia de títulos, paleta claro/escuro, tipografia legível e navegação completa no celular.
+- Visão geral reduzida; gerenciamento da conta junto ao saldo, ações de compra e histórico recolhidos.
+- Atalho ao conteúdo, foco nos títulos/diálogos, Tab/Escape e alvos de toque ampliados.
+- Atualização por período descarta respostas antigas e sinaliza carregamento; planejamento carrega ao entrar.
+- Auditoria automatizada axe e regressão de interface em Chromium/Firefox na CI, sem dependência nova de aplicação.
+
 ## Homologação do núcleo básico — 10/11/2026
 
 - Jornada financeira na mesma sessão Keycloak/TOTP, isolamento com outro login real e persistência após nova autenticação.

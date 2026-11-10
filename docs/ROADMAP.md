@@ -234,3 +234,6 @@ Plano de 10/11/2026 — 0.24: (1) capturar bancos/configurações com criptograf
 0.24 homologada e integrada pelo PR #15, CI 42857495727: 265 testes; backup financeiro/identidade restaurado e comparado em 22,1 segundos no cenário sintético.
 
 Plano de continuação de 10/11/2026: ampliar o roteiro Keycloak/TOTP existente para uma jornada financeira única, outro usuário real, nova sessão e preservação da exportação. Reutilizar testes/serviços atuais; nenhuma funcionalidade de produto nova. Resultados e limites em JORNADA_BASICA.md. A versão da aplicação permanece 0.24; a homologação integrada é versionada pelo PR.
+
+
+Plano de 10/11/2026 — 0.25: (1) simplificar informação e ações nas seis áreas existentes; (2) alinhar paleta, tipografia e tamanhos de toque em desktop/mobile; (3) corrigir foco, nome dos diálogos e respostas obsoletas na troca de mês; (4) validar formulários existentes e axe/teclado nos dois motores de navegador; (5) documentar e integrar pelo PR. Sem novo serviço, framework ou dependência de aplicação. O pedido de UI/UX inclui esta revisão na V1; funcionalidades avançadas continuam adiadas. Próximos critérios: promoção/login da recuperação, volume declarado e aceite básico.

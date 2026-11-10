@@ -1,14 +1,15 @@
 :root {
   color-scheme: light;
-  --bg: #f7f8fa;
+  --bg: #f5f6f8;
   --surface: #fff;
-  --text: #222433;
-  --muted: #777b89;
-  --line: #edeef2;
-  --purple: #7544d7;
-  --soft: #f3effc;
-  --green: #167b60;
-  --shadow: 0 10px 35px #26213a04;
+  --text: #202936;
+  --muted: #566477;
+  --line: #dce2e9;
+  --purple: #584098;
+  --soft: #efecf7;
+  --green: #146b53;
+  --shadow: none;
+  --focus: #684ab4;
 }
 * {
   box-sizing: border-box;
@@ -18,20 +19,21 @@ body {
   background: var(--bg);
   color: var(--text);
   font:
-    14px/1.6 -apple-system,
+    15px/1.6 -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
 }
 body.dark {
   color-scheme: dark;
-  --bg: #14131b;
-  --surface: #1d1b27;
-  --text: #f1eef8;
-  --muted: #a29dac;
-  --line: #302c3c;
-  --soft: #30233f;
-  --green: #6ed4af;
+  --bg: #101820;
+  --surface: #19232e;
+  --text: #edf2f7;
+  --muted: #b5c0ce;
+  --line: #354353;
+  --soft: #302b46;
+  --green: #8ee0bc;
+  --focus: #c5b5ff;
   --shadow: none;
 }
 button,
@@ -56,11 +58,12 @@ a {
   color: inherit;
   text-decoration: none;
 }
+summary:focus-visible,
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid #b795ff;
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 [hidden] {
@@ -69,10 +72,10 @@ select:focus-visible {
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
-  width: 245px;
+  width: 224px;
   background: var(--surface);
   border-right: 1px solid var(--line);
-  padding: 36px 24px;
+  padding: 28px 18px;
   display: flex;
   flex-direction: column;
 }
@@ -82,7 +85,7 @@ select:focus-visible {
   letter-spacing: -1px;
   display: flex;
   align-items: center;
-  margin-bottom: 54px;
+  margin-bottom: 32px;
 }
 .brand-mark {
   display: inline-grid;
@@ -100,7 +103,7 @@ select:focus-visible {
   color: var(--purple);
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 1.8px;
   color: var(--muted);
@@ -132,43 +135,24 @@ nav {
 .sidebar-bottom {
   margin-top: auto;
 }
-.small-card {
-  background: var(--bg);
-  padding: 22px 18px;
-  border-radius: 16px;
-  margin-bottom: 24px;
-}
-.small-card strong {
-  display: block;
-  line-height: 1.5;
-}
-.small-card p {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 0;
-}
-.spark {
-  font-size: 30px;
-  color: var(--purple);
-}
 .version {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   padding-left: 10px;
 }
 main {
-  margin-left: 245px;
-  padding: 0 44px;
-  max-width: 1700px;
+  margin-left: 224px;
+  padding: 0 36px;
+  max-width: 1440px;
 }
 .topbar {
-  height: 90px;
+  height: 72px;
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .topbar > div {
   display: flex;
@@ -177,10 +161,10 @@ main {
 }
 .badge {
   padding: 5px 10px;
-  border-radius: 20px;
+  border-radius: 16px;
   background: var(--soft);
   color: var(--purple);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
 }
 .welcome {
@@ -190,9 +174,9 @@ main {
   margin: 35px 0 22px;
 }
 h1 {
-  font-size: clamp(25px, 2.5vw, 37px);
+  font-size: clamp(26px, 2.5vw, 32px);
   line-height: 1.3;
-  letter-spacing: -1.1px;
+  letter-spacing: -0.7px;
   margin: 9px 0;
 }
 h1 > span {
@@ -203,7 +187,7 @@ p {
   margin: 6px 0 16px;
 }
 h2 {
-  font-size: 16px;
+  font-size: 18px;
   margin: 0;
   letter-spacing: -0.3px;
 }
@@ -212,7 +196,7 @@ h3 {
   font-size: 15px;
 }
 .month-label {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   min-width: 155px;
 }
@@ -229,7 +213,7 @@ h3 {
   border-radius: 12px;
   padding: 12px 16px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 22px;
 }
 .button,
@@ -239,7 +223,7 @@ h3 {
   border-radius: 10px;
   padding: 11px 18px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
   display: inline-block;
 }
 .button {
@@ -262,7 +246,7 @@ h3 {
   background: none;
   border: 0;
   color: var(--purple);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
   padding: 6px 0;
 }
@@ -284,27 +268,16 @@ h3 {
 }
 .balance-card {
   padding: 25px 28px 18px;
-  border-radius: 20px;
+  border-radius: 16px;
   color: white;
-  background: linear-gradient(120deg, #7543d6, #925ee8);
+  background: #493575;
   position: relative;
   overflow: hidden;
-}
-.balance-card:after {
-  content: "";
-  position: absolute;
-  width: 210px;
-  height: 210px;
-  border: 35px solid #ffffff08;
-  border-radius: 50%;
-  right: -80px;
-  top: -55px;
-  pointer-events: none;
 }
 .card-top {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 14px;
   color: #eee5ff;
 }
 .balance-card > strong {
@@ -315,42 +288,30 @@ h3 {
 }
 .muted-light {
   color: #e3d5fc;
-  font-size: 11px;
-}
-.balance-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid #ffffff24;
-  margin-top: 20px;
-  padding-top: 12px;
-  font-size: 10px;
-}
-.balance-bottom > span:last-child {
-  font-size: 21px;
+  font-size: 13px;
 }
 .metric {
   background: var(--surface);
   padding: 25px;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
 }
 .metric > span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 15px;
 }
 .metric > strong {
-  font-size: 27px;
+  font-size: clamp(20px, 2.2vw, 28px);
   letter-spacing: -0.7px;
   margin: 4px 0;
 }
 .metric small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .icon-circle {
   height: 36px;
@@ -378,7 +339,7 @@ h3 {
   padding: 26px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: var(--shadow);
 }
 .section-heading {
@@ -389,12 +350,12 @@ h3 {
   margin-bottom: 20px;
 }
 .section-heading p {
-  font-size: 11px;
+  font-size: 13px;
   margin: 3px 0 0;
 }
 .subtle {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .category-row {
   margin: 17px 0;
@@ -402,7 +363,7 @@ h3 {
 .category-label {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 7px;
 }
 .track {
@@ -441,10 +402,10 @@ h3 {
   margin-top: 14px;
 }
 .insight strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 .insight p {
-  font-size: 11px;
+  font-size: 13px;
   margin: 5px 0;
 }
 .insight b {
@@ -452,7 +413,7 @@ h3 {
   font-size: 15px;
 }
 .fine-print {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 17px;
 }
@@ -482,23 +443,23 @@ h3 {
 }
 .transaction-info strong {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   overflow-wrap: anywhere;
 }
 .transaction-info small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .transaction-amount {
-  font-size: 12px;
+  font-size: 14px;
   white-space: nowrap;
 }
 .positive {
   color: var(--green);
 }
 .pending {
-  color: #a66a15;
-  font-size: 10px;
+  color: #85540d;
+  font-size: 12px;
 }
 .row-actions {
   display: flex;
@@ -510,7 +471,7 @@ h3 {
   color: var(--purple);
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .goal {
   padding: 17px 0;
@@ -532,24 +493,24 @@ h3 {
   color: var(--purple);
 }
 .goal-head strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 .goal-head small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .goal-values {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 13px;
   margin-bottom: 9px;
 }
 .goal-values span:last-child {
   color: var(--muted);
 }
 .goal-plan {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   margin-top: 12px;
 }
@@ -557,7 +518,7 @@ h3 {
   padding: 35px 12px;
   text-align: center;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .empty span {
   display: block;
@@ -582,7 +543,7 @@ h3 {
   margin: 12px 0;
 }
 .privacy-panel p {
-  font-size: 13px;
+  font-size: 14px;
 }
 .view {
   margin-bottom: 25px;
@@ -594,7 +555,7 @@ h3 {
 label {
   display: block;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 14px;
 }
 input,
@@ -626,7 +587,7 @@ select {
 }
 dialog {
   border: 1px solid var(--line);
-  border-radius: 22px;
+  border-radius: 16px;
   padding: 28px;
   width: min(560px, calc(100% - 30px));
   color: var(--text);
@@ -639,7 +600,7 @@ dialog::backdrop {
   backdrop-filter: blur(5px);
 }
 dialog p {
-  font-size: 12px;
+  font-size: 14px;
 }
 dialog .section-heading {
   margin-bottom: 24px;
@@ -659,21 +620,20 @@ footer {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   padding: 24px 0 32px;
   border-top: 1px solid var(--line);
 }
-@media (prefers-reduced-motion: no-preference) {
-  button,
-  a {
-    transition:
-      background 0.15s,
-      opacity 0.15s;
-  }
-  button:hover,
-  a.button:hover {
-    opacity: 0.85;
-  }
+.button:hover,
+a.button:hover {
+  background: #493575;
+}
+.ghost:hover,
+.nav:hover {
+  background: var(--soft);
+}
+.text-button:hover {
+  text-decoration: underline;
 }
 @media (min-width: 1600px) {
   main {
@@ -730,7 +690,7 @@ footer {
   .nav {
     justify-content: center;
     padding: 9px;
-    font-size: 11px;
+    font-size: 13px;
     gap: 6px;
   }
   .nav span:first-child {
@@ -749,7 +709,7 @@ footer {
     gap: 10px;
   }
   .welcome p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .welcome > .eyebrow {
     font-size: 9px;
@@ -818,7 +778,7 @@ footer {
     width: 100%;
   }
   .nav {
-    font-size: 10px;
+    font-size: 12px;
     padding: 8px 5px;
   }
   .nav span:first-child {
@@ -826,11 +786,11 @@ footer {
   }
 }
 body.dark {
-  --purple: #b99af8;
+  --purple: #c5b5ff;
 }
 body.dark .button,
 body.dark .brand-mark {
-  background: #7544d7;
+  background: #6850b3;
 }
 .account-list {
   display: flex;
@@ -858,7 +818,7 @@ body.dark .brand-mark {
   gap: 12px;
   padding: 14px 0;
   border-top: 1px solid var(--line);
-  font-size: 12px;
+  font-size: 14px;
 }
 @media (max-width: 800px) {
   nav {
@@ -891,7 +851,7 @@ body.dark .brand-mark {
   min-width: 0;
 }
 .pdf-row legend {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   padding: 0 8px;
 }
@@ -931,7 +891,7 @@ body.dark .brand-mark {
 }
 .planning-row p {
   margin: 4px 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 .recurrence {
   padding: 16px 0;
@@ -943,7 +903,7 @@ body.dark .brand-mark {
 }
 .recurrence p {
   margin: 8px 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 @media (max-width: 800px) {
   .planning-row {
@@ -966,12 +926,245 @@ body.dark .brand-mark {
   font-size: 24px;
 }
 
-.account-management { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.account-management {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
-.history-item { border-bottom: 1px solid var(--line); padding: 14px 0; overflow-wrap: anywhere; }
-.history-item summary { cursor: pointer; }
-.history-item dl { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(0, 3fr); gap: 8px 16px; }
-.history-item dd { margin: 0; }
-#first-steps { margin-bottom: 24px; }
-#first-steps summary { cursor: pointer; font-weight: 600; }
-#first-steps li { margin-block: 16px; }
+.history-item {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  overflow-wrap: anywhere;
+}
+.history-item summary {
+  cursor: pointer;
+}
+.history-item dl {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(0, 3fr);
+  gap: 8px 16px;
+}
+.history-item dd {
+  margin: 0;
+}
+#first-steps {
+  margin-bottom: 24px;
+}
+#first-steps summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+#first-steps li {
+  margin-block: 16px;
+}
+
+/* Controles e hierarquia compartilhados pela jornada básica. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  padding: 10px 16px;
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--focus);
+  border-radius: 8px;
+  transform: translateY(-160%);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+button,
+a.button,
+summary {
+  min-height: 44px;
+}
+.icon-button {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+input,
+select {
+  font-size: 16px;
+}
+input[type="checkbox"] {
+  appearance: auto;
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 18px;
+  accent-color: var(--purple);
+}
+label:has(> input[type="checkbox"]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding-block: 8px;
+}
+label:has(> input[type="checkbox"]) input {
+  margin-top: 3px;
+}
+.balance-card > strong,
+.metric > strong,
+.account-balance-value,
+.transaction-amount {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.summary-grid,
+.content-grid {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+.summary-grid {
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+}
+.metric,
+.panel,
+.balance-card {
+  min-width: 0;
+}
+.secondary-panel {
+  margin-top: 24px;
+}
+.secondary-panel > summary {
+  font-weight: 650;
+  cursor: pointer;
+}
+.secondary-panel[open] > summary {
+  margin-bottom: 20px;
+}
+.row-menu {
+  margin-left: auto;
+}
+.row-menu > summary {
+  color: var(--purple);
+  background: var(--soft);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.row-menu[open] {
+  flex-basis: 100%;
+}
+.row-menu .row-actions {
+  margin: 12px 0 0;
+  flex-wrap: wrap;
+}
+.row-actions button {
+  min-height: 44px;
+}
+body.dark .income {
+  background: #183d32;
+  color: #a6edcc;
+}
+body.dark .expense {
+  background: #3c2b22;
+  color: #ffd1b2;
+}
+body.dark .pending {
+  color: #f0cb8e;
+}
+@media (min-width: 801px) {
+  .topbar button[aria-label="Alternar tema"] {
+    display: none;
+  }
+}
+@media (max-width: 800px) {
+  .sidebar {
+    padding: 16px 18px 8px;
+  }
+  nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    overflow: visible;
+  }
+  .nav {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 8px 6px;
+    font-size: 13px;
+    line-height: 1.35;
+    margin: 0;
+    text-align: center;
+  }
+  .nav span:first-child {
+    display: none;
+  }
+  .topbar {
+    height: 60px;
+  }
+  .welcome {
+    margin: 24px 0;
+  }
+  .welcome p {
+    font-size: 14px;
+  }
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .metric {
+    padding: 18px;
+  }
+  .metric > strong {
+    font-size: 22px;
+  }
+  .panel {
+    padding: 20px;
+  }
+  .balance-card {
+    padding: 24px;
+  }
+  .section-heading > div {
+    min-width: 0;
+  }
+  .transaction-amount {
+    white-space: normal;
+  }
+  dialog {
+    padding: 22px;
+  }
+}
+@media (max-width: 420px) {
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .month-label {
+    width: 100%;
+  }
+  .nav {
+    font-size: 12px;
+  }
+}
+
+#theme span {
+  font-size: 14px;
+}
+.section-heading > div:not(.actions) {
+  flex: 1;
+  min-width: 0;
+}
+.overview-column {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  min-width: 0;
+}
+.overview-column .secondary-panel {
+  margin-top: 0;
+}
+
+.account-balance > button {
+  margin: 8px 8px 0 0;
+}

@@ -41,8 +41,8 @@ const fs = require("fs");
       .click();
     await page.locator("#setup-dialog").waitFor({ state: "hidden" });
     await page
-      .locator("#account-list")
-      .getByText("Conta de teste", { exact: true })
+      .locator("#balance-list")
+      .getByRole("heading", { name: "Conta de teste", exact: true })
       .waitFor();
     await page.locator("#new-card").click();
     await page.locator("#setup-form [name=name]").fill("Cartão de teste");

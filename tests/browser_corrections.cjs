@@ -57,6 +57,7 @@ const base = "http://localhost:8000";
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
     await page.locator('[data-view="finance"]').click();
+    await page.locator("#statement-list .row-menu > summary").first().click();
     await page
       .getByRole("button", { name: "Corrigir compra", exact: true })
       .click();
@@ -111,6 +112,7 @@ const base = "http://localhost:8000";
     await page.locator("#month").fill("2026-12");
     await page.locator("#month").dispatchEvent("change");
     await next;
+    await page.locator("#statement-list .row-menu > summary").first().click();
     await page
       .getByRole("button", { name: "Corrigir compra", exact: true })
       .click();

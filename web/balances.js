@@ -65,6 +65,11 @@ async function loadBalances() {
   data.accounts.forEach((a) => {
     const panel = el("article", undefined, "panel account-balance");
     panel.dataset.accountId = a.id;
+    const account = financeAccounts.find((row) => row.id === a.id);
+    if (account) {
+      panel.dataset.entityId = account.id;
+      panel.dataset.entityVersion = account.version;
+    }
     if (a.archived)
       panel.append(el("span", "Conta arquivada · saldo preservado", "badge"));
     panel.append(
@@ -116,6 +121,10 @@ async function loadBalances() {
                 : (a.opening_cents / 100).toFixed(2).replace(".", ",");
           },
         ),
+      );
+    if (account)
+      panel.append(
+        button("Gerenciar conta", () => manageEntity(account, "accounts")),
       );
     target.append(panel);
   });
