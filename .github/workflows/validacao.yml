@@ -60,7 +60,6 @@ jobs:
       - name: Validar saldos e transferências no navegador
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_balances.cjs
-          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_first_steps.cjs
       - name: Validar OIDC e TOTP com Keycloak real
         run: |
           python scripts/setup_auth.py
@@ -100,6 +99,7 @@ jobs:
           sleep 60
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_cards.cjs
           PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser.cjs
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_first_steps.cjs
       - name: Validar OFX no PostgreSQL e navegador
         run: |
           sleep 60
