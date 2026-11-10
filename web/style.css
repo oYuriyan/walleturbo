@@ -972,3 +972,6 @@ body.dark .brand-mark {
 .history-item summary { cursor: pointer; }
 .history-item dl { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(0, 3fr); gap: 8px 16px; }
 .history-item dd { margin: 0; }
+#first-steps { margin-bottom: 24px; }
+#first-steps summary { cursor: pointer; font-weight: 600; }
+#first-steps li { margin-block: 16px; }

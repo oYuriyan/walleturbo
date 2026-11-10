@@ -1,3 +1,9 @@
+## 0.23.0 — em validação
+
+- Recorte da V1 para uso financeiro local básico, adiando automações e integrações avançadas.
+- Guia de primeiro uso com atalhos para conta, saldo inicial e lançamento; recolhido no retorno e oculto na demonstração/sessão encerrada.
+- Jornada mobile reconcilia R$ 1.000 menos R$ 25; componentes existentes, sem nova persistência ou dependência.
+
 ## 0.22.0 — em validação
 
 - Correção de competência do lançamento OFX primário junto com sua origem, preservando identidade e correções.

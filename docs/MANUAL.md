@@ -4,6 +4,8 @@
 
 Abra a aplicação. **Explorar demonstração** carrega exemplos fictícios na memória da aba. Você pode criar e editar lançamentos/metas; ao recarregar, tudo é descartado. Nenhum exemplo é gravado no banco. Para uso real, selecione **Entrar com segurança** no ambiente local com Keycloak/TOTP configurado. Google e domínio permanecem adiados.
 
+Na visão geral, **Primeiros passos** orienta o cadastro da conta, a referência de saldo inicial e o primeiro lançamento. O guia abre para quem ainda não tem contas; nos acessos seguintes fica recolhido e pode ser aberto pelo título. Use **Conferir saldos** para ir à data de consulta e definir a referência na conta desejada. Para que receitas/despesas alterem o saldo, selecione a conta no lançamento. O guia não aparece na demonstração ou com a sessão encerrada.
+
 ## Rotina mensal
 
 Selecione o mês no topo. O resultado mensal é receitas menos despesas diretas e parcelas no mês de vencimento, com estornos. A movimentação de caixa considera pagamentos de fatura na data registrada. Nenhum deles é saldo consultado no banco. Vá a Movimentações para adicionar uma receita ou despesa, informando valor positivo, data, descrição e categoria. Marque a revisão quando tiver conferido a classificação. Para parcelas, estornos e pagamento de cartão, use **Contas e cartões**, conforme [Faturas](FATURAS.md); não registre também o pagamento como despesa direta. Para transferir entre suas contas, use **Registrar transferência**, conforme a seção de saldos abaixo.

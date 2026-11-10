@@ -47,7 +47,7 @@
         </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
         ><span class="version"
-          >Walleturbo · versão em desenvolvimento 0.11</span
+          >Walleturbo · versão em desenvolvimento 0.23</span
         >
       </div>
     </aside>
@@ -79,6 +79,39 @@
       </div>
       <div id="status" role="status" aria-live="polite"></div>
       <section id="overview" class="view">
+        <details id="first-steps" class="panel" hidden>
+          <summary>Primeiros passos</summary>
+          <p>Comece com uma conta e os registros do seu dia a dia.</p>
+          <ol>
+            <li>
+              <strong>Cadastre sua conta.</strong> Use um nome que reconheça.
+              <button id="start-account" class="text-button" type="button">
+                Cadastrar conta
+              </button>
+            </li>
+            <li>
+              <strong>Informe o saldo inicial e a data.</strong> O saldo é
+              calculado pelos seus registros, sem consulta ao banco. Movimentos
+              anteriores à referência não alteram esse saldo.
+              <button id="start-balances" class="text-button" type="button">
+                Conferir saldos
+              </button>
+            </li>
+            <li>
+              <strong>Registre uma receita ou despesa.</strong> Escolha a conta
+              para que o movimento entre no saldo. Compras de cartão ficam em
+              Contas e cartões.
+              <button data-action="new-entry" class="text-button" type="button">
+                Registrar receita ou despesa
+              </button>
+            </li>
+          </ol>
+          <p>
+            Depois, cadastre cartões, importe arquivos nos formatos disponíveis
+            ou defina uma meta conforme precisar. Você pode recolher este guia a
+            qualquer momento.
+          </p>
+        </details>
         <div class="summary-grid">
           <article class="balance-card">
             <div class="card-top">

@@ -99,6 +99,7 @@ jobs:
           sleep 60
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_cards.cjs
           PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser.cjs
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_first_steps.cjs
       - name: Validar OFX no PostgreSQL e navegador
         run: |
           sleep 60
@@ -129,6 +130,7 @@ jobs:
             artifacts/ofx-*.png
             artifacts/planning-*.png
             artifacts/balances-*.png
+            artifacts/first-steps-*.png
             artifacts/lifecycle-*.png
             artifacts/goals-*.png
             artifacts/history-*.png

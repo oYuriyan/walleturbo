@@ -87,3 +87,5 @@ Licença: [GPL-3.0](LICENSE), preservada do repositório original.
 Para configurar login local com Keycloak e TOTP, consulte [Identidade local](docs/KEYCLOAK.md).
 
 Saldos iniciais, posição por conta e transferências com reversão: [contrato financeiro](docs/SALDOS.md).
+
+Primeira versão de uso básico: [escopo e critérios de aceite](docs/V1_BASICA.md). Primeiro uso orientado na visão geral: conta, saldo inicial e lançamento.
