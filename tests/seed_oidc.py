@@ -21,22 +21,25 @@ with httpx2.Client(timeout=15, trust_env=False) as client:
     )
     response.raise_for_status()
     client.headers["Authorization"] = "Bearer " + response.json()["access_token"]
-    username = "ci-" + uuid.uuid4().hex
-    password = "Ci-9aA-" + secrets.token_urlsafe(24)
-    response = client.post(
-        base + "/admin/realms/walleturbo/users",
-        json={
-            "username": username,
-            "enabled": True,
-            "emailVerified": True,
-            "firstName": "Pessoa",
-            "lastName": "Sintética",
-            "email": username + "@example.invalid",
-            "requiredActions": ["CONFIGURE_TOTP"],
-            "credentials": [
-                {"type": "password", "value": password, "temporary": False}
-            ],
-        },
-    )
-    response.raise_for_status()
-    print(json.dumps({"username": username, "password": password}))
+    users = []
+    for _ in range(2):
+        username = "ci-" + uuid.uuid4().hex
+        password = "Ci-9aA-" + secrets.token_urlsafe(24)
+        response = client.post(
+            base + "/admin/realms/walleturbo/users",
+            json={
+                "username": username,
+                "enabled": True,
+                "emailVerified": True,
+                "firstName": "Pessoa",
+                "lastName": "Sintética",
+                "email": username + "@example.invalid",
+                "requiredActions": ["CONFIGURE_TOTP"],
+                "credentials": [
+                    {"type": "password", "value": password, "temporary": False}
+                ],
+            },
+        )
+        response.raise_for_status()
+        users.append({"username": username, "password": password})
+    print(json.dumps({**users[0], "other": users[1]}))

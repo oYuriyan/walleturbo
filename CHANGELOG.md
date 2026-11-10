@@ -1,3 +1,9 @@
+## Homologação do núcleo básico — 10/11/2026
+
+- Jornada financeira na mesma sessão Keycloak/TOTP, isolamento com outro login real e persistência após nova autenticação.
+- Valores de saldo, caixa e resultado reconciliados; reaproveita a CI e os fluxos existentes.
+- Ampliação de testes/documentação; aplicação permanece na versão 0.24.0.
+
 ## 0.24.0 — em validação
 
 - Backup GPG dos bancos financeiro/identidade e configurações, com reativação dos escritores.

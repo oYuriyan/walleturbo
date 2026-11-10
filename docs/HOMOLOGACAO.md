@@ -225,3 +225,7 @@ A jornada mobile browser_first_steps.cjs cadastra uma conta pelos atalhos, defin
 ## Incremento 0.24 — recuperação local
 
 265 testes locais aprovados com avisos como erro, incluindo oito casos de nomes/caminhos, symlinks, chave privada, destino existente e reativação dos mesmos containers após falha do dump. Ensaio PostgreSQL financeiro com linha sintética: backup GPG, restauração em projeto novo e comparação de todas as tabelas/configurações; chave incorreta, corrupção e repetição recusadas; origem preservada e API reativada. Duração local do ensaio: 17 segundos, sem garantia para bases reais. CI inclui ensaio completo com identidade Keycloak inicializada, comparando realm/usuários/credenciais/clientes além das finanças. Commit e resultado integral registrados no PR; promoção/login no ambiente recuperado e volume real exigem conferência local. Procedimento e limites em RECUPERACAO_LOCAL.md.
+
+## Jornada básica integrada — 10/11/2026
+
+Cenário financeiro local aprovado com sessão sintética: resultado R$ 1.935, movimentação de caixa R$ 1.965 e saldo total R$ 2.965; reenvios preservam correções e não duplicam compras, pagamentos ou transferência. A ampliação da CI exige dois logins reais com TOTP, recusas de acesso/vínculo cruzado, limpeza ao sair e exportação idêntica após novo login. Roteiro em JORNADA_BASICA.md; evidência final/commit no PR. Nenhum endpoint, schema, dependência ou serviço de produto novo.

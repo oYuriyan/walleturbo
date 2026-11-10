@@ -91,3 +91,5 @@ Saldos iniciais, posição por conta e transferências com reversão: [contrato 
 Primeira versão de uso básico: [escopo e critérios de aceite](docs/V1_BASICA.md). Primeiro uso orientado na visão geral: conta, saldo inicial e lançamento.
 
 Backup e restauração local: [procedimento, proteção da chave e ensaio](docs/RECUPERACAO_LOCAL.md).
+
+[Jornada básica integrada e resultados esperados](docs/JORNADA_BASICA.md): identidade real, finanças, isolamento e nova sessão.

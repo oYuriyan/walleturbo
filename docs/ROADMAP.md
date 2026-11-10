@@ -4,7 +4,7 @@
 
 Prioridade definida pelo responsável pelo produto: concluir o desenvolvimento e uma jornada end-to-end confiável em ambiente local antes de contratar serviços, adquirir domínio ou conectar Google. Não há autorização de publicação ou contratação nesta revisão. Desenvolvimento, testes e documentação seguem containerizados, em pt-BR, com BRL/centavos e privacidade desde a concepção.
 
-Base de código homologada: `8124548`, [CI 42045260683](https://github.com/oYuriyan/walleturbo/actions/runs/42045260683), com 133 testes, integração PostgreSQL/Redis, migrações 001–010, PDF/planejamento/cartões/demonstração no navegador e login real Keycloak/TOTP. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
+Base de código homologada: versão 0.24, PR #15, [CI 42857495727](https://github.com/oYuriyan/walleturbo/actions/runs/42857495727), com 265 testes, migrações 001–013, integração PostgreSQL/Redis, importações assistidas CSV/PDF/OFX, primeiro uso, login real Keycloak/TOTP e backup/restauração isolada dos bancos/configurações. Isso valida os cenários executados; não demonstra produto completo, produção aprovada ou certificação LGPD.
 
 Este documento substitui a ordem do roadmap anterior. Relatórios antigos em HOMOLOGACAO.md são históricos. Uma tarefa só passa a concluída com comportamento implementado, critérios de aceite atendidos, evidências e documentação atualizada. As fases abaixo estão pendentes ou parciais; não são entregas prontas.
 
@@ -18,7 +18,7 @@ Por decisão do responsável, a primeira versão será o núcleo financeiro loca
 | --- | --- | --- |
 | Fundação | FastAPI, PostgreSQL, Redis, Compose, migrações com checksum, CI, PR e documentação | Operação pública, recuperação de desastre e controles de volume incompletos |
 | Finanças | Lançamentos, categorias por regras, contas/cartões, parcelas, estornos, conferência e pagamentos parciais | Saldo inicial, saldo por conta e transferências com reversão entregues na 0.5; recorrências automáticas, ciclo de vida de contas/cartões/metas homologado na 0.7; recorrências e alguns ciclos de crédito pendentes |
-| Importação | CSV definido e PDF textual genérico isolado, prévia/revisão e deduplicação | Documentos sintéticos; sem emissores homologados, OCR, OFX ou antivírus |
+| Importação | CSV definido e PDF textual genérico isolado, prévia/revisão e deduplicação | CSV/PDF textual e OFX bancário/cartão com corpus sintético; emissores reais, OCR e pipeline avançado pendentes |
 | Planejamento | Metas, limites mensais, simulação conservadora e recorrências de assinaturas com evidências | Metas independentes das contas; sem projeção completa, perfil personalizado ou IA |
 | Interface | Web responsiva, claro/escuro, demonstração e formulários funcionais | Jornada completa, acessibilidade e revisão de design ainda não homologadas |
 | Identidade | OIDC/PKCE, Keycloak real/TOTP, sessões opacas, CSRF, expiração e logout local | Google, recuperação, revogação global e testes criptográficos amplos pendentes |
@@ -229,3 +229,8 @@ Plano de 10/11/2026 — 0.23: (1) registrar o recorte econômico da V1; (2) orie
 0.23 homologada e integrada pelo PR #14, CI 42839190138.
 
 Plano de 10/11/2026 — 0.24: (1) capturar bancos/configurações com criptografia e parada breve dos escritores; (2) restaurar somente em projeto novo e bancos vazios, sem iniciar a aplicação; (3) ensaiar identidade/finanças, chave incorreta, corrupção, destino existente e reativação; (4) documentar guarda, conferência e promoção manual. Utilizar PostgreSQL, Compose e GPG disponíveis. A próxima prioridade da V1 é o roteiro integrado de uso/recuperação, sem retomar automações avançadas.
+
+
+0.24 homologada e integrada pelo PR #15, CI 42857495727: 265 testes; backup financeiro/identidade restaurado e comparado em 22,1 segundos no cenário sintético.
+
+Plano de continuação de 10/11/2026: ampliar o roteiro Keycloak/TOTP existente para uma jornada financeira única, outro usuário real, nova sessão e preservação da exportação. Reutilizar testes/serviços atuais; nenhuma funcionalidade de produto nova. Resultados e limites em JORNADA_BASICA.md. A versão da aplicação permanece 0.24; a homologação integrada é versionada pelo PR.
