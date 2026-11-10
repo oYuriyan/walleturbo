@@ -27,7 +27,7 @@ O roteiro executa operações pela API na sessão do navegador, confere os valor
 
 A segunda pessoa autentica com senha/TOTP próprios: a lista de contas fica vazia; leitura de transação/fatura e tentativa de lançamento ligado à conta da primeira pessoa recebem 404. A exportação da primeira identidade permanece idêntica.
 
-Sair revoga a sessão e limpa o resumo da página. Novo login da mesma pessoa exige senha e TOTP, recuperando uma exportação idêntica à anterior. Os dados sintéticos permanecem no banco descartável da CI para que o ensaio de backup seguinte restaure também registros ligados a identidades reais de teste. Não gravar senha, tokens, segredo TOTP ou QR em arquivos/artefatos; a fixture chega por stdin.
+Sair revoga a sessão e limpa o resumo da página. Novo login da mesma pessoa exige senha e TOTP de uma janela nova, recuperando uma exportação idêntica à anterior. Quando a execução ocorre na mesma janela de 30 segundos do primeiro login, o teste aguarda o próximo código para respeitar a proteção contra reutilização. Os dados sintéticos permanecem no banco descartável da CI para que o ensaio de backup seguinte restaure também registros ligados a identidades reais de teste. Não gravar senha, tokens, segredo TOTP ou QR em arquivos/artefatos; a fixture chega por stdin.
 
 ## Execução e limites
 

@@ -64,6 +64,7 @@ assert.equal(totp("12345678901234567890", 59000), "287082");
     const me = await context.request.get(base + "/api/me");
     assert.equal(me.status(), 200);
     const { csrf } = await me.json();
+    const firstLoginStep = Math.floor(Date.now() / 30000);
     const after = (await context.cookies(base)).find(
       (c) => c.name === "walleturbo_session",
     );
@@ -151,6 +152,11 @@ assert.equal(totp("12345678901234567890", 59000), "287082");
     await page.locator("#username").fill(fixture.username);
     await page.locator("#password").fill(fixture.password);
     await page.locator("#kc-login").click();
+    // O mesmo código não pode ser reutilizado na janela da primeira autenticação.
+    if (Math.floor(Date.now() / 30000) <= firstLoginStep)
+      await new Promise((resolve) =>
+        setTimeout(resolve, 30000 - (Date.now() % 30000) + 1000),
+      );
     await page.locator("#otp").fill(totp(secret));
     await page.locator("#kc-login").click();
     await page.waitForURL(base + "/");
