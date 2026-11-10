@@ -69,6 +69,10 @@ jobs:
           source .env.auth
           set +a
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e KEYCLOAK_ADMIN_USER -e KEYCLOAK_ADMIN_PASSWORD api python < tests/seed_oidc.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_oidc.cjs
+      - name: Ensaiar backup e restauração isolada dos bancos
+        run: |
+          command -v gpg
+          python -m tests.integration_backup --identity
       - name: Validar ciclo de vida dos cadastros
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_lifecycle.py

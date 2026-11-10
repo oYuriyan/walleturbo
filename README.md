@@ -89,3 +89,5 @@ Para configurar login local com Keycloak e TOTP, consulte [Identidade local](doc
 Saldos iniciais, posição por conta e transferências com reversão: [contrato financeiro](docs/SALDOS.md).
 
 Primeira versão de uso básico: [escopo e critérios de aceite](docs/V1_BASICA.md). Primeiro uso orientado na visão geral: conta, saldo inicial e lançamento.
+
+Backup e restauração local: [procedimento, proteção da chave e ensaio](docs/RECUPERACAO_LOCAL.md).

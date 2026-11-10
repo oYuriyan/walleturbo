@@ -224,3 +224,8 @@ Entrega 0.22: correção explícita de competência OFX preserva o lançamento e
 0.22 homologada e integrada pelo PR #13, CI 42679157365, com 257 testes.
 
 Plano de 10/11/2026 — 0.23: (1) registrar o recorte econômico da V1; (2) orientar conta, saldo inicial e lançamento com atalhos aos formulários existentes; (3) validar a jornada mobile e saldo esperado, incluindo sessão/demonstração; (4) documentar e homologar no PR. Sem nova persistência, serviço ou dependência. Colisões CSV deixam de ser a próxima prioridade: recuperação local e jornada básica passam à frente, conforme V1_BASICA.md.
+
+
+0.23 homologada e integrada pelo PR #14, CI 42839190138.
+
+Plano de 10/11/2026 — 0.24: (1) capturar bancos/configurações com criptografia e parada breve dos escritores; (2) restaurar somente em projeto novo e bancos vazios, sem iniciar a aplicação; (3) ensaiar identidade/finanças, chave incorreta, corrupção, destino existente e reativação; (4) documentar guarda, conferência e promoção manual. Utilizar PostgreSQL, Compose e GPG disponíveis. A próxima prioridade da V1 é o roteiro integrado de uso/recuperação, sem retomar automações avançadas.

@@ -31,3 +31,5 @@ Regras automáticas de fechamento, dias úteis, limite de crédito, juros/rotati
 ## Situação
 
 Base 0.22 integrada pelo PR #13, CI 42679157365, com 257 testes. Primeiro uso 0.23 em validação; evidências finais e commit serão registrados no PR. Os pacotes de recuperação e aceite integrado ainda estão pendentes. Nenhuma estimativa de prazo/custo foi fixada.
+
+Incremento 0.24: captura GPG dos bancos/configurações e restauração em projeto novo, com testes negativos e comparação de dados. Recuperação local avança; aceite da jornada integrada, recuperação de acesso e medição na instalação continuam necessários. Evidências finais no PR.

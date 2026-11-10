@@ -16,7 +16,7 @@ A API usa usuário sem privilégios, filesystem somente leitura, capabilities re
 
 `/health/live`: processo atendendo. `/health/ready`: conexão com banco e Redis. Monitorar latência p95, erros 5xx, recusas 429, tamanho das filas futuras e saturação de banco/Redis. Nenhuma informação financeira deve aparecer como label de métrica.
 
-Perder Redis encerra sessões e zera contadores temporários, sem perder os registros financeiros. Backups de PostgreSQL devem ser criptografados, retidos por política aprovada, testados em ambiente isolado e associados a RPO/RTO acordados. Este repositório ainda não automatiza backups nem restauração.
+Perder Redis encerra sessões e zera contadores temporários, sem perder os registros financeiros. Backups de PostgreSQL devem ser criptografados, retidos por política aprovada, testados em ambiente isolado e associados a RPO/RTO acordados. A versão 0.24 oferece captura criptografada e restauração isolada em projeto novo, com ensaio dos bancos financeiro/identidade. Procedimento e limites em [RECUPERACAO_LOCAL.md](RECUPERACAO_LOCAL.md). Agendamento, cópia fora da máquina e política de retenção permanecem responsabilidades locais.
 
 ## Promoção de versão
 

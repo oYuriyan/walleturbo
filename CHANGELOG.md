@@ -1,3 +1,9 @@
+## 0.24.0 — em validação
+
+- Backup GPG dos bancos financeiro/identidade e configurações, com reativação dos escritores.
+- Restauração isolada em projeto novo, sem sobrescrever volumes existentes nem iniciar a aplicação.
+- Ensaio de integridade, configurações e dados restaurados; procedimento local e limites documentados.
+
 ## 0.23.0 — em validação
 
 - Recorte da V1 para uso financeiro local básico, adiando automações e integrações avançadas.

@@ -20,6 +20,7 @@ RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export PIP_CERT=/run/secrets/proxy_ca; fi; \
     pip install --require-hashes -r requirements-test.lock
 COPY --chown=10001:10001 tests ./tests
+COPY --chown=10001:10001 scripts ./scripts
 COPY --chown=10001:10001 pyproject.toml ./
 USER 10001:10001
 CMD ["pytest", "-q", "-p", "no:cacheprovider"]
