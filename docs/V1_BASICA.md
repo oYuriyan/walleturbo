@@ -24,14 +24,14 @@ Os quatro itens são pacotes de aceite, não uma promessa de quatro commits. Pri
 
 ## Adiado para depois da V1
 
-IA e perfil personalizado, preços/cupons/ofertas, OCR, novos emissores e integrações bancárias/Google, importações em lote e mapeamento genérico de arquivos, automações de recorrência/alertas, projeções avançadas e metas vinculadas a contas. Também ficam adiados redesign amplo, realocação de formatos legados e resolução sofisticada de colisões CSV, pois há cadastro manual e revisão explícita disponíveis.
+IA e perfil personalizado, preços/cupons/ofertas, OCR, novos emissores e integrações bancárias/Google, importações em lote e mapeamento genérico de arquivos, automações de recorrência/alertas, projeções avançadas e metas vinculadas a contas. A revisão direcionada de UI/UX foi incluída pelo responsável nesta continuação, sem novos serviços ou funcionalidades. Ficam adiados realocação de formatos legados e resolução sofisticada de colisões CSV, pois há cadastro manual e revisão explícita disponíveis.
 
 Regras automáticas de fechamento, dias úteis, limite de crédito, juros/rotativo e transporte de saldo credor não serão desenvolvidas agora. Casos não suportados devem continuar recusados ou claramente identificados; não presumir pagamento, renda ou transporte de crédito. Melhorias de infraestrutura pública, escala, RLS e operação de produção serão reavaliadas antes de ampliar o uso; a V1 local não representa aprovação de publicação ou conformidade jurídica.
 
 ## Situação
 
-Base 0.24 integrada pelo PR #15, CI 42857495727, com 265 testes. Primeiro uso 0.23 integrado pelo PR #14. Backup financeiro/identidade restaurado e comparado no cenário sintético; promoção do ambiente, volume real e aceite de uso continuam pendentes. A ampliação da jornada integrada está em homologação no PR atual. Nenhuma estimativa de prazo/custo foi fixada.
+Base 0.24 integrada pelos PRs #15 (CI 42857495727) e #16 (CI 42864510569), com 265 testes. Primeiro uso 0.23 integrado pelo PR #14. Backup financeiro/identidade restaurado e comparado no cenário sintético; jornada com dois logins reais, TOTP e nova sessão aprovada, conforme [JORNADA_BASICA.md](JORNADA_BASICA.md).
 
-Incremento 0.24: captura GPG dos bancos/configurações e restauração em projeto novo, com testes negativos e comparação de dados. Recuperação local avança; aceite da jornada integrada, recuperação de acesso e medição na instalação continuam necessários. Evidências finais no PR.
+Incremento 0.25 em homologação: revisão direcionada da interface e testes automatizados de contraste, foco, teclado, diálogos, leitura mobile e troca concorrente de período. O escopo e os limites da evidência estão em HOMOLOGACAO.md; resultado final/commit serão registrados no PR.
 
-Homologação integrada em andamento: login/TOTP real → núcleo financeiro na mesma identidade → outro usuário → nova sessão. Roteiro e valores em [JORNADA_BASICA.md](JORNADA_BASICA.md). A entrega reaproveita o teste OIDC existente; pendências de recuperação promovida, volume e acessibilidade seguem abertas.
+Para fechar a V1 local, ainda é necessário comprovar promoção/login no ambiente recuperado, medir e declarar volume suportado na instalação e concluir o aceite dos fluxos essenciais, corrigindo bloqueios encontrados. A auditoria automatizada não substitui avaliação assistiva completa. Nenhuma estimativa de prazo/custo ou autorização de publicação foi fixada.

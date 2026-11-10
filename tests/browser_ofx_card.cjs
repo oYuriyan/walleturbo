@@ -98,6 +98,10 @@ const fs = require("fs"),
     await page
       .locator('#import-preview select[data-link-index="0"]')
       .selectOption(manual.id);
+    const checkboxBounds = await page
+      .locator('input[data-source-index="0"]')
+      .boundingBox();
+    assert(checkboxBounds.width <= 24 && checkboxBounds.height <= 24);
     assert.equal(
       await page.locator("#import-preview [data-ofx-payment]").count(),
       1,

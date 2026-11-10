@@ -103,6 +103,11 @@ const { randomUUID } = require("crypto");
     await page
       .locator("#statement-list .transaction")
       .filter({ hasText: "Mercado revisado" })
+      .locator(".row-menu > summary")
+      .click();
+    await page
+      .locator("#statement-list .transaction")
+      .filter({ hasText: "Mercado revisado" })
       .getByRole("button", { name: "Corrigir importado", exact: true })
       .click();
     const correction = page.locator("#correction-form"),

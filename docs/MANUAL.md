@@ -6,6 +6,14 @@ Abra a aplicação. **Explorar demonstração** carrega exemplos fictícios na m
 
 Na visão geral, **Primeiros passos** orienta o cadastro da conta, a referência de saldo inicial e o primeiro lançamento. O guia abre para quem ainda não tem contas; nos acessos seguintes fica recolhido e pode ser aberto pelo título. Use **Conferir saldos** para ir à data de consulta e definir a referência na conta desejada. Para que receitas/despesas alterem o saldo, selecione a conta no lançamento. O guia não aparece na demonstração ou com a sessão encerrada.
 
+## Navegação e leitura
+
+As seis áreas ficam na lateral no desktop e em duas linhas no celular. O título identifica a área atual. **Alternar tema** troca entre claro e escuro. Pelo teclado, o primeiro atalho é **Ir para o conteúdo**; os formulários mantêm o foco no diálogo e podem ser fechados com Escape.
+
+A visão geral destaca resultado, entradas e despesas; **Ver metas** abre o cadastro completo. **Pontos de atenção** e **Histórico de alterações** abrem pelo título quando necessários. Em Contas e cartões, **Gerenciar conta** fica junto ao saldo; nas compras de faturas em revisão, abra **Ações** para corrigir, revisar a categoria ou excluir.
+
+Ao trocar o período, aguarde **Atualizando registros…** antes de agir sobre os registros. Planejamento consulta o período ao abrir. Metas e Privacidade não precisam do seletor de mês.
+
 ## Rotina mensal
 
 Selecione o mês no topo. O resultado mensal é receitas menos despesas diretas e parcelas no mês de vencimento, com estornos. A movimentação de caixa considera pagamentos de fatura na data registrada. Nenhum deles é saldo consultado no banco. Vá a Movimentações para adicionar uma receita ou despesa, informando valor positivo, data, descrição e categoria. Marque a revisão quando tiver conferido a classificação. Para parcelas, estornos e pagamento de cartão, use **Contas e cartões**, conforme [Faturas](FATURAS.md); não registre também o pagamento como despesa direta. Para transferir entre suas contas, use **Registrar transferência**, conforme a seção de saldos abaixo.

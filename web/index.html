@@ -18,14 +18,15 @@
     <script src="/assets/ofx-relocation.js" defer></script>
   </head>
   <body>
+    <a href="#page-title" class="skip-link">Ir para o conteúdo</a>
     <aside class="sidebar">
       <a class="brand" href="/" aria-label="Walleturbo início"
         ><span class="brand-mark">w</span> walleturbo<span class="brand-dot"
           >.</span
         ></a
-      ><span class="eyebrow">SEU ESPAÇO FINANCEIRO</span>
+      >
       <nav aria-label="Navegação principal">
-        <button class="nav active" data-view="overview">
+        <button class="nav active" data-view="overview" aria-current="page">
           <span aria-hidden="true">◫</span> Visão geral</button
         ><button class="nav" data-view="transactions">
           <span aria-hidden="true">⇄</span> Movimentações</button
@@ -40,20 +41,15 @@
         </button>
       </nav>
       <div class="sidebar-bottom">
-        <div class="small-card">
-          <span class="spark">✧</span
-          ><strong>Pequenos hábitos.<br />Grandes planos.</strong>
-          <p>Um passo de cada vez para cuidar do seu amanhã.</p>
-        </div>
         <button id="theme" class="nav">◐ <span>Alternar tema</span></button
         ><span class="version"
-          >Walleturbo · versão em desenvolvimento 0.24</span
+          >Walleturbo · versão em desenvolvimento 0.25</span
         >
       </div>
     </aside>
-    <main>
+    <main aria-busy="false">
       <header class="topbar">
-        <span>Organize hoje. Respire amanhã.</span>
+        <span>Seu controle financeiro</span>
         <div>
           <span id="mode" class="badge">Não conectado</span
           ><a class="button small" href="/auth/login" id="login"
@@ -63,9 +59,10 @@
       </header>
       <section class="welcome">
         <div>
-          <span class="eyebrow">MENOS RUÍDO, MAIS CLAREZA</span>
-          <h1>Seu dinheiro, com direção<span>.</span></h1>
-          <p>Entenda suas escolhas e abra espaço para o que importa.</p>
+          <h1 id="page-title" tabindex="-1">Visão geral</h1>
+          <p id="page-description">
+            Entradas, despesas e resultado do período.
+          </p>
         </div>
         <label class="month-label"
           >Período<input type="month" id="month" aria-label="Mês de referência"
@@ -78,6 +75,7 @@
         ><button id="demo" class="text-button">Explorar demonstração →</button>
       </div>
       <div id="status" role="status" aria-live="polite"></div>
+      <p id="loading-status" role="status" hidden>Atualizando registros…</p>
       <section id="overview" class="view">
         <details id="first-steps" class="panel" hidden>
           <summary>Primeiros passos</summary>
@@ -119,11 +117,8 @@
             </div>
             <strong id="balance">R$ 0,00</strong
             ><span class="muted-light"
-              >Receitas menos despesas, incluindo parcelas a vencer</span
+              >Receitas menos despesas e parcelas deste mês</span
             >
-            <div class="balance-bottom">
-              <span>Um olhar mais leve para suas finanças</span><span>✳</span>
-            </div>
           </article>
           <article class="metric">
             <div class="icon-circle income">↓</div>
@@ -142,65 +137,57 @@
             >Pagamentos de fatura não duplicam despesas.</span
           >
         </div>
-        <div class="content-grid">
-          <article class="panel">
-            <div class="section-heading">
-              <div>
-                <h2>Para onde seu dinheiro vai</h2>
-                <p>Gastos por categoria neste mês</p>
+        <div class="content-grid overview-grid">
+          <div class="overview-column">
+            <article class="panel">
+              <div class="section-heading">
+                <div>
+                  <h2>Despesas por categoria</h2>
+                  <p>Gastos por categoria neste mês</p>
+                </div>
+                <span class="subtle">● BRL</span>
               </div>
-              <span class="subtle">● BRL</span>
-            </div>
-            <div id="categories" class="categories"></div>
-          </article>
-          <article class="panel insights-panel">
-            <span class="eyebrow">UM OLHAR ATENTO</span>
-            <h2>Oportunidades de cuidado <span>✧</span></h2>
-            <p class="subtle">Sinais calculados a partir dos seus registros.</p>
-            <div id="insights"></div>
-            <div class="fine-print">
-              Análise por regras transparentes. IA e ofertas de parceiros ainda
-              não estão ativadas.
-            </div>
-          </article>
-        </div>
-        <div class="content-grid">
-          <article class="panel">
-            <div class="section-heading">
-              <div>
-                <h2>Últimas movimentações</h2>
-                <p>O cotidiano também conta</p>
+              <div id="categories" class="categories"></div>
+            </article>
+            <article class="panel">
+              <div class="section-heading">
+                <div>
+                  <h2>Últimas movimentações</h2>
+                  <p>Registros recentes no período.</p>
+                </div>
+                <button class="text-button" data-view="transactions">
+                  Ver todas ↑
+                </button>
               </div>
-              <button class="text-button" data-view="transactions">
-                Ver todas ↑
-              </button>
-            </div>
-            <div id="recent"></div>
-          </article>
-          <article class="panel">
-            <div class="section-heading">
-              <div>
-                <h2>Planos que ganham forma</h2>
-                <p>Seu próximo passo começa aqui</p>
+              <div id="recent"></div>
+            </article>
+          </div>
+          <div class="overview-column">
+            <article class="panel">
+              <div class="section-heading">
+                <div>
+                  <h2>Suas metas</h2>
+                  <p>Seu objetivo em destaque.</p>
+                </div>
+                <button class="text-button" data-view="goals">Ver metas</button>
               </div>
-              <button
-                class="icon-button"
-                data-action="new-goal"
-                aria-label="Criar meta"
-              >
-                +
-              </button>
-            </div>
-            <div id="goal-preview"></div>
-          </article>
+              <div id="goal-preview"></div>
+            </article>
+            <details class="panel secondary-panel insights-panel">
+              <summary>Pontos de atenção</summary>
+              <p class="subtle">
+                Sinais calculados a partir dos seus registros.
+              </p>
+              <div id="insights"></div>
+              <div class="fine-print">
+                Calculado a partir dos registros informados.
+              </div>
+            </details>
+          </div>
         </div>
       </section>
       <section id="transactions" class="view" hidden>
         <div class="section-heading">
-          <div>
-            <h2>Movimentações</h2>
-            <p>Importe, revise e acompanhe cada lançamento.</p>
-          </div>
           <div class="actions">
             <button class="ghost" id="import-button">
               ↑ Importar CSV / OFX</button
@@ -221,10 +208,6 @@
       </section>
       <section id="finance" class="view" hidden>
         <div class="section-heading">
-          <div>
-            <h2>Contas e cartões</h2>
-            <p>Das compras ao pagamento, sem contar o gasto duas vezes.</p>
-          </div>
           <div class="actions">
             <button class="ghost" id="new-account">+ Conta</button
             ><button class="ghost" id="new-card">+ Cartão</button
@@ -268,35 +251,25 @@
         <div id="card-list" class="goals-grid"></div>
         <h2 class="statement-heading">Faturas do período</h2>
         <div id="statement-list"></div>
-        <article class="panel">
+        <details class="panel secondary-panel" id="history-panel">
+          <summary>Histórico de alterações</summary>
           <div class="section-heading">
-            <h2>Histórico de alterações</h2>
+            <p>Consulte alterações de todos os meses.</p>
             <button id="refresh-history" class="ghost" type="button">
               Consultar histórico
             </button>
           </div>
           <p>
-            Criações, correções e exclusões registradas a partir da versão 0.8.
-            Inclui todos os meses. Atualize a consulta para ver novas
-            alterações.
+            Criações, correções e exclusões. Atualize para ver novas alterações.
           </p>
           <p id="history-notice" role="status"></p>
           <div id="history-list"></div>
           <button id="more-history" class="ghost" type="button" hidden>
             Carregar mais alterações
           </button>
-        </article>
+        </details>
       </section>
       <section id="planning" class="view" hidden>
-        <div class="section-heading">
-          <div>
-            <h2>Planejamento do mês</h2>
-            <p>
-              Defina limites, reveja recorrências e simule aportes para suas
-              metas
-            </p>
-          </div>
-        </div>
         <button id="reload-planning" type="button" class="ghost">
           Recarregar planejamento
         </button>
@@ -363,18 +336,13 @@
       </section>
       <section id="goals" class="view" hidden>
         <div class="section-heading">
-          <div>
-            <h2>Minhas metas</h2>
-            <p>Transforme seus desejos em planos possíveis.</p>
-          </div>
           <button class="button" data-action="new-goal">+ Criar meta</button>
         </div>
         <div id="goal-list" class="goals-grid"></div>
       </section>
       <section id="privacy" class="view" hidden>
         <article class="panel privacy-panel">
-          <span class="eyebrow">CONTROLE TAMBÉM É LIBERDADE</span>
-          <h2>Seus dados, suas escolhas.</h2>
+          <h2>Controle dos seus dados</h2>
           <p>
             Guardamos descrições, valores e datas que você registra, além de um
             identificador derivado da sua conta. Não solicitamos número completo
@@ -400,7 +368,7 @@
         </article>
       </section>
       <footer>
-        Feito para dar mais espaço à sua vida.
+        Walleturbo · Uso local
         <span>Valores em reais · pt-BR</span>
       </footer>
     </main>

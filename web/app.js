@@ -140,25 +140,48 @@ function summary(entries) {
     });
   return sums;
 }
+let refreshGeneration = 0;
 async function refresh() {
-  const expectedCsrf = csrf,
-    expectedDemo = demo;
-  let data;
-  if (csrf && !demo) {
-    data = await api("/api/dashboard?month=" + $("#month").value);
-    if (csrf !== expectedCsrf || demo !== expectedDemo) return;
-    all = data.transactions;
-    goals = data.goals;
-  } else {
-    data = summary(all.filter((t) => t.date.startsWith($("#month").value)));
+  const generation = ++refreshGeneration,
+    expectedCsrf = csrf,
+    expectedDemo = demo,
+    month = $("#month").value;
+  const current = () =>
+    generation === refreshGeneration &&
+    month === $("#month").value &&
+    csrf === expectedCsrf &&
+    demo === expectedDemo;
+  message("");
+  document.querySelector("main").setAttribute("aria-busy", "true");
+  $("#loading-status").hidden = false;
+  document.querySelectorAll(".view").forEach((node) => (node.inert = true));
+  try {
+    const data =
+      csrf && !demo
+        ? await api("/api/dashboard?month=" + month)
+        : summary(all.filter((t) => t.date.startsWith(month)));
+    if (!current()) return;
+    if (typeof loadFinance === "function") await loadFinance();
+    if (!current()) return;
+    if (csrf && !demo) {
+      all = data.transactions;
+      goals = data.goals;
+    }
+    if (demo && typeof applyDemoCards === "function") applyDemoCards(data);
+    render(data);
+    document.querySelector("main").dataset.renderedMonth = month;
+    if (typeof loadBalances === "function") await loadBalances();
+    if (current() && view === "planning" && typeof loadPlanning === "function")
+      await loadPlanning();
+  } finally {
+    if (generation === refreshGeneration) {
+      document.querySelector("main").setAttribute("aria-busy", "false");
+      $("#loading-status").hidden = true;
+      document
+        .querySelectorAll(".view")
+        .forEach((node) => (node.inert = false));
+    }
   }
-  if (typeof loadFinance === "function") await loadFinance();
-  if (csrf !== expectedCsrf || demo !== expectedDemo) return;
-  if (demo && typeof applyDemoCards === "function") applyDemoCards(data);
-  render(data);
-  if (typeof loadBalances === "function") await loadBalances();
-  if (view === "planning" && typeof loadPlanning === "function")
-    await loadPlanning();
 }
 function render(data) {
   const guide = $("#first-steps");
@@ -347,7 +370,7 @@ function renderGoals() {
   preview.replaceChildren();
   list.replaceChildren();
   const active = goals.filter((g) => !g.archived);
-  active.slice(0, 2).forEach((g) => preview.append(goalNode(g, false)));
+  active.slice(0, 1).forEach((g) => preview.append(goalNode(g, false)));
   if (!active.length) empty(preview, "Crie ou reative uma meta para planejar.");
   goals.forEach((g) => list.append(goalNode(g, true)));
   if (!goals.length) {
@@ -355,18 +378,45 @@ function renderGoals() {
   }
 }
 function showView(name) {
+  const pages = {
+    overview: ["Visão geral", "Entradas, despesas e resultado do período."],
+    transactions: [
+      "Movimentações",
+      "Registre, encontre e revise seus lançamentos.",
+    ],
+    finance: ["Contas e cartões", "Saldos das contas e faturas do período."],
+    planning: ["Planejamento", "Organize limites e a margem para suas metas."],
+    goals: ["Minhas metas", "Acompanhe seus objetivos e valores reservados."],
+    privacy: ["Privacidade", "Exporte seus registros e controle seus dados."],
+  };
+  if (!pages[name]) return;
   view = name;
+  $("#page-title").textContent = pages[name][0];
+  $("#page-description").textContent = pages[name][1];
+  document.title = `${pages[name][0]} · Walleturbo`;
+  $(".month-label").hidden = name === "privacy" || name === "goals";
   document.querySelectorAll(".view").forEach((n) => (n.hidden = n.id !== name));
   document.querySelectorAll(".nav[data-view]").forEach((n) => {
     n.classList.toggle("active", n.dataset.view === name);
     if (n.dataset.view === name) n.setAttribute("aria-current", "page");
     else n.removeAttribute("aria-current");
   });
+  $("#page-title").focus();
+  if (name === "planning" && typeof loadPlanning === "function")
+    action(loadPlanning);
 }
 function openDialog(id) {
   const d = $(id);
   d.querySelector(".dialog-error")?.remove();
+  const title = d.querySelector("h2");
+  if (title) {
+    if (!title.id) title.id = `${d.id}-title`;
+    d.setAttribute("aria-labelledby", title.id);
+  }
   d.showModal();
+  d.querySelector(
+    'input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)',
+  )?.focus();
 }
 let entryGeneration = 0;
 function clearEntryForm() {
@@ -467,6 +517,29 @@ document
 document
   .querySelectorAll('[data-action="new-goal"]')
   .forEach((b) => (b.onclick = () => openGoal()));
+document.querySelectorAll("dialog").forEach((dialog) => {
+  dialog.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab" || event.ctrlKey || event.metaKey || event.altKey)
+      return;
+    const controls = [
+      ...dialog.querySelectorAll(
+        'button, input:not([type="hidden"]), select, textarea, a[href], summary, [tabindex]',
+      ),
+    ].filter(
+      (node) => !node.disabled && node.tabIndex >= 0 && node.checkVisibility(),
+    );
+    const first = controls[0],
+      last = controls.at(-1);
+    if (!first) return;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+});
 document
   .querySelectorAll(".close")
   .forEach((b) => (b.onclick = () => b.closest("dialog").close()));

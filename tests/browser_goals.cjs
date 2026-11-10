@@ -150,6 +150,7 @@ const base = "http://localhost:8000";
       ).status(),
       201,
     );
+    await page.locator("#history-panel > summary").click();
     await page.locator("#refresh-history").click();
     await page
       .locator("#history-list")
