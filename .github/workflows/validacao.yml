@@ -106,6 +106,10 @@ jobs:
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_cards.cjs
           PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser.cjs
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_first_steps.cjs
+      - name: Validar interface e acessibilidade em Chromium e Firefox
+        run: |
+          # A jornada autenticada usa uma janela própria, mantendo as cotas reais.
+          sleep 60
           PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright AXE_PATH=/tmp/walleturbo-e2e/node_modules/axe-core/axe.min.js node tests/browser_ui.cjs
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | BROWSER_ENGINE=firefox UI_AUTH=1 PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright AXE_PATH=/tmp/walleturbo-e2e/node_modules/axe-core/axe.min.js node tests/browser_ui.cjs
       - name: Validar OFX no PostgreSQL e navegador
