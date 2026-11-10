@@ -229,3 +229,8 @@ Plano de 10/11/2026 — 0.23: (1) registrar o recorte econômico da V1; (2) orie
 0.23 homologada e integrada pelo PR #14, CI 42839190138.
 
 Plano de 10/11/2026 — 0.24: (1) capturar bancos/configurações com criptografia e parada breve dos escritores; (2) restaurar somente em projeto novo e bancos vazios, sem iniciar a aplicação; (3) ensaiar identidade/finanças, chave incorreta, corrupção, destino existente e reativação; (4) documentar guarda, conferência e promoção manual. Utilizar PostgreSQL, Compose e GPG disponíveis. A próxima prioridade da V1 é o roteiro integrado de uso/recuperação, sem retomar automações avançadas.
+
+
+0.24 homologada e integrada pelo PR #15, CI 42857495727: 265 testes; backup financeiro/identidade restaurado e comparado em 22,1 segundos no cenário sintético.
+
+Plano de continuação de 10/11/2026: ampliar o roteiro Keycloak/TOTP existente para uma jornada financeira única, outro usuário real, nova sessão e preservação da exportação. Reutilizar testes/serviços atuais; nenhuma funcionalidade de produto nova. Resultados e limites em JORNADA_BASICA.md. A versão da aplicação permanece 0.24; a homologação integrada é versionada pelo PR.

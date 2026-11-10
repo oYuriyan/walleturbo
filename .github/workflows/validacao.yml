@@ -15,7 +15,7 @@ defaults:
 jobs:
   testes:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5, Node.js 24
       - name: Construir ambiente de testes
@@ -60,7 +60,7 @@ jobs:
       - name: Validar saldos e transferências no navegador
         run: |
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_balances.cjs
-      - name: Validar OIDC e TOTP com Keycloak real
+      - name: Validar login real e jornada financeira básica
         run: |
           python scripts/setup_auth.py
           docker compose --env-file .env --env-file .env.auth -f compose.yaml -f compose.auth.yaml up --build -d --wait --wait-timeout 240
