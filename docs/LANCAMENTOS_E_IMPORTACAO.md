@@ -106,3 +106,7 @@ Extrato bancário OFX usa FITID e contexto bancário/conta local para distinguir
 ## OFX de cartão — 0.21
 
 As marcas de cartão continuam na fatura; o recibo `ofx_card` reserva a origem ao primeiro contexto aceito, com `resource_id` apontando para a fatura, inclusive após excluir ou desfazer. Outra fatura do mesmo cartão recebe conflito. Vínculos e revisões do CSV são preservados; pagamentos do emissor não viram lançamentos e créditos selecionados exigem revisão adicional como estorno. Não há realocação de origem ou expansão de parcelas. Contrato e limites em [OFX_CARTAO.md](OFX_CARTAO.md), sem alteração de schema.
+
+## Competência OFX — 0.22
+
+O lançamento primário OFX de cartão pode mudar de fatura junto com sua origem em uma operação explícita com simulação, motivo e revisão das duas faturas. Preserva ID e correções; versões acompanham a mudança e antes/depois ficam no histórico. Reenvio na competência anterior recebe conflito, e no destino reconhece a mesma origem sem duplicar. Exclusões, parcelas e vínculos adicionais não são movidos. Contrato em [OFX_REALOCACAO.md](OFX_REALOCACAO.md).

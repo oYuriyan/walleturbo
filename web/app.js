@@ -966,6 +966,22 @@ $("#csv-file").onchange = () =>
             });
           $("#import-preview").append(reasonLabel, release);
         }
+        if (
+          cardOfx &&
+          origin.relocatable &&
+          !result.source_conflicts?.includes(index)
+        )
+          $("#import-preview").append(
+            ofxRelocationControls(
+              base,
+              content,
+              index,
+              origin,
+              result.relocation_destinations,
+              version,
+              updateSelection,
+            ),
+          );
       }
     });
     $("#import-preview").append(selectionStatus);

@@ -1,4 +1,4 @@
-"""OFX de cartão: uma origem permanece reservada à primeira fatura aceita."""
+"""OFX de cartão: origem reservada à fatura, com realocação explícita separada."""
 
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
@@ -67,6 +67,17 @@ def preview(
     db: Session = Depends(db_session),
 ):
     statement, parsed, keys = load(db, user, statement_id, body)
+    state = origin_state(
+        db,
+        Charge,
+        user,
+        keys,
+        Charge.statement_id == statement.id,
+        "card",
+        statement.id,
+    )
+    for origin in state["known_origins"]:
+        origin["relocatable"] = not origin["removed"] and not origin["releasable"]
     return {
         "format": parsed.format,
         "bank_id": parsed.bank_id,
@@ -76,15 +87,21 @@ def preview(
         "payments": parsed.payments,
         "entries": [entry.model_dump() for entry in parsed.entries],
         **source_state(db, user, "ofx_card", keys, parsed.fingerprints, statement.id),
-        **origin_state(
-            db,
-            Charge,
-            user,
-            keys,
-            Charge.statement_id == statement.id,
-            "card",
-            statement.id,
-        ),
+        **state,
+        "relocation_destinations": [
+            {"id": row.id, "month": row.month}
+            for row in db.scalars(
+                select(Statement)
+                .where(
+                    Statement.owner == user,
+                    Statement.card_id == statement.card_id,
+                    Statement.id != statement.id,
+                    Statement.status == "open",
+                )
+                .order_by(Statement.month.desc())
+                .limit(120)
+            )
+        ],
         "possible_duplicates": candidates(
             db, Charge, user, parsed.entries, Charge.statement_id == statement.id
         ),

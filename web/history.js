@@ -9,6 +9,7 @@ function clearHistory() {
   $("#more-history").hidden = true;
 }
 const historyEntities = {
+  import_relocation: "Competência da importação",
   import_link: "Vínculo de importação",
   month_plan: "Cenário mensal",
   budget: "Limite mensal",
@@ -27,6 +28,7 @@ const historyFields = {
   income_reference_cents: "Renda de referência",
   records_complete: "Registros confirmados",
   version: "Versão",
+  origin_version: "Versão da origem",
   name: "Nome",
   account_id: "Conta",
   source_account_id: "Conta de origem",
