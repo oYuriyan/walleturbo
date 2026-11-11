@@ -51,6 +51,25 @@ jobs:
           mkdir -p artifacts
           docker compose exec -T api python -c "import sys; g={'__name__':'fixture'}; exec(compile(sys.stdin.read(),'fixture','exec'),g); sys.stdout.buffer.write(g['make_pdf'](['03/11/2026 Mercado 123,45','2026-11-04 Estorno loja -23,45']))" < tests/integration_pdf.py > artifacts/fatura-sintetica.pdf
           docker compose exec -T api python -c "import sys; g={'__name__':'fixture'}; exec(compile(sys.stdin.read(),'fixture','exec'),g); sys.stdout.buffer.write(g['make_pdf'](['03/11/2026 Mercado em outro documento 123,45']))" < tests/integration_pdf.py > artifacts/fatura-conciliacao-sintetica.pdf
+          # Evitar indisponibilidade DNS do espelho Azure; manter repositórios Ubuntu assinados.
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          files = [Path('/etc/apt/sources.list'), *Path('/etc/apt/sources.list.d').glob('*.sources'), *Path('/etc/apt/sources.list.d').glob('*.list')]
+          replacements = {
+              'mirror+file:/etc/apt/mirrors/ubuntu.list': 'https://archive.ubuntu.com/ubuntu/',
+              'mirror+file:/etc/apt/mirrors/ubuntu-security.list': 'https://security.ubuntu.com/ubuntu/',
+              'http://azure.archive.ubuntu.com/ubuntu': 'https://archive.ubuntu.com/ubuntu',
+              'https://azure.archive.ubuntu.com/ubuntu': 'https://archive.ubuntu.com/ubuntu',
+          }
+          for path in files:
+              if path.exists():
+                  original = path.read_text()
+                  updated = original
+                  for old, new in replacements.items():
+                      updated = updated.replace(old, new)
+                  if updated != original:
+                      path.write_text(updated)
+          PY
           npm install --prefix /tmp/walleturbo-e2e playwright@1.58.2 axe-core@4.10.3
           /tmp/walleturbo-e2e/node_modules/.bin/playwright install --with-deps chromium firefox
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_pdf.cjs
