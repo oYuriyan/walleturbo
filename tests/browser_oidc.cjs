@@ -165,6 +165,21 @@ assert.equal(totp("12345678901234567890", 59000), "287082");
       await request(context, currentCsrf, "/api/privacy/export"),
       checkpoint.exported,
     );
+    if (process.env.RECOVERY_TEST === "1")
+      await require("./recovery_browser.cjs").verifyRecovery(
+        browser,
+        fixture,
+        secret,
+        totp,
+        checkpoint,
+        (await context.cookies(base)).find(
+          (c) => c.name === "walleturbo_session",
+        ),
+      );
+    assert.deepEqual(
+      await request(context, currentCsrf, "/api/privacy/export"),
+      checkpoint.exported,
+    );
     await context.request.post(base + "/api/logout", {
       headers: { Origin: base, "X-CSRF-Token": currentCsrf },
     });

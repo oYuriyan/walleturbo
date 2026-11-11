@@ -152,9 +152,13 @@ async function refresh() {
     csrf === expectedCsrf &&
     demo === expectedDemo;
   message("");
+  $("#retry-load").hidden = true;
+  let completed = false;
   document.querySelector("main").setAttribute("aria-busy", "true");
   $("#loading-status").hidden = false;
-  document.querySelectorAll(".view").forEach((node) => (node.inert = true));
+  document
+    .querySelectorAll(".view")
+    .forEach((node) => (node.inert = node.id !== "privacy"));
   try {
     const data =
       csrf && !demo
@@ -173,13 +177,23 @@ async function refresh() {
     if (typeof loadBalances === "function") await loadBalances();
     if (current() && view === "planning" && typeof loadPlanning === "function")
       await loadPlanning();
+    completed = current();
+  } catch (error) {
+    if (current()) {
+      $("#retry-load").hidden = false;
+      throw error;
+    }
   } finally {
     if (generation === refreshGeneration) {
       document.querySelector("main").setAttribute("aria-busy", "false");
       $("#loading-status").hidden = true;
       document
         .querySelectorAll(".view")
-        .forEach((node) => (node.inert = false));
+        .forEach(
+          (node) =>
+            (node.inert =
+              node.id !== "privacy" && !completed && !!csrf && !demo),
+        );
     }
   }
 }
@@ -563,6 +577,7 @@ $("#month").onchange = () =>
       throw Error("Selecione um mês válido.");
     await refresh();
   });
+$("#retry-load").onclick = () => action(refresh);
 $("#search").oninput = renderTransactions;
 $("#demo").onclick = () => {
   message("");

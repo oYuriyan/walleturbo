@@ -62,3 +62,6 @@ Jornada básica integrada (REL-01 parcial): browser_oidc.cjs/basic_journey.cjs, 
 
 
 UI/UX 0.25 (UX-01 parcial): browser_ui.cjs → seis áreas em claro/escuro, axe WCAG A/AA nos estados exercitados, navegação 320/390/768 px, atalho ao conteúdo, títulos focáveis, diálogo nomeado, Tab/Escape e ações secundárias por teclado. Sessão sintética reutiliza basic_journey.cjs; resposta de fatura de dezembro é retida até novembro terminar e não pode substituir os dados atuais. browser_lifecycle.cjs verifica gerenciamento junto ao saldo e versões; browser_ofx_card.cjs verifica dimensões dos seletores. Chromium/Firefox na CI. Não equivale a certificação WCAG nem avaliação assistiva completa.
+
+
+Aceite V1 local: ACEITE_V1.md → integration_volume.py/browser_volume.cjs (10 mil lançamentos, 2.400 compras, 24 meses; totais, leitura/exportação, busca e mobile) e recovery_browser.cjs/integration_backup.py --identity --promote (cookie antigo, OTP existente, exportação/resultado, origem reativada). local_backup.runtime_file impede uso acidental do `.env` do checkout; test_local_backup cobre caminho com aspas, permissão e recusa de sobrescrita. REL-01/02 e UX-01 atendem o recorte local definido, condicionado à CI da entrega. Escala, automações e exigências de operação pública continuam conforme backlog.

@@ -1,4 +1,4 @@
-# Manual de utilização
+# Manual de utilização — V1 básica local
 
 ## Primeiro acesso
 
@@ -12,7 +12,7 @@ As seis áreas ficam na lateral no desktop e em duas linhas no celular. O títul
 
 A visão geral destaca resultado, entradas e despesas; **Ver metas** abre o cadastro completo. **Pontos de atenção** e **Histórico de alterações** abrem pelo título quando necessários. Em Contas e cartões, **Gerenciar conta** fica junto ao saldo; nas compras de faturas em revisão, abra **Ações** para corrigir, revisar a categoria ou excluir.
 
-Ao trocar o período, aguarde **Atualizando registros…** antes de agir sobre os registros. Planejamento consulta o período ao abrir. Metas e Privacidade não precisam do seletor de mês.
+Ao trocar o período, aguarde **Atualizando registros…** antes de agir sobre os registros. Se a consulta falhar, as ações financeiras ficam bloqueadas até atualizar; use **Tentar novamente**. Privacidade continua acessível. Planejamento consulta o período ao abrir. Metas e Privacidade não precisam do seletor de mês.
 
 ## Rotina mensal
 
@@ -97,3 +97,5 @@ Se outra sessão alterar o pagamento, use **Recarregar pagamento**. A remoção 
 Reimportar linhas reconhecidas já excluídas informa quantas não foram recriadas. Use o mesmo contexto/fatura e a mesma seleção de conta da importação original. Para uma despesa realmente nova com dados iguais, registre explicitamente um lançamento/compra novo.
 
 Em fatura aberta, **Corrigir importado** permite revisar os dados mantendo fatura e parcela única. A origem permanece reservada; a reimportação não desfaz sua correção. A revisão de categoria também verifica a versão; use **Recarregar categoria** em conflito. Detalhes e limitações em [Lançamentos e importação](LANCAMENTOS_E_IMPORTACAO.md).
+
+O cenário de volume validado, os critérios de aceite e os cuidados de operação estão em [ACEITE_V1.md](ACEITE_V1.md). Para backup e retorno ao uso após restauração, siga [RECUPERACAO_LOCAL.md](RECUPERACAO_LOCAL.md).

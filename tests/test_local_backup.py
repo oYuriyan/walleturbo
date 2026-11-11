@@ -1,5 +1,6 @@
 import argparse
 import io
+import json
 import subprocess
 import tarfile
 import pytest
@@ -96,3 +97,22 @@ def test_restore_existing_project_is_never_adopted(monkeypatch):
     )
     with pytest.raises(ValueError, match="já existe"):
         recovery.existing_project("walleturbo-restore-existing")
+
+
+def test_runtime_config_uses_recovered_file_and_is_never_overwritten(tmp_path):
+    directory = tmp_path / 'recovery with "quotes"'
+    directory.mkdir()
+    target = recovery.runtime_file(directory)
+    assert target.stat().st_mode & 0o077 == 0
+    paths = [
+        line.split("!override ", 1)[1]
+        for line in target.read_text().splitlines()
+        if "!override" in line
+    ]
+    assert len(paths) == 2
+    assert all(json.loads(value) == [str(directory / ".env")] for value in paths)
+    assert "image: walleturbo-parser" in target.read_text()
+    original = target.read_bytes()
+    with pytest.raises(FileExistsError):
+        recovery.runtime_file(directory)
+    assert target.read_bytes() == original
