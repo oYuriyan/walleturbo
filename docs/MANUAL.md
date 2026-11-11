@@ -1,4 +1,4 @@
-# Manual de utilização
+# Manual de utilização — V1 básica local
 
 ## Primeiro acesso
 
@@ -97,3 +97,5 @@ Se outra sessão alterar o pagamento, use **Recarregar pagamento**. A remoção 
 Reimportar linhas reconhecidas já excluídas informa quantas não foram recriadas. Use o mesmo contexto/fatura e a mesma seleção de conta da importação original. Para uma despesa realmente nova com dados iguais, registre explicitamente um lançamento/compra novo.
 
 Em fatura aberta, **Corrigir importado** permite revisar os dados mantendo fatura e parcela única. A origem permanece reservada; a reimportação não desfaz sua correção. A revisão de categoria também verifica a versão; use **Recarregar categoria** em conflito. Detalhes e limitações em [Lançamentos e importação](LANCAMENTOS_E_IMPORTACAO.md).
+
+O cenário de volume validado, os critérios de aceite e os cuidados de operação estão em [ACEITE_V1.md](ACEITE_V1.md). Para backup e retorno ao uso após restauração, siga [RECUPERACAO_LOCAL.md](RECUPERACAO_LOCAL.md).

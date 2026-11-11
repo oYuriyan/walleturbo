@@ -1,6 +1,6 @@
-# Backup e recuperação local — 0.24
+# Backup e recuperação local — V1
 
-Para a configuração local padrão deste repositório: PostgreSQL financeiro `db`, PostgreSQL da identidade `auth-db`, API e Keycloak. Requer Python 3.11+, Git, Docker Compose, GPG e gpgconf no computador operador. Não instala pacotes, contrata serviços ou envia dados para fora da máquina. Procedimento validado em Linux, com permissões POSIX e filesystem que suporte hardlinks para publicar a cópia sem sobrescrever. Use o mesmo usuário local com acesso autorizado ao Docker.
+Para a configuração local padrão deste repositório: PostgreSQL financeiro `db`, PostgreSQL da identidade `auth-db`, API e Keycloak. Requer Python 3.11+, Git, Docker Compose 2.24.4 ou superior, GPG e gpgconf no computador operador. Não instala pacotes, contrata serviços ou envia dados para fora da máquina. Procedimento validado em Linux, com permissões POSIX e filesystem que suporte hardlinks para publicar a cópia sem sobrescrever. Use o mesmo usuário local com acesso autorizado ao Docker.
 
 ## Preparação e guarda
 
@@ -36,7 +36,7 @@ python scripts/local_backup.py restore --key /caminho/seguro/walleturbo.backup-k
 
 Crie antes somente o diretório pai `recovery`, se necessário. O destino deve começar com `walleturbo-restore-`. A operação recusa projetos com qualquer container, volume ou rede existente e diretório de saída existente. Autentica/decripta o arquivo antes de criar o diretório durável; verifica nomes, tipos, membros e checksums e não extrai links ou caminhos livres do arquivo. Chave errada ou cópia corrompida falham antes da criação dos bancos.
 
-Inicia apenas bancos novos, sem portas publicadas. Confirma que estão vazios e usa `pg_restore --exit-on-error`, sem limpar ou sobrescrever tabelas. API e Keycloak não são iniciados no destino. Uma falha após a criação pode deixar um projeto parcial para diagnóstico; não trate essa tentativa como recuperada. Confira o nome antes de remover exclusivamente os volumes de um ensaio descartável. Não execute `down -v` no projeto original.
+Inicia apenas bancos novos, sem portas publicadas. Confirma que estão vazios e usa `pg_restore --exit-on-error`, sem limpar ou sobrescrever tabelas. API e Keycloak não são iniciados no destino. A restauração também cria `runtime.compose.yaml` privado: a API/migração leem somente o `.env` recuperado e o parser reutiliza a imagem `walleturbo-parser`. O arquivo contém caminhos absolutos; mantenha o diretório no mesmo local até concluir a promoção. Uma falha após a criação pode deixar um projeto parcial para diagnóstico; não trate essa tentativa como recuperada. Confira o nome antes de remover exclusivamente os volumes de um ensaio descartável. Não execute `down -v` no projeto original.
 
 O diretório de recuperação contém dumps/configurações descriptografados, privados (0700/0600). Restrinja o acesso e remova a cópia de ensaio quando não for mais necessária. Segredos `.env.auth`, hashes de senha e credenciais TOTP são dados sensíveis. Nunca envie esse diretório, a chave ou backups reais para Git/CI/chat.
 
@@ -47,10 +47,10 @@ Confira o commit em `manifest.json`, use o código correspondente e valide valor
 Somente depois da conferência, pare API/Keycloak da origem para liberar as portas locais. Para iniciar o ambiente recuperado completo (mantenha a cópia original preservada), use o nome de projeto escolhido e os arquivos recuperados:
 
 ```bash
-docker compose --project-name walleturbo-restore-ensaio --env-file recovery/ensaio/.env --env-file recovery/ensaio/.env.auth -f compose.yaml -f compose.auth.yaml up --no-build -d --wait
+docker compose --project-name walleturbo-restore-ensaio --env-file recovery/ensaio/.env --env-file recovery/ensaio/.env.auth -f compose.yaml -f compose.auth.yaml -f recovery/ensaio/runtime.compose.yaml up --no-build -d --wait
 ```
 
-A imagem `walleturbo-api` deve corresponder ao código validado. Consulte KEYCLOAK.md para o endereço de identidade local. Redis novo encerra sessões anteriores; autentique novamente. O script não faz essa promoção nem remove a instalação original.
+As imagens `walleturbo-api` e `walleturbo-parser` devem corresponder ao código validado; prepare ambas antes da manutenção (`docker compose build api parser` na instalação padrão). A opção `!override` do arquivo de recuperação exige Compose 2.24.4 ou superior. Não omita esse arquivo: o Compose base aponta o `env_file` da API para o checkout. Consulte KEYCLOAK.md para o endereço de identidade local. Redis novo encerra sessões anteriores; autentique novamente. O script não faz essa promoção nem remove a instalação original.
 
 Para perda do autenticador, a V1 mantém o procedimento administrativo local de KEYCLOAK.md: confirmar a identidade, acessar o console pelo administrador autorizado e exigir novo cadastro OTP. Preserve o acesso administrativo e as configurações fora da máquina. Backup não substitui esse procedimento e não cria bypass ou códigos de recuperação automáticos. Antes de uso público, recuperação autônoma e administração precisam de homologação própria.
 
@@ -59,3 +59,5 @@ Para perda do autenticador, a V1 mantém o procedimento administrativo local de 
 `python -m tests.integration_backup` ensaia o financeiro; `--identity` inclui identidade e exige Keycloak previamente inicializado com credenciais sintéticas. Compara todas as tabelas financeiras e realm/usuários/credenciais/clientes do Keycloak, verifica configurações, chave incorreta, corrupção, repetição recusada e reativação dos escritores. Cria e remove apenas o projeto aleatório de ensaio e seus volumes; uma linha financeira sintética é removida da origem no final. Não rodar esse teste com dados pessoais antes de revisar o ambiente.
 
 O ensaio financeiro local sintético levou 17 segundos, incluindo backup, casos negativos, restauração e comparação. Não é uma promessa de tempo para bases reais. A CI registra o ensaio completo. RPO é o instante do último backup válido; RTO depende do volume, imagens e operador e deve ser medido na instalação. Até existir agendamento, faça a captura antes de atualizar e após alterações importantes; guarde cópia criptografada fora da máquina, defina retenção e teste-a periodicamente. Não existe garantia de recuperação sem cópia íntegra, chave e ensaio.
+
+O modo `--identity --promote` de `tests.integration_backup` é coordenado pelo roteiro OIDC da CI (`RECOVERY_TEST=1`). Inicia o destino após conferir os bancos e parar os escritores da origem; o navegador usa contexto novo, recusa cookie antigo, exige OTP já cadastrado e compara a exportação e o resultado R$ 1.935. O destino é removido e a origem é reativada/conferida. Senha/TOTP e checkpoint ficam em memória. Não chamar esse modo isoladamente: ele aguarda confirmação do navegador e falha ao receber EOF/timeout. O comando de restauração do operador continua sem promoção automática.

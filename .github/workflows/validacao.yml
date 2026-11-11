@@ -15,7 +15,7 @@ defaults:
 jobs:
   testes:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5, Node.js 24
       - name: Construir ambiente de testes
@@ -68,11 +68,7 @@ jobs:
           set -a
           source .env.auth
           set +a
-          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e KEYCLOAK_ADMIN_USER -e KEYCLOAK_ADMIN_PASSWORD api python < tests/seed_oidc.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_oidc.cjs
-      - name: Ensaiar backup e restauração isolada dos bancos
-        run: |
-          command -v gpg
-          python -m tests.integration_backup --identity
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e KEYCLOAK_ADMIN_USER -e KEYCLOAK_ADMIN_PASSWORD api python < tests/seed_oidc.py | RECOVERY_TEST=1 PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_oidc.cjs
       - name: Validar ciclo de vida dos cadastros
         run: |
           # Nova janela após a jornada ampliada, mantendo as cotas reais.
@@ -130,6 +126,11 @@ jobs:
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e SMOKE_BASE_URL=http://localhost:8000 api python < tests/integration_ofx_relocation.py
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_ofx_card.cjs
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_ofx_relocation.cjs
+      - name: Validar volume básico local e navegação mobile
+        run: |
+          sleep 60
+          mkdir -p artifacts
+          docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e VOLUME_BROWSER=1 api python < tests/integration_volume.py | PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright node tests/browser_volume.cjs
       - name: Salvar evidências sintéticas de interface
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node.js 24
@@ -144,6 +145,8 @@ jobs:
             artifacts/balances-*.png
             artifacts/first-steps-*.png
             artifacts/ui-*.png
+            artifacts/volume-mobile.png
+            artifacts/v1-volume.json
             artifacts/lifecycle-*.png
             artifacts/goals-*.png
             artifacts/history-*.png

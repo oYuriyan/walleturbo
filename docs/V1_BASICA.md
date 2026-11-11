@@ -32,6 +32,8 @@ Regras automáticas de fechamento, dias úteis, limite de crédito, juros/rotati
 
 Base 0.24 integrada pelos PRs #15 (CI 42857495727) e #16 (CI 42864510569), com 265 testes. Primeiro uso 0.23 integrado pelo PR #14. Backup financeiro/identidade restaurado e comparado no cenário sintético; jornada com dois logins reais, TOTP e nova sessão aprovada, conforme [JORNADA_BASICA.md](JORNADA_BASICA.md).
 
-Incremento 0.25 em homologação: revisão direcionada da interface e testes automatizados de contraste, foco, teclado, diálogos, leitura mobile e troca concorrente de período. O escopo e os limites da evidência estão em HOMOLOGACAO.md; resultado final/commit serão registrados no PR.
+Interface 0.25 integrada pelo PR #17, CI 42880867890: seis áreas em claro/escuro, Chromium/Firefox, axe, teclado/foco, mobile e proteção contra resposta de período obsoleto.
 
-Para fechar a V1 local, ainda é necessário comprovar promoção/login no ambiente recuperado, medir e declarar volume suportado na instalação e concluir o aceite dos fluxos essenciais, corrigindo bloqueios encontrados. A auditoria automatizada não substitui avaliação assistiva completa. Nenhuma estimativa de prazo/custo ou autorização de publicação foi fixada.
+A entrega 1.0 de 11/11/2026 fecha os critérios técnicos restantes quando a CI integral do PR for aprovada: promoção/login no destino restaurado, uso do `.env` recuperado, volume de um usuário com 10 mil lançamentos/2.400 compras em 24 meses e regressão dos fluxos essenciais. Critérios, medição local, reprodução e limites em [ACEITE_V1.md](ACEITE_V1.md). Evidência e commit finais no PR.
+
+O aceite permite uso local controlado no recorte documentado. Ajustes por preferência pessoal, medição no equipamento de instalação e rotina de guarda/ensaio de backups continuam responsabilidades operacionais; recursos avançados e publicação pública permanecem fora deste marco.

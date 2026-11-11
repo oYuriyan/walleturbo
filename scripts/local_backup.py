@@ -310,7 +310,11 @@ def restore(args):
         for path in decoded.iterdir():
             shutil.copyfile(path, args.directory / path.name)
             os.chmod(args.directory / path.name, 0o600)
-    cmd = compose(args.project, args.directory.resolve(), manifest["identity"])
+    runtime_file(args.directory.resolve())
+    cmd = compose(args.project, args.directory.resolve(), manifest["identity"]) + [
+        "-f",
+        str(args.directory.resolve() / "runtime.compose.yaml"),
+    ]
     services = list(DATABASES) if manifest["identity"] else ["db"]
     run(
         cmd + ["up", "--no-deps", "-d", "--wait", "--wait-timeout", "120", *services],
@@ -358,6 +362,24 @@ def restore(args):
     print(
         "Bancos restaurados em projeto isolado. API e identidade não foram iniciadas. Confira os dados antes de promover o ambiente."
     )
+
+
+def runtime_file(directory):
+    """A promoção lê o .env recuperado, sem depender do .env do checkout."""
+    target = directory / "runtime.compose.yaml"
+    config = json.dumps(str(directory / ".env"), ensure_ascii=True)
+    with target.open("x") as stream:
+        os.chmod(target, 0o600)
+        stream.write(
+            "services:\n"
+            "  api:\n"
+            f"    env_file: !override [{config}]\n"
+            "  migrate:\n"
+            f"    env_file: !override [{config}]\n"
+            "  parser:\n"
+            "    image: walleturbo-parser\n"
+        )
+    return target
 
 
 def main():

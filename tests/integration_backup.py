@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import select
 import subprocess
 import sys
 import tempfile
@@ -14,7 +15,10 @@ from scripts import local_backup as recovery
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--identity", action="store_true")
+parser.add_argument("--promote", action="store_true")
 args = parser.parse_args()
+if args.promote and not args.identity:
+    parser.error("--promote exige --identity e conferência de login pelo navegador")
 ROOT = Path(__file__).resolve().parents[1]
 script = ROOT / "scripts/local_backup.py"
 source = recovery.compose("walleturbo", ROOT, args.identity)
@@ -80,6 +84,7 @@ with Session() as db:
 execute(source + ["exec", "-T", "api", "python"], input=seed.encode())
 services = ["db", "auth-db"] if args.identity else ["db"]
 restored = None
+original_writers = []
 started = time.monotonic()
 try:
     expected = {service: fingerprints(source, service) for service in services}
@@ -134,6 +139,10 @@ try:
         assert failed.returncode != 0 and not directory.exists()
         restored = recovery.compose(project, ROOT, args.identity)
         execute(base + ["--key", str(key), "--input", str(saved)])
+        restored = recovery.compose(project, directory, args.identity) + [
+            "-f",
+            str(directory / "runtime.compose.yaml"),
+        ]
         actual = {service: fingerprints(restored, service) for service in services}
         assert actual == expected
         manifest = json.loads((directory / "manifest.json").read_text())
@@ -151,9 +160,70 @@ try:
         assert {
             service: fingerprints(restored, service) for service in services
         } == expected
+        if args.promote:
+            promoted = restored
+            probe = uuid4().hex
+            with (directory / ".env").open("a") as stream:
+                stream.write(f"\nWALLETURBO_RECOVERY_PROBE={probe}\n")
+            model = json.loads(execute(promoted + ["config", "--format", "json"]))
+            for service in ("api", "migrate"):
+                assert (
+                    model["services"][service]["environment"][
+                        "WALLETURBO_RECOVERY_PROBE"
+                    ]
+                    == probe
+                )
+            original_writers = (
+                execute(source + ["ps", "--quiet", "api", "keycloak"]).decode().split()
+            )
+            assert len(original_writers) == 2
+            print(
+                "RECOVERY: bancos/configurações conferidos; iniciando destino isolado.",
+                flush=True,
+            )
+            execute(["docker", "stop", *original_writers])
+            try:
+                execute(
+                    promoted
+                    + [
+                        "up",
+                        "--no-build",
+                        "-d",
+                        "--wait",
+                        "--wait-timeout",
+                        "240",
+                        "api",
+                    ]
+                )
+                # Handshake sem arquivos de senha/TOTP: o pai conserva a fixture em memória.
+                print("RECOVERY_READY", flush=True)
+                readable, _, _ = select.select([sys.stdin], [], [], 120)
+                assert readable and sys.stdin.readline().strip() == "VERIFIED"
+                print(
+                    "PASS: ambiente recuperado iniciado e login/MFA conferido.",
+                    flush=True,
+                )
+            finally:
+                try:
+                    execute(promoted + ["down", "--volumes"])
+                    restored = None
+                finally:
+                    execute(
+                        source
+                        + [
+                            "start",
+                            "--wait",
+                            "--wait-timeout",
+                            "240",
+                            "api",
+                            "keycloak",
+                        ]
+                    )
+                    original_writers = []
         # Preservar configs até a limpeza dos volumes sintéticos isolados.
-        execute(restored + ["down", "--volumes"])
-        restored = None
+        if restored:
+            execute(restored + ["down", "--volumes"])
+            restored = None
     running = (
         execute(source + ["ps", "--status", "running", "--services"]).decode().split()
     )
@@ -162,8 +232,14 @@ try:
         f"PASS: backup GPG {'financeiro e identidade' if args.identity else 'financeiro'} restaura dados/configurações em projeto novo, recusa chave incorreta/corrupção/destino existente e reativa escritores. Ensaio sintético: {time.monotonic()-started:.1f}s."
     )
 finally:
-    if restored:
-        execute(restored + ["down", "--volumes"])
+    try:
+        if restored:
+            execute(restored + ["down", "--volumes"])
+    finally:
+        if original_writers:
+            execute(
+                source + ["start", "--wait", "--wait-timeout", "240", "api", "keycloak"]
+            )
     # Só remove a conta e o lançamento criados por este ensaio, sem tocar nos demais.
     sql(
         source,

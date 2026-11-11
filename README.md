@@ -2,7 +2,8 @@
 
 Controle financeiro pessoal em português do Brasil. A proposta é reduzir o tempo de registro, tornar os gastos compreensíveis e ajudar a planejar metas sem depender de funcionalidades pagas de outros aplicativos.
 
-**Estado: fundação funcional em desenvolvimento, não liberada para produção.** A demonstração visual é independente do login e usa dados fictícios em memória. A operação real exige PostgreSQL, Redis e um provedor OpenID Connect configurado. Login local com Keycloak/TOTP foi homologado no CI. Google, recuperação de MFA, OCR, formatos bancários específicos, agentes de IA e busca de ofertas permanecem pendentes. Contas, cartões, parcelas, conferência de fatura e pagamentos parciais já possuem fluxos funcionais.
+**V1 básica para uso financeiro local controlado.** Contas/saldos, lançamentos, transferências, cartões/faturas, planejamento simples, metas e importação assistida já possuem jornadas de validação. Login local usa Keycloak/TOTP. O [aceite da V1](docs/ACEITE_V1.md) reúne instalação, evidências e limites de volume/recuperação. Google, OCR, integrações bancárias adicionais, IA/ofertas e operação pública ficam no backlog. A demonstração usa exemplos fictícios na memória da aba.
+
 
 ## Executar com Docker
 

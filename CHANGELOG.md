@@ -1,3 +1,10 @@
+## 1.0.0 — V1 básica local — 11/11/2026
+
+- Fecha o recorte financeiro local, com interface revisada, jornada integrada e limites documentados.
+- Recuperação gera configuração que usa o `.env` restaurado; ensaio inicia API/Keycloak recuperados, exige OTP existente e compara exportação/resultado antes de reativar a origem.
+- Aceite de leitura/mobile com 10 mil lançamentos e 2.400 compras em 24 meses, sem ampliar serviços ou dependências.
+- Instalação, operação, recuperação e limitações consolidadas em docs/ACEITE_V1.md; evidência integral e commit no PR.
+
 ## 0.25.0 — em validação
 
 - Interface com hierarquia de títulos, paleta claro/escuro, tipografia legível e navegação completa no celular.
