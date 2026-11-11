@@ -242,6 +242,6 @@ Firefox local não pôde ser instalado porque os domínios de download foram rec
 
 ## Aceite 1.0 — 11/11/2026
 
-266 testes locais aprovados, incluindo proteção do arquivo de configuração recuperado. Restauração financeira local aprovada com casos negativos e reativação da API. Compose validado com marcador exclusivo no `.env` recuperado, recebido pela API/migração. Cenário local com 10 mil lançamentos/2.400 compras em 24 meses aprovou totais, contagens, exportação e busca mobile; medição em ACEITE_V1.md. Capturas/relatório sintéticos publicados pela CI.
+266 testes locais aprovados, incluindo proteção do arquivo de configuração recuperado. Restauração financeira local aprovada com casos negativos e reativação da API. Compose validado com marcador exclusivo no `.env` recuperado, recebido pela API/migração. Cenário local com 10 mil lançamentos/2.400 compras em 24 meses, 12.530 eventos de auditoria e 12.400 recibos aprovou totais, contagens, exportação e busca mobile; medição em ACEITE_V1.md. Capturas/relatório sintéticos publicados pela CI.
 
 O ambiente local possui cerca de 0,7 GB livres e não tem imagem Keycloak: a duplicação completa é ensaiada no runner do GitHub. `RECOVERY_TEST=1` conserva a fixture OIDC em memória, promove o projeto isolado, exige OTP existente, recusa cookie anterior, compara exportação/resultado e reativa a origem. A CI final do PR é requisito de aceite; nenhum resultado de login recuperado é presumido a partir da comparação SQL. A aplicação passa a 1.0.0 para o recorte financeiro local, sem autorização de publicação pública.

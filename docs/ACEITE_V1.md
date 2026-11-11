@@ -17,19 +17,20 @@ O aceite é técnico: os roteiros de formulários e a inspeção visual cobrem o
 
 ## Volume ensaiado
 
-Um usuário, 24 meses, 10 contas com referências, quatro cartões, 96 faturas, 10 mil lançamentos diretos, 2.400 compras e 10 metas. Novembro/2026 contém 416 lançamentos diretos e 100 compras. Verificam-se valores independentes de resultado/saldo, contagens do mês e integridade da exportação; a busca no celular encontra um lançamento específico e as faturas não apresentam corte horizontal.
+Um usuário, 24 meses, 10 contas com referências, quatro cartões, 96 faturas, 10 mil lançamentos diretos, 2.400 compras, 10 metas, 12.530 registros de histórico e 12.400 recibos de operação. Novembro/2026 contém 416 lançamentos diretos e 100 compras. Verificam-se valores independentes de resultado/saldo, contagens do mês e integridade da exportação; a busca no celular encontra um lançamento específico e as faturas não apresentam corte horizontal.
 
 Medição local de 11/11/2026, cinco amostras sequenciais por endpoint, API limitada pelo Compose a 1 CPU/512 MiB, PostgreSQL 17/Redis 7 em host compartilhado. Milissegundos, incluindo resposta HTTP; tempos variam por instalação:
 
 | Consulta | Mediana | Máximo observado |
 | --- | ---: | ---: |
-| Resumo mensal | 53,8 | 139,2 |
-| Faturas do mês | 13,8 | 14,8 |
-| Saldos das contas | 37,2 | 40,9 |
-| Planejamento | 86,0 | 99,1 |
-| Exportação (3,83 MB) | 540,3 | 575,7 |
+| Resumo mensal | 48,1 | 52,5 |
+| Faturas do mês | 12,4 | 12,5 |
+| Saldos das contas | 37,0 | 40,4 |
+| Planejamento | 97,7 | 165,5 |
+| Exportação (11,89 MB) | 1.597,4 | 1.724,8 |
+| Histórico (50 registros) | 9,0 | 15,4 |
 
-Chromium 390 px: resumo exibido em 648 ms, incluindo abertura/carregamento; busca e leitura dos registros aprovadas. A fixture é inserida diretamente no banco para reduzir custo; o ensaio mede leitura e renderização, não taxa de cadastro/importação. Os testes funcionais existentes continuam verificando a escrita pela API/formulários. Não é carga simultânea, SLA, percentil estatístico nem garantia para um volume maior.
+Chromium 390 px: resumo exibido em 402 ms, incluindo abertura/carregamento; busca e leitura dos registros aprovadas. A fixture usa o ORM diretamente, com os eventos normais de auditoria e recibos sintéticos, para reduzir custo; o ensaio mede leitura e renderização, não taxa de cadastro/importação. Os testes funcionais existentes continuam verificando a escrita pela API/formulários. Não é carga simultânea, SLA, percentil estatístico nem garantia para um volume maior.
 
 A CI repete o cenário e publica `v1-volume.json` e `volume-mobile.png` com dados sintéticos. Falha se uma leitura superar cinco segundos ou se o resumo mobile superar dez segundos, além de exigir valores/contagens corretos. Esses são orçamentos de regressão, não promessas ao usuário. Antes de ampliar volume ou acessos simultâneos, repetir a medição no equipamento-alvo.
 

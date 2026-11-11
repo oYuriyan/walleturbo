@@ -18,6 +18,7 @@ from app.db import (
     Charge,
     Goal,
     OpeningBalance,
+    RequestReceipt,
     Session,
     Statement,
     Transaction,
@@ -25,6 +26,33 @@ from app.db import (
 
 if os.environ.get("WALLETURBO_INTEGRATION") != "1":
     raise SystemExit("Somente ambiente de integração com dados sintéticos")
+
+# Ativar os mesmos eventos de auditoria usados pela aplicação.
+from app import main
+
+
+def seed(db, model, values):
+    rows = [model(**value) for value in values]
+    db.add_all(rows)
+    db.flush()
+    if model in (Transaction, Charge):
+        db.execute(
+            insert(RequestReceipt),
+            [
+                dict(
+                    owner=row.owner,
+                    scope="transaction" if model is Transaction else "purchase",
+                    request_id=(
+                        str(uuid4()) if model is Transaction else row.operation_id
+                    ),
+                    payload_hash="0" * 64,
+                    resource_id=row.id,
+                )
+                for row in rows
+            ],
+        )
+    return rows
+
 
 owner = "volume-test-" + uuid4().hex
 sid, csrf = secrets.token_hex(32), secrets.token_hex(32)
@@ -69,15 +97,17 @@ with httpx2.Client(
 ) as client:
     try:
         with Session() as db:
-            db.execute(
-                insert(Account),
+            seed(
+                db,
+                Account,
                 [
                     dict(id=a, owner=owner, name=f"Conta {i + 1}")
                     for i, a in enumerate(accounts)
                 ],
             )
-            db.execute(
-                insert(OpeningBalance),
+            seed(
+                db,
+                OpeningBalance,
                 [
                     dict(
                         owner=owner,
@@ -92,15 +122,17 @@ with httpx2.Client(
                     for a in accounts
                 ],
             )
-            db.execute(
-                insert(Card),
+            seed(
+                db,
+                Card,
                 [
                     dict(id=c, owner=owner, name=f"Cartão {i + 1}", due_day=20)
                     for i, c in enumerate(cards)
                 ],
             )
-            db.execute(
-                insert(Statement),
+            seed(
+                db,
+                Statement,
                 [
                     dict(
                         id=bill,
@@ -112,8 +144,9 @@ with httpx2.Client(
                     for (month, card), bill in bills.items()
                 ],
             )
-            db.execute(
-                insert(Charge),
+            seed(
+                db,
+                Charge,
                 [
                     dict(
                         owner=owner,
@@ -134,9 +167,10 @@ with httpx2.Client(
                 ],
             )
             for start in range(0, len(entries), 1000):
-                db.execute(insert(Transaction), entries[start : start + 1000])
-            db.execute(
-                insert(Goal),
+                seed(db, Transaction, entries[start : start + 1000])
+            seed(
+                db,
+                Goal,
                 [
                     dict(
                         owner=owner,
@@ -159,6 +193,8 @@ with httpx2.Client(
                 "charges": 2400,
                 "statements": 96,
                 "goals": 10,
+                "history": 12530,
+                "receipts": 12400,
             },
             "requests": {},
         }
@@ -168,6 +204,7 @@ with httpx2.Client(
             "/api/balances?as_of=2026-12-31",
             "/api/planning/2026-11",
             "/api/privacy/export",
+            "/api/history?limit=50",
         ]
         for path in paths:
             durations = []
@@ -195,12 +232,18 @@ with httpx2.Client(
                         len(data["accounts"]) == 10
                         and data["total_cents"] == cash_total
                     )
+                elif path.startswith("/api/history"):
+                    assert len(data["items"]) == 50 and data["next_cursor"]
                 elif path.startswith("/api/privacy"):
                     assert (
                         len(data["transactions"]) == 10000
                         and len(data["card_charges"]) == 2400
                     )
                     assert len(data["statements"]) == 96 and len(data["goals"]) == 10
+                    assert (
+                        len(data["financial_history"]) == 12530
+                        and len(data["request_receipts"]) == 12400
+                    )
                 durations.append(elapsed * 1000)
             assert (
                 max(durations) < 5000
