@@ -135,6 +135,37 @@ const assert = require("assert/strict");
       );
     };
     if (authenticated) {
+      // Falhar ao consultar outro mês não pode liberar ações sobre dados antigos.
+      await page.route(
+        "**/api/dashboard?month=2026-12",
+        (route) =>
+          route.fulfill({
+            status: 503,
+            contentType: "application/json",
+            body: JSON.stringify({
+              detail: "Consulta temporariamente indisponível",
+            }),
+          }),
+        { times: 1 },
+      );
+      await page.locator("#month").fill("2026-12");
+      await page.locator("#month").blur();
+      await page.locator("#retry-load").waitFor();
+      assert(await page.locator("#finance").evaluate((node) => node.inert));
+      assert(await page.locator("#privacy").evaluate((node) => !node.inert));
+      assert.match(
+        await page.locator("#status").textContent(),
+        /temporariamente indisponível/,
+      );
+      await audit("falha de carregamento");
+      await page.locator("#retry-load").click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("main").getAttribute("aria-busy") ===
+            "false" && !document.querySelector("#finance").inert,
+      );
+      assert(await page.locator("#retry-load").isHidden());
+      await setMonth("2026-11");
       let release, fetched;
       const held = new Promise((resolve) => (release = resolve)),
         received = new Promise((resolve) => (fetched = resolve));

@@ -2,6 +2,7 @@
 
 - Fecha o recorte financeiro local, com interface revisada, jornada integrada e limites documentados.
 - Recuperação gera configuração que usa o `.env` restaurado; ensaio inicia API/Keycloak recuperados, exige OTP existente e compara exportação/resultado antes de reativar a origem.
+- Consulta com falha mantém ações financeiras bloqueadas e oferece nova tentativa; Privacidade permanece acessível.
 - Aceite de leitura/mobile com 10 mil lançamentos e 2.400 compras em 24 meses, sem ampliar serviços ou dependências.
 - Instalação, operação, recuperação e limitações consolidadas em docs/ACEITE_V1.md; evidência integral e commit no PR.
 

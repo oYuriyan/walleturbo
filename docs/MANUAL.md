@@ -12,7 +12,7 @@ As seis áreas ficam na lateral no desktop e em duas linhas no celular. O títul
 
 A visão geral destaca resultado, entradas e despesas; **Ver metas** abre o cadastro completo. **Pontos de atenção** e **Histórico de alterações** abrem pelo título quando necessários. Em Contas e cartões, **Gerenciar conta** fica junto ao saldo; nas compras de faturas em revisão, abra **Ações** para corrigir, revisar a categoria ou excluir.
 
-Ao trocar o período, aguarde **Atualizando registros…** antes de agir sobre os registros. Planejamento consulta o período ao abrir. Metas e Privacidade não precisam do seletor de mês.
+Ao trocar o período, aguarde **Atualizando registros…** antes de agir sobre os registros. Se a consulta falhar, as ações financeiras ficam bloqueadas até atualizar; use **Tentar novamente**. Privacidade continua acessível. Planejamento consulta o período ao abrir. Metas e Privacidade não precisam do seletor de mês.
 
 ## Rotina mensal
 

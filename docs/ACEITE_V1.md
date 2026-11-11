@@ -9,7 +9,7 @@ A versão 1.0 fecha o recorte de [V1_BASICA.md](V1_BASICA.md) quando o PR desta 
 | Primeiro uso e rotina financeira | browser_first_steps, browser_cards, browser_balances, browser_goals e correções: conta, saldo, despesa, fatura/pagamento, transferência, metas e histórico |
 | Identidade e persistência | browser_oidc/basic_journey: dois logins reais/TOTP, isolamento, logout/nova sessão e exportação idêntica |
 | Recuperação utilizável | integration_backup/recovery_browser: GPG, comparação dos bancos, API/Keycloak iniciados no destino, cookie antigo recusado, OTP existente e exportação/resultado preservados; origem reativada |
-| Interface essencial | browser_ui: Chromium/Firefox, seis áreas claro/escuro, axe, foco/Tab/Escape, navegação 320/390/768 px; capturas inspecionadas no incremento 0.25 |
+| Interface essencial | browser_ui: Chromium/Firefox, seis áreas claro/escuro, axe, foco/Tab/Escape, navegação 320/390/768 px, falha/repetição de consulta com bloqueio financeiro e Privacidade acessível; capturas inspecionadas no incremento 0.25 |
 | Volume local declarado | integration_volume/browser_volume: cenário abaixo, totais/contagens/exportação e busca mobile, com orçamento de tempo e limpeza da fixture |
 | Regressão e operação | 266 testes, auditoria de dependências, PostgreSQL/Redis/migrações/importações, manual e recuperação documentados |
 
