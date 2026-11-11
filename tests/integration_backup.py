@@ -40,6 +40,21 @@ def sql(cmd, service, query):
     )
 
 
+def restart_original(ids):
+    execute(["docker", "start", *ids])
+    deadline = time.monotonic() + 240
+    while time.monotonic() < deadline:
+        health = (
+            execute(["docker", "inspect", "--format", "{{.State.Health.Status}}", *ids])
+            .decode()
+            .split()
+        )
+        if len(health) == len(ids) and all(state == "healthy" for state in health):
+            return
+        time.sleep(2)
+    raise RuntimeError("Escritores originais não ficaram saudáveis após reativação")
+
+
 def fingerprints(cmd, service):
     tables = (
         sql(
@@ -208,17 +223,7 @@ try:
                     execute(promoted + ["down", "--volumes"])
                     restored = None
                 finally:
-                    execute(
-                        source
-                        + [
-                            "start",
-                            "--wait",
-                            "--wait-timeout",
-                            "240",
-                            "api",
-                            "keycloak",
-                        ]
-                    )
+                    restart_original(original_writers)
                     original_writers = []
         # Preservar configs até a limpeza dos volumes sintéticos isolados.
         if restored:
@@ -237,9 +242,7 @@ finally:
             execute(restored + ["down", "--volumes"])
     finally:
         if original_writers:
-            execute(
-                source + ["start", "--wait", "--wait-timeout", "240", "api", "keycloak"]
-            )
+            restart_original(original_writers)
     # Só remove a conta e o lançamento criados por este ensaio, sem tocar nos demais.
     sql(
         source,

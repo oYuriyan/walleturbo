@@ -5,6 +5,28 @@ const { createInterface } = require("readline");
 const { request } = require("./basic_journey.cjs");
 const base = "http://localhost:8000";
 
+// A API exporta coleções sem contrato de ordenação SQL. Preservar todas as linhas.
+function orderedExport(data) {
+  const orderedKeys = (value) => {
+    if (Array.isArray(value)) return value.map(orderedKeys);
+    if (value && typeof value === "object")
+      return Object.fromEntries(
+        Object.keys(value)
+          .sort()
+          .map((key) => [key, orderedKeys(value[key])]),
+      );
+    return value;
+  };
+  return Object.fromEntries(
+    Object.entries(data).map(([name, rows]) => [
+      name,
+      rows
+        .map(orderedKeys)
+        .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+    ]),
+  );
+}
+
 async function verifyRecovery(
   browser,
   fixture,
@@ -44,17 +66,21 @@ async function verifyRecovery(
       resolve(code);
     });
   });
+  let stage = "inicialização do destino";
   try {
     await ready;
+    stage = "recusa do cookie anterior";
     const stale = await browser.newContext();
     try {
       await stale.addCookies([{ ...oldCookie, url: undefined }]);
       assert.equal((await stale.request.get(base + "/api/me")).status(), 401);
+      console.log("RECOVERY: cookie anterior recusado pelo destino.");
     } finally {
       await stale.close();
     }
     const context = await browser.newContext();
     try {
+      stage = "senha e OTP recuperado";
       const page = await context.newPage();
       await page.goto(base + "/auth/login");
       await page.locator("#username").fill(fixture.username);
@@ -63,6 +89,7 @@ async function verifyRecovery(
       // Credencial OTP recuperada: precisa pedir o código, sem novo cadastro.
       await page.locator("#otp").waitFor();
       assert.equal((await context.request.get(base + "/api/me")).status(), 401);
+      console.log("RECOVERY: senha aceita; destino exige OTP já cadastrado.");
       // O último código pode estar registrado como usado no snapshot.
       await new Promise((resolve) =>
         setTimeout(resolve, 30000 - (Date.now() % 30000) + 1000),
@@ -70,11 +97,13 @@ async function verifyRecovery(
       await page.locator("#otp").fill(totp(secret));
       await page.locator("#kc-login").click();
       await page.waitForURL(base + "/");
+      stage = "exportação recuperada";
       const csrf = (await request(context, "", "/api/me")).csrf;
       assert.deepEqual(
-        await request(context, csrf, "/api/privacy/export"),
-        checkpoint.exported,
+        orderedExport(await request(context, csrf, "/api/privacy/export")),
+        orderedExport(checkpoint.exported),
       );
+      stage = "resultado e despesa recuperados";
       await page.locator("#month").fill("2026-11");
       await page.locator("#month").blur();
       await page.waitForFunction(() =>
@@ -88,11 +117,15 @@ async function verifyRecovery(
       await context.close();
     }
     child.stdin.end("VERIFIED\n");
+    stage = "reativação da origem";
     assert.equal(
       await exited,
       0,
       "O ensaio precisa limpar o destino e reativar a origem",
     );
+  } catch (error) {
+    console.error(`FAIL: recuperação, etapa ${stage}: ${error.name}`);
+    throw error;
   } finally {
     if (!child.stdin.writableEnded) child.stdin.end();
     await exited;
