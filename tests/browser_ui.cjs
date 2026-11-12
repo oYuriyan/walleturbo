@@ -248,9 +248,7 @@ const assert = require("assert/strict");
     }
     await page.locator("#theme").click();
     await page.locator('.nav[data-view="transactions"]').click();
-    await page
-      .getByRole("button", { name: "Novo lançamento", exact: false })
-      .click();
+    await page.locator('#transactions [data-action="new-entry"]').click();
     const dialog = page.getByRole("dialog", {
       name: "Novo lançamento",
       exact: true,
@@ -280,6 +278,7 @@ const assert = require("assert/strict");
       await page.setViewportSize({ width, height: 844 });
       for (const view of views) {
         const link = page.locator(`.nav[data-view="${view}"]`);
+        if (!(await link.isVisible())) await page.locator("#more-navigation-button").click();
         await link.click();
         const bounds = await link.boundingBox();
         assert(
@@ -311,7 +310,7 @@ const assert = require("assert/strict");
       path: `artifacts/ui-${engine}-mobile.png`,
       fullPage: true,
     });
-    await page.locator('.topbar button[aria-label="Alternar tema"]').click();
+    await page.locator("#theme-preference").selectOption("dark");
     await audit("mobile escuro");
     await page.screenshot({
       path: `artifacts/ui-${engine}-dark.png`,

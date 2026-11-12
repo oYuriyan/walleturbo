@@ -1,0 +1,142 @@
+/* Visão geral: uma âncora de leitura e informação secundária sob demanda. */
+.page-tools { display: flex; align-items: end; gap: 16px; min-width: 0; }
+.overview-quick-actions, .action-label-mobile { display: none; }
+body[data-view="overview"] .overview-quick-actions { display: flex; flex-wrap: nowrap; }
+body[data-view="overview"] .topbar { min-height: 64px; }
+body[data-view="overview"] .welcome { margin: 24px 0 16px; gap: 16px; }
+body[data-view="overview"] .welcome h1 { margin-bottom: 0; }
+body[data-view="overview"] #page-description { display: none; }
+body[data-view="overview"] .month-label { width: 208px; flex-basis: 208px; font-size: 12px; }
+body[data-view="overview"] .month-label input { margin-top: 4px; }
+body[data-view="overview"] #notice { background: transparent; color: var(--color-text-muted); border: 0; border-bottom: 1px solid var(--color-border-subtle); border-radius: 0; padding: 8px 0; margin-bottom: 16px; }
+body[data-view="overview"] #notice button { color: var(--color-link); }
+.dashboard-demo-note { margin: 0 0 16px; font-size: 12px; }
+.dashboard-top { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(280px,1fr); gap: 24px; align-items: start; }
+.financial-overview { min-width: 0; background: var(--color-surface); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-card); }
+.dashboard .account-summary { background: transparent; border: 0; padding: 16px 24px 0; margin: 0; border-radius: 0; }
+.dashboard .account-summary .section-heading { flex-wrap: nowrap; margin-bottom: 8px; gap: 8px; }
+.dashboard .account-summary h2 { color: var(--color-text-muted); font-size: 14px; font-weight: 500; }
+.dashboard .account-summary .money-large { font-size: 36px; line-height: 1.25; }
+.dashboard .account-summary .balance-unavailable { font-size: 20px; }
+.dashboard #overview-balance-context { margin-top: 8px; font-size: 14px; }
+.balance-help { margin: 0; }
+.balance-help summary { font-size: 12px; font-weight: 400; color: var(--color-link); min-height: 40px; padding: 8px 0; }
+.balance-help p { margin: 0 0 16px; font-size: 14px; }
+.dashboard-metrics { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0; margin: 8px 0 0; padding: 16px 8px; border-top: 1px solid var(--color-border-subtle); }
+.dashboard-metrics .metric { padding: 0 16px; border: 0; border-radius: 0; background: transparent; }
+.dashboard-metrics .metric + .metric { border-left: 1px solid var(--color-border-subtle); }
+.dashboard-metrics .metric > span { margin: 0; font-size: 12px; }
+.dashboard-metrics .metric > strong { font-size: 24px; margin: 8px 0 4px; }
+.dashboard-metrics .metric small { font-size: 12px; }
+.cash-details { padding: 0 24px; border-top: 1px solid var(--color-border-subtle); }
+.cash-details summary { font-size: 12px; font-weight: 500; min-height: 40px; padding: 8px 0; color: var(--color-text-muted); }
+.cash-details p { margin: 0 0 8px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.overview-card-panel { min-width: 0; padding: 16px; background: var(--color-surface); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-card); }
+.overview-card-panel > .section-heading { margin: 0 0 16px; min-height: 40px; gap: 8px; flex-wrap: nowrap; }
+.overview-card-panel h2 { font-size: 18px; }
+.overview-card-panel h2 .subtle { font-size: 12px; font-weight: 400; white-space: nowrap; }
+.overview-card-panel #overview-new-card { min-height: 48px; padding: 8px; border-radius: var(--radius-pill); white-space: nowrap; }
+.overview-card-panel #overview-new-card .ui-icon { width: 16px; height: 16px; }
+.overview-cards { min-width: 0; }
+.overview-cards .empty { padding: 24px 8px; }
+.overview-cards .empty .ui-icon { display: none; }
+.card-showcase { display: grid; grid-template-columns: 144px minmax(0,1fr); gap: 24px; align-items: start; }
+.card-stack { position: relative; min-width: 0; height: 208px; padding-top: 12px; }
+.card-stack::before { content: ""; position: absolute; inset: 0 8px 16px; border-radius: 12px; background: var(--color-card-stack); }
+.credit-access { display: block; position: relative; width: 100%; height: 100%; padding: 0; overflow: hidden; border: 1px solid var(--color-border-control); border-radius: 12px; background: var(--color-card-front); color: var(--color-card-on-front); text-align: left; }
+.credit-access::before { content: ""; position: absolute; width: 160%; height: 150%; top: -24%; left: 40%; border-radius: 50%; background: var(--color-card-sheen); transform: rotate(24deg); pointer-events: none; }
+.credit-access:hover { border-color: var(--color-link); }
+.card-front { position: relative; display: flex; flex-direction: column; gap: 16px; min-height: 100%; padding: 16px; }
+.card-front-brand { font-size: 14px; font-weight: 600; letter-spacing: -.4px; }
+.card-chip { display: block; align-self: flex-end; width: 32px; height: 24px; border-radius: 6px; background: linear-gradient(135deg,var(--color-card-chip-light),var(--color-card-chip-dark)); }
+.card-chip::after { content: ""; display: block; width: 12px; height: 100%; margin: auto; border-inline: 1px solid var(--color-card-chip-dark); }
+.card-contactless { align-self: flex-end; color: var(--color-card-front-muted); }
+.card-front-identity { display: grid; gap: 4px; margin-top: auto; }
+.card-front-label { font-size: 10px; line-height: 1.5; color: var(--color-card-front-muted); }
+.card-front-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-size: 14px; line-height: 1.4; font-weight: 500; overflow-wrap: anywhere; }
+.card-information { min-width: 0; }
+.card-selected-name { display: block; font-size: 14px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; margin-bottom: 12px; }
+.card-facts { display: grid; gap: 12px; margin: 0; }
+.card-facts > div { min-width: 0; }
+.card-facts > div:not(:first-child) { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
+.card-facts > div:not(:first-child) dt { margin-bottom: 0; }
+.card-facts > div:not(:first-child) dd { white-space: nowrap; overflow-wrap: normal; }
+.card-facts dt { margin: 0 0 4px; color: var(--color-text-muted); font-size: 12px; line-height: 1.4; }
+.card-facts dd { margin: 0; color: var(--color-text); font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.card-facts .card-bill-total { font-size: 24px; font-weight: 600; line-height: 1.3; overflow-wrap: normal; }
+.card-facts .card-value-long { font-size: 16px; }
+.card-facts .credit-remaining { font-size: 16px; }
+.card-open { margin: 8px 0 0; padding-inline: 0; justify-content: flex-start; }
+.card-showcase-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.card-showcase-footer > a { margin-left: auto; }
+.card-options { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.card-choice { min-height: 48px; max-width: 168px; padding: 8px 12px; border: 1px solid var(--color-border-control); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-choice[aria-pressed="true"] { background: var(--color-surface-selected); color: var(--color-link); border-color: var(--color-link); font-weight: 600; }
+.card-choice:hover { background: var(--color-surface-selected); }
+
+.dashboard .attention-banner { margin: 16px 0 0; padding: 8px 16px; min-height: 40px; }
+.dashboard .overview-grid { grid-template-columns: minmax(0,1.45fr) minmax(280px,1fr); gap: 24px; margin-top: 24px; align-items: start; }
+.dashboard .overview-grid .panel { padding: 16px 24px; }
+.dashboard .overview-grid h2 { font-size: 18px; }
+.dashboard .overview-grid .section-heading { margin-bottom: 8px; }
+.dashboard #recent .transaction { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 8px; padding: 12px 0; }
+.dashboard #recent .transaction-icon { width: 32px; height: 32px; }
+.dashboard #recent .transaction-info { min-width: 0; }
+.dashboard #recent .transaction-info strong { font-size: 14px; }
+.dashboard #recent .transaction-info small { font-size: 12px; }
+.dashboard #recent .transaction-amount { font-size: 14px; margin: 0; text-align: right; }
+.dashboard #recent .pending { margin-top: 4px; padding: 0 4px; }
+.dashboard .category-row { margin-top: 16px; }
+.dashboard .category-label { gap: 4px 8px; font-size: 14px; }
+.dashboard .category-label .subtle { font-size: 12px; }
+.overview-secondary { border-top: 1px solid var(--color-border-subtle); margin-top: 24px; }
+.overview-secondary > summary { color: var(--color-text-muted); font-weight: 500; }
+.overview-secondary .content-grid { margin-top: 8px; }
+.dashboard #first-steps { margin: 16px 0 0; padding: 8px 16px; }
+.dashboard #first-steps > summary { font-size: 14px; }
+@media (max-width: 1199px) and (min-width: 1024px) {
+  body[data-view="overview"] .page-tools { gap: 8px; }
+  body[data-view="overview"] .month-label { width: 192px; flex-basis: 192px; }
+  .dashboard-top, .dashboard .overview-grid { grid-template-columns: minmax(0,1.2fr) minmax(264px,1fr); gap: 16px; }
+  .dashboard-metrics .metric { padding: 0 8px; }
+  .dashboard-metrics .metric > strong { font-size: 20px; }
+}
+@media (max-width: 767px) {
+  body[data-view="overview"] .topbar { min-height: 64px; }
+  body[data-view="overview"] .welcome { margin: 16px 0; flex-direction: column; align-items: stretch; }
+  body[data-view="overview"] .page-tools { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; width: 100%; gap: 8px; }
+  body[data-view="overview"] .month-label { width: 100%; min-width: 0; }
+  body[data-view="overview"] .month-label input { padding: 8px; }
+  .overview-quick-actions .button { padding: 12px; }
+  .overview-quick-actions #overview-import, .action-label-desktop { display: none; }
+  .action-label-mobile { display: inline; }
+  .dashboard-top, .dashboard .overview-grid { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  .dashboard-demo-note { font-size: 12px; }
+  .dashboard .account-summary { padding: 8px 16px 0; }
+  .dashboard .account-summary .section-heading > h2 { flex: 1; }
+  .dashboard .account-summary .money-large { font-size: 32px; }
+  .dashboard .account-summary .balance-unavailable { font-size: 18px; }
+  .dashboard-metrics { grid-template-columns: minmax(0,1fr); padding: 16px; gap: 8px; }
+  .dashboard-metrics .metric { display: flex; flex-direction: row; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 0; }
+  .dashboard-metrics .metric + .metric { border-left: 0; }
+  .dashboard-metrics .metric > strong { font-size: 18px; line-height: 1.4; margin: 0; max-width: 100%; white-space: nowrap; overflow-wrap: normal; }
+  .dashboard-metrics .metric small { display: none; }
+  .dashboard-metrics .metric > span { font-size: 14px; flex: 1 1 104px; }
+  .cash-details { padding: 0 16px; }
+  .overview-card-panel > .section-heading { margin-bottom: 0; }
+  .dashboard .overview-grid { margin-top: 16px; }
+  .dashboard .overview-grid .panel { padding: 8px 16px 16px; }
+  .dashboard #recent .transaction-amount { grid-column: auto; margin: 0; }
+  .dashboard #recent .transaction-info { flex-basis: auto; }
+  .overview-secondary { margin-top: 16px; }
+}
+@media (max-width: 359px) {
+  body[data-view="overview"] .welcome { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+  body[data-view="overview"] .page-tools { display: contents; }
+  body[data-view="overview"] .overview-quick-actions { grid-column: 2; grid-row: 1; }
+  body[data-view="overview"] .month-label { grid-column: 1 / -1; grid-row: 2; }
+  .dashboard #recent .transaction-amount { grid-column: 2 / -1; text-align: left; }
+}
+
+@media (max-width: 1199px) and (min-width: 1024px) { .card-showcase { grid-template-columns: 120px minmax(0,1fr); gap: 16px; } .card-facts .card-bill-total { font-size: 20px; } .card-facts .card-value-long { font-size: 16px; } }
+@media (max-width: 359px) { .card-showcase { grid-template-columns: 108px minmax(0,1fr); gap: 16px; } .card-front { padding: 12px; } .card-front-brand { font-size: 12px; } .overview-card-panel h2 { font-size: 16px; } .card-facts .card-bill-total { font-size: 20px; } .card-facts .card-value-long { font-size: 16px; } }

@@ -1,0 +1,559 @@
+{
+  "date": "2026-11-11",
+  "method": "Luminancia relativa sRGB; pares solidos declarados, sem renderizacao de navegador.",
+  "source": "web/style.css e design-system/walleturbo/tokens.css",
+  "existing": [
+    {
+      "label": "Claro: texto/superficie",
+      "foreground": "#202936",
+      "background": "#ffffff",
+      "minimum": 4.5,
+      "ratio": 14.666,
+      "pass": true
+    },
+    {
+      "label": "Claro: secundario/superficie",
+      "foreground": "#566477",
+      "background": "#ffffff",
+      "minimum": 4.5,
+      "ratio": 6.026,
+      "pass": true
+    },
+    {
+      "label": "Claro: borda de campo/fundo do campo",
+      "foreground": "#dce2e9",
+      "background": "#f5f6f8",
+      "minimum": 3,
+      "ratio": 1.206,
+      "pass": false
+    },
+    {
+      "label": "Claro: borda de campo/superficie externa",
+      "foreground": "#dce2e9",
+      "background": "#ffffff",
+      "minimum": 3,
+      "ratio": 1.304,
+      "pass": false
+    },
+    {
+      "label": "Escuro: texto/superficie",
+      "foreground": "#edf2f7",
+      "background": "#19232e",
+      "minimum": 4.5,
+      "ratio": 14.112,
+      "pass": true
+    },
+    {
+      "label": "Escuro: secundario/superficie",
+      "foreground": "#b5c0ce",
+      "background": "#19232e",
+      "minimum": 4.5,
+      "ratio": 8.625,
+      "pass": true
+    },
+    {
+      "label": "Escuro: borda de campo/fundo do campo",
+      "foreground": "#354353",
+      "background": "#101820",
+      "minimum": 3,
+      "ratio": 1.772,
+      "pass": false
+    },
+    {
+      "label": "Escuro: borda de campo/superficie externa",
+      "foreground": "#354353",
+      "background": "#19232e",
+      "minimum": 3,
+      "ratio": 1.574,
+      "pass": false
+    },
+    {
+      "label": "Claro: botao primario",
+      "foreground": "#ffffff",
+      "background": "#584098",
+      "minimum": 4.5,
+      "ratio": 8.072,
+      "pass": true
+    },
+    {
+      "label": "Escuro: botao primario",
+      "foreground": "#ffffff",
+      "background": "#6850b3",
+      "minimum": 4.5,
+      "ratio": 6.2,
+      "pass": true
+    }
+  ],
+  "proposed": {
+    "light": [
+      {
+        "label": "Texto/superficie",
+        "foreground": "#202936",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 14.666,
+        "pass": true
+      },
+      {
+        "label": "Secundario/superficie",
+        "foreground": "#566477",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 6.026,
+        "pass": true
+      },
+      {
+        "label": "Texto/fundo",
+        "foreground": "#202936",
+        "background": "#f5f6f8",
+        "minimum": 4.5,
+        "ratio": 13.563,
+        "pass": true
+      },
+      {
+        "label": "Secundario/fundo",
+        "foreground": "#566477",
+        "background": "#f5f6f8",
+        "minimum": 4.5,
+        "ratio": 5.573,
+        "pass": true
+      },
+      {
+        "label": "Texto/elevada",
+        "foreground": "#202936",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 14.666,
+        "pass": true
+      },
+      {
+        "label": "Secundario/elevada",
+        "foreground": "#566477",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 6.026,
+        "pass": true
+      },
+      {
+        "label": "Botao/padrao",
+        "foreground": "#ffffff",
+        "background": "#584098",
+        "minimum": 4.5,
+        "ratio": 8.072,
+        "pass": true
+      },
+      {
+        "label": "Botao/hover",
+        "foreground": "#ffffff",
+        "background": "#493575",
+        "minimum": 4.5,
+        "ratio": 10.247,
+        "pass": true
+      },
+      {
+        "label": "Botao/pressionado",
+        "foreground": "#ffffff",
+        "background": "#3e2d63",
+        "minimum": 4.5,
+        "ratio": 11.929,
+        "pass": true
+      },
+      {
+        "label": "Link/superficie",
+        "foreground": "#584098",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 8.072,
+        "pass": true
+      },
+      {
+        "label": "Selecao",
+        "foreground": "#584098",
+        "background": "#efecf7",
+        "minimum": 4.5,
+        "ratio": 6.923,
+        "pass": true
+      },
+      {
+        "label": "Receita",
+        "foreground": "#146b53",
+        "background": "#e5f6ef",
+        "minimum": 4.5,
+        "ratio": 5.759,
+        "pass": true
+      },
+      {
+        "label": "Receita/superficie",
+        "foreground": "#146b53",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 6.446,
+        "pass": true
+      },
+      {
+        "label": "Despesa",
+        "foreground": "#9a3412",
+        "background": "#fff0e7",
+        "minimum": 4.5,
+        "ratio": 6.566,
+        "pass": true
+      },
+      {
+        "label": "Despesa/superficie",
+        "foreground": "#9a3412",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 7.307,
+        "pass": true
+      },
+      {
+        "label": "Aviso",
+        "foreground": "#85540d",
+        "background": "#fff3d6",
+        "minimum": 4.5,
+        "ratio": 5.821,
+        "pass": true
+      },
+      {
+        "label": "Erro",
+        "foreground": "#a73140",
+        "background": "#fcecef",
+        "minimum": 4.5,
+        "ratio": 5.824,
+        "pass": true
+      },
+      {
+        "label": "Erro/superficie",
+        "foreground": "#a73140",
+        "background": "#ffffff",
+        "minimum": 4.5,
+        "ratio": 6.653,
+        "pass": true
+      },
+      {
+        "label": "Informacao",
+        "foreground": "#1d4e89",
+        "background": "#eaf2ff",
+        "minimum": 4.5,
+        "ratio": 7.448,
+        "pass": true
+      },
+      {
+        "label": "Perigo/padrao",
+        "foreground": "#ffffff",
+        "background": "#a73140",
+        "minimum": 4.5,
+        "ratio": 6.653,
+        "pass": true
+      },
+      {
+        "label": "Perigo/hover",
+        "foreground": "#ffffff",
+        "background": "#8d2635",
+        "minimum": 4.5,
+        "ratio": 8.532,
+        "pass": true
+      },
+      {
+        "label": "Perigo/pressionado",
+        "foreground": "#ffffff",
+        "background": "#751e2b",
+        "minimum": 4.5,
+        "ratio": 10.622,
+        "pass": true
+      },
+      {
+        "label": "Borda/superficie",
+        "foreground": "#7b8796",
+        "background": "#ffffff",
+        "minimum": 3,
+        "ratio": 3.653,
+        "pass": true
+      },
+      {
+        "label": "Borda/fundo",
+        "foreground": "#7b8796",
+        "background": "#f5f6f8",
+        "minimum": 3,
+        "ratio": 3.379,
+        "pass": true
+      },
+      {
+        "label": "Borda/elevada",
+        "foreground": "#7b8796",
+        "background": "#ffffff",
+        "minimum": 3,
+        "ratio": 3.653,
+        "pass": true
+      },
+      {
+        "label": "Foco/superficie",
+        "foreground": "#684ab4",
+        "background": "#ffffff",
+        "minimum": 3,
+        "ratio": 6.507,
+        "pass": true
+      },
+      {
+        "label": "Foco/fundo",
+        "foreground": "#684ab4",
+        "background": "#f5f6f8",
+        "minimum": 3,
+        "ratio": 6.018,
+        "pass": true
+      },
+      {
+        "label": "Foco/elevada",
+        "foreground": "#684ab4",
+        "background": "#ffffff",
+        "minimum": 3,
+        "ratio": 6.507,
+        "pass": true
+      }
+    ],
+    "dark": [
+      {
+        "label": "Texto/superficie",
+        "foreground": "#edf2f7",
+        "background": "#19232e",
+        "minimum": 4.5,
+        "ratio": 14.112,
+        "pass": true
+      },
+      {
+        "label": "Secundario/superficie",
+        "foreground": "#b5c0ce",
+        "background": "#19232e",
+        "minimum": 4.5,
+        "ratio": 8.625,
+        "pass": true
+      },
+      {
+        "label": "Texto/fundo",
+        "foreground": "#edf2f7",
+        "background": "#101820",
+        "minimum": 4.5,
+        "ratio": 15.888,
+        "pass": true
+      },
+      {
+        "label": "Secundario/fundo",
+        "foreground": "#b5c0ce",
+        "background": "#101820",
+        "minimum": 4.5,
+        "ratio": 9.711,
+        "pass": true
+      },
+      {
+        "label": "Texto/elevada",
+        "foreground": "#edf2f7",
+        "background": "#222f3d",
+        "minimum": 4.5,
+        "ratio": 12.091,
+        "pass": true
+      },
+      {
+        "label": "Secundario/elevada",
+        "foreground": "#b5c0ce",
+        "background": "#222f3d",
+        "minimum": 4.5,
+        "ratio": 7.39,
+        "pass": true
+      },
+      {
+        "label": "Botao/padrao",
+        "foreground": "#22163b",
+        "background": "#c5b5ff",
+        "minimum": 4.5,
+        "ratio": 9.172,
+        "pass": true
+      },
+      {
+        "label": "Botao/hover",
+        "foreground": "#22163b",
+        "background": "#d5caff",
+        "minimum": 4.5,
+        "ratio": 11.013,
+        "pass": true
+      },
+      {
+        "label": "Botao/pressionado",
+        "foreground": "#22163b",
+        "background": "#b29cef",
+        "minimum": 4.5,
+        "ratio": 7.139,
+        "pass": true
+      },
+      {
+        "label": "Link/superficie",
+        "foreground": "#c5b5ff",
+        "background": "#19232e",
+        "minimum": 4.5,
+        "ratio": 8.649,
+        "pass": true
+      },
+      {
+        "label": "Selecao",
+        "foreground": "#c5b5ff",
+        "background": "#302b46",
+        "minimum": 4.5,
+        "ratio": 7.327,
+        "pass": true
+      },
+      {
+        "label": "Receita",
+        "foreground": "#8ee0bc",
+        "background": "#183d32",
+        "minimum": 4.5,
+        "ratio": 7.726,
+        "pass": true
+      },
+      {
+        "label": "Receita/superficie",
+        "foreground": "#8ee0bc",
+        "background": "#19232e",
+        "minimum": 4.5,
+        "ratio": 10.247,
+        "pass": true
+      },
+      {
+        "label": "Despesa",
+        "foreground": "#ffd1b2",
+        "background": "#3c2b22",
+        "minimum": 4.5,
+        "ratio": 9.62,
+        "pass": true
+      },
+      {
+        "label": "Despesa/superficie",
+        "foreground": "#ffd1b2",
+        "background": "#19232e",
+        "minimum": 4.5,
+        "ratio": 11.365,
+        "pass": true
+      },
+      {
+        "label": "Aviso",
+        "foreground": "#f0cb8e",
+        "background": "#3b301e",
+        "minimum": 4.5,
+        "ratio": 8.38,
+        "pass": true
+      },
+      {
+        "label": "Erro",
+        "foreground": "#ffadb7",
+        "background": "#49202a",
+        "minimum": 4.5,
+        "ratio": 7.82,
+        "pass": true
+      },
+      {
+        "label": "Erro/superficie",
+        "foreground": "#ffadb7",
+        "background": "#19232e",
+        "minimum": 4.5,
+        "ratio": 9.017,
+        "pass": true
+      },
+      {
+        "label": "Informacao",
+        "foreground": "#a8caff",
+        "background": "#182f4b",
+        "minimum": 4.5,
+        "ratio": 8.117,
+        "pass": true
+      },
+      {
+        "label": "Perigo/padrao",
+        "foreground": "#38151e",
+        "background": "#ffadb7",
+        "minimum": 4.5,
+        "ratio": 9.205,
+        "pass": true
+      },
+      {
+        "label": "Perigo/hover",
+        "foreground": "#38151e",
+        "background": "#ffc1c8",
+        "minimum": 4.5,
+        "ratio": 10.597,
+        "pass": true
+      },
+      {
+        "label": "Perigo/pressionado",
+        "foreground": "#38151e",
+        "background": "#f296a3",
+        "minimum": 4.5,
+        "ratio": 7.47,
+        "pass": true
+      },
+      {
+        "label": "Borda/superficie",
+        "foreground": "#8291a3",
+        "background": "#19232e",
+        "minimum": 3,
+        "ratio": 4.941,
+        "pass": true
+      },
+      {
+        "label": "Borda/fundo",
+        "foreground": "#8291a3",
+        "background": "#101820",
+        "minimum": 3,
+        "ratio": 5.563,
+        "pass": true
+      },
+      {
+        "label": "Borda/elevada",
+        "foreground": "#8291a3",
+        "background": "#222f3d",
+        "minimum": 3,
+        "ratio": 4.234,
+        "pass": true
+      },
+      {
+        "label": "Foco/superficie",
+        "foreground": "#c5b5ff",
+        "background": "#19232e",
+        "minimum": 3,
+        "ratio": 8.649,
+        "pass": true
+      },
+      {
+        "label": "Foco/fundo",
+        "foreground": "#c5b5ff",
+        "background": "#101820",
+        "minimum": 3,
+        "ratio": 9.738,
+        "pass": true
+      },
+      {
+        "label": "Foco/elevada",
+        "foreground": "#c5b5ff",
+        "background": "#222f3d",
+        "minimum": 3,
+        "ratio": 7.411,
+        "pass": true
+      }
+    ]
+  },
+  "cardPreview": [
+    {
+      "label": "Nome do cartão",
+      "foreground": "#f2f6f4",
+      "background": "#171c1b",
+      "minimum": 4.5,
+      "ratio": 15.811,
+      "pass": true
+    },
+    {
+      "label": "Legenda do cartão",
+      "foreground": "#c7d0cb",
+      "background": "#171c1b",
+      "minimum": 4.5,
+      "ratio": 10.927,
+      "pass": true
+    }
+  ]
+}

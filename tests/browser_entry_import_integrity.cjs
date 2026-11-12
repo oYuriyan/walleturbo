@@ -2,7 +2,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs"),
   assert = require("assert/strict"),
   { randomUUID } = require("crypto");
-const base = "http://localhost:8000";
+const base = process.env.APP_URL || "http://localhost:8000";
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8"));
   const browser = await chromium.launch({
@@ -24,6 +24,7 @@ const base = "http://localhost:8000";
     },
   ]);
   const page = await context.newPage();
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let headers;
   try {
     headers = {
@@ -34,7 +35,7 @@ const base = "http://localhost:8000";
     };
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
-    await page.locator('.nav[data-view="transactions"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "transactions");
     await page.locator('#transactions [data-action="new-entry"]').click();
     const form = page.locator("#entry-form"),
       dialog = page.locator("#entry-dialog");
@@ -62,9 +63,7 @@ const base = "http://localhost:8000";
     let transaction = page
       .locator("#transaction-list .transaction")
       .filter({ hasText: "Gasto sintético" });
-    await transaction
-      .getByRole("button", { name: "Revisar", exact: true })
-      .click();
+    await require("./ui_helpers.cjs").clickRowAction(transaction, "Revisar");
     await form.locator('[name="amount"]').fill("15,00");
     await form.locator('[name="reason"]').fill("Revisão local");
     assert.equal(
@@ -112,10 +111,9 @@ const base = "http://localhost:8000";
       ).status(),
       409,
     );
-    page.once("dialog", (d) => d.accept());
-    await transaction
-      .getByRole("button", { name: "Excluir", exact: true })
-      .click();
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await require("./ui_helpers.cjs").clickRowAction(transaction, "Excluir");
+    });
     await page
       .locator("#transaction-list .transaction")
       .waitFor({ state: "detached" });
@@ -219,13 +217,14 @@ const base = "http://localhost:8000";
     await page
       .locator('#import-preview input[data-release-reason="0"]')
       .fill("Destino escolhido por engano");
-    page.once("dialog", (d) => d.accept());
     const releasedResponse = page.waitForResponse(
       (r) => r.url().endsWith("/api/import/unlink") && r.status() === 200,
     );
-    await page
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await page
       .locator('#import-preview button[data-release-index="0"]')
       .click();
+    });
     assert.equal((await (await releasedResponse).json()).released, 1);
     await page
       .locator('#import-preview button[data-release-index="0"]')
@@ -244,10 +243,9 @@ const base = "http://localhost:8000";
       await page.locator("#transaction-list .transaction").count(),
       1,
     );
-    page.once("dialog", (d) => d.accept());
-    await transaction
-      .getByRole("button", { name: "Excluir", exact: true })
-      .click();
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await require("./ui_helpers.cjs").clickRowAction(transaction, "Excluir");
+    });
     await page
       .locator("#transaction-list .transaction")
       .waitFor({ state: "detached" });

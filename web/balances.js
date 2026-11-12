@@ -4,6 +4,7 @@ let balanceGeneration = 0,
 $("#balance-date").value = today;
 const balanceForms = ["opening", "transfer", "reverse-transfer"];
 function clearBalances() {
+  uiOverviewBalance(null, demo ? "demo" : "signedout");
   balanceGeneration++;
   transferOffset = 0;
   $("#balance-list").replaceChildren();
@@ -49,10 +50,21 @@ async function loadBalances() {
     return;
   }
   $("#balance-notice").textContent = "Calculando saldos…";
+  uiOverviewBalance(null, "loading");
   const day = $("#balance-date").value;
   if (!day) throw Error("Informe uma data de consulta.");
-  const data = await api("/api/balances?as_of=" + encodeURIComponent(day));
+  let data;
+  try { data = await api("/api/balances?as_of=" + encodeURIComponent(day)); }
+  catch (error) {
+    if (generation === balanceGeneration) {
+      uiOverviewBalance(null, "error");
+      $("#balance-notice").textContent = "Consulta de saldos indisponível. Tente novamente para atualizar os valores.";
+      $("#retry-load").hidden = false;
+    }
+    throw error;
+  }
   if (generation !== balanceGeneration || !csrf || demo) return;
+  uiOverviewBalance(data);
   $("#balance-notice").textContent =
     (data.total_cents === null
       ? `Subtotal conhecido: ${money(data.known_subtotal_cents)}. ${data.unknown_accounts} conta(s) sem referência aplicável e ${data.unassigned_transactions} lançamento(s) sem conta. Total completo indisponível.`
@@ -86,7 +98,7 @@ async function loadBalances() {
       el(
         "p",
         a.opening_date
-          ? `Referência: ${money(a.opening_cents)} no início de ${a.opening_date.split("-").reverse().join("/")} · revisão ${a.version}.`
+          ? `Referência: ${money(a.opening_cents)} no início de ${a.opening_date.split("-").reverse().join("/")}.`
           : "Informe o saldo inicial para começar o cálculo.",
       ),
     );
@@ -130,6 +142,7 @@ async function loadBalances() {
   });
   transferOffset = 0;
   await loadTransfers(generation, true);
+  uiRestoreFocus();
 }
 async function loadTransfers(generation, reset = false) {
   const page = await api(`/api/transfers?offset=${transferOffset}&limit=30`);
@@ -215,7 +228,7 @@ $("#opening-form").onsubmit = (e) => {
         reason: f.elements.reason.value.trim(),
       });
       $("#opening-dialog").close();
-      await loadBalances();
+      await refreshAfterSave(loadBalances);
       message(
         "Referência salva. Correções anteriores permanecem na exportação.",
       );
@@ -243,7 +256,7 @@ $("#transfer-form").onsubmit = (e) => {
         description: f.elements.description.value.trim(),
       });
       $("#transfer-dialog").close();
-      await loadBalances();
+      await refreshAfterSave(loadBalances);
       message("Transferência registrada, sem duplicar receitas ou despesas.");
     }),
   );
@@ -257,7 +270,7 @@ $("#reverse-transfer-form").onsubmit = (e) => {
         date: f.elements.date.value,
       });
       $("#reverse-transfer-dialog").close();
-      await loadBalances();
+      await refreshAfterSave(loadBalances);
       message("Reversão registrada na data informada.");
     }),
   );

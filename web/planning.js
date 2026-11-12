@@ -20,11 +20,17 @@ function clearPlanning() {
   for (const id of ["capacity", "planning-disclaimer", "planning-notice"])
     $("#" + id).textContent = "";
   for (const form of [$("#plan-form"), $("#budget-form")])
+    delete form.dataset.dirty;
+  for (const form of [$("#plan-form"), $("#budget-form")])
     form
       .querySelectorAll("input,select,button")
       .forEach((n) => (n.disabled = true));
 }
-async function loadPlanning() {
+function planningHasDraft() {
+  return [$("#plan-form"), $("#budget-form")].some((form) => form.dataset.dirty === "true");
+}
+async function loadPlanning(force = false) {
+  if (!force && csrf && !demo && planningContext?.month === $("#month").value && planningHasDraft()) return;
   const generation = ++planningGeneration;
   const enabled = !!csrf && !demo;
   for (const form of [$("#plan-form"), $("#budget-form")])
@@ -47,13 +53,22 @@ async function loadPlanning() {
     return;
   }
   $("#planning-notice").textContent = "Calculando com os registros do mês…";
-  const data = await api("/api/planning/" + $("#month").value);
+  let data;
+  try { data = await api("/api/planning/" + $("#month").value); }
+  catch (error) {
+    if (generation === planningGeneration) {
+      planningContext = null;
+      $("#planning-notice").textContent = "Planejamento indisponível. Use Recarregar planejamento para tentar novamente.";
+    }
+    throw error;
+  }
   if (generation !== planningGeneration) return;
   planningContext = {
     month: data.month,
     version: data.version,
     recordsRevision: data.records_revision,
   };
+  for (const form of [$("#plan-form"), $("#budget-form")]) delete form.dataset.dirty;
   for (const form of [$("#plan-form"), $("#budget-form")])
     form
       .querySelectorAll("input,select,button")
@@ -91,7 +106,7 @@ async function loadPlanning() {
         async () => {
           const generation = planningGeneration;
           if (
-            !confirm(
+            !await confirmAction(
               "Remover este limite mensal? Os lançamentos serão preservados.",
             )
           )
@@ -163,9 +178,6 @@ async function loadPlanning() {
     " Aportes são distribuídos pela data de prazo, usando as metas atuais. Método: " +
     data.method;
 }
-document
-  .querySelector("[data-view=planning]")
-  .addEventListener("click", () => action(loadPlanning));
 $("#plan-form").onsubmit = (e) => {
   e.preventDefault();
   action(async () => {
@@ -183,7 +195,7 @@ $("#plan-form").onsubmit = (e) => {
       expected_records_revision: context.recordsRevision,
     });
     if (generation !== planningGeneration) return;
-    await loadPlanning();
+    await refreshAfterSave(() => loadPlanning(true));
     message("Cenário salvo. A simulação não movimenta nem reserva dinheiro.");
   });
 };
@@ -200,9 +212,12 @@ $("#budget-form").onsubmit = (e) => {
       amount_cents: cents(f.elements.amount.value),
     });
     if (generation !== planningGeneration) return;
-    await loadPlanning();
+    await refreshAfterSave(() => loadPlanning(true));
     message("Limite mensal salvo.");
   });
 };
 
-$("#reload-planning").onclick = () => action(loadPlanning);
+$("#reload-planning").onclick = () => action(async () => {
+  if (planningHasDraft() && !await confirmAction("Descartar os valores do planejamento ainda não salvos e recarregar?")) return;
+  await loadPlanning(true);
+});

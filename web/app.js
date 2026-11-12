@@ -27,26 +27,27 @@ let demo = false,
   csvContent = "",
   view = "overview",
   importStatementId = null;
-$("#month").value = today.slice(0, 7);
+$("#month").value = uiRoute().month || today.slice(0, 7);
 // Apenas preferência visual fica no navegador. Dados financeiros da demonstração ficam em memória.
-try {
-  document.body.classList.toggle(
-    "dark",
-    localStorage.getItem("walleturbo-theme") === "dark",
-  );
-} catch {}
+walleturboTheme.apply();
 function el(tag, text, cls) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
   if (cls) node.className = cls;
   return node;
 }
-function message(text) {
-  $("#status").textContent = text;
+function message(text, kind = /^(Lançamento salvo|Meta salva|Cadastro salvo|Pagamento registrado|Fatura conferida|Compra corrigida|Registro de pagamento corrigido|Cenário salvo|Limite mensal salvo|Transferência registrada|Referência salva|Dados financeiros ativos excluídos)/.test(text) ? "success" : "info") {
+  uiStatus(text, kind);
 }
-function empty(target, text) {
+function empty(target, text, actionLabel, onAction) {
   const box = el("div", undefined, "empty");
-  box.append(el("span", "◎"), el("div", text));
+  box.append(uiIcon("empty"), el("div", text));
+  if (actionLabel && onAction) {
+    const button = el("button", actionLabel, "ghost");
+    button.type = "button";
+    button.onclick = onAction;
+    box.append(button);
+  }
   target.append(box);
 }
 async function api(path, method = "GET", body, headers = {}) {
@@ -76,29 +77,41 @@ async function api(path, method = "GET", body, headers = {}) {
       if (typeof clearBalances === "function") clearBalances();
       render(summary([]));
     }
-    throw Error(
+    const error = Error(
       typeof detail === "string"
         ? detail
         : "Confira os campos e tente novamente.",
     );
+    error.fields = Array.isArray(detail) ? detail : [];
+    throw error;
   }
   return response.status === 204 ? null : response.json();
 }
 async function action(fn) {
+  const form = uiSubmission;
+  uiSubmission = null;
+  if (form?.dataset.uiBusy === "true") return;
+  // Iniciar fn antes da indicação ocupada preserva guards disabled dos módulos.
+  let release = () => {};
   try {
-    await fn();
+    const result = fn();
+    release = uiBusy(form);
+    await result;
   } catch (e) {
-    message(e.message);
-    const dialog = document.querySelector("dialog[open]");
-    if (dialog) {
-      let error = dialog.querySelector(".dialog-error");
-      if (!error) {
-        error = el("p", undefined, "dialog-error");
-        error.setAttribute("role", "alert");
-        dialog.append(error);
-      }
-      error.textContent = e.message;
-    }
+    const dialog = document.querySelector("dialog[open]:not(#confirm-dialog)");
+    if (dialog) uiFormError(dialog, e);
+    else message(e.message, e.mutationCommitted ? "info" : "error");
+  } finally {
+    release();
+  }
+}
+async function refreshAfterSave(load = refresh) {
+  try { await load(); }
+  catch (cause) {
+    const error = Error("Alteração concluída. Não foi possível atualizar a consulta. Use Tentar novamente para consultar os registros, sem salvar outra vez.");
+    error.mutationCommitted = true;
+    $("#retry-load").hidden = false;
+    throw error;
   }
 }
 function allowed() {
@@ -155,6 +168,7 @@ async function refresh() {
   $("#retry-load").hidden = true;
   let completed = false;
   document.querySelector("main").setAttribute("aria-busy", "true");
+  $("#overview-quick-actions").inert = true;
   $("#loading-status").hidden = false;
   document
     .querySelectorAll(".view")
@@ -180,12 +194,14 @@ async function refresh() {
     completed = current();
   } catch (error) {
     if (current()) {
+      if (!demo && csrf) uiOverviewBalance(null, "error");
       $("#retry-load").hidden = false;
       throw error;
     }
   } finally {
     if (generation === refreshGeneration) {
       document.querySelector("main").setAttribute("aria-busy", "false");
+      $("#overview-quick-actions").inert = !completed && !!csrf && !demo;
       $("#loading-status").hidden = true;
       document
         .querySelectorAll(".view")
@@ -194,10 +210,13 @@ async function refresh() {
             (node.inert =
               node.id !== "privacy" && !completed && !!csrf && !demo),
         );
+      uiRestoreFocus();
     }
   }
 }
 function render(data) {
+  $("#finance-demo-help").hidden = !demo;
+  document.querySelectorAll("[data-demo-note]").forEach((node) => (node.hidden = !demo));
   const guide = $("#first-steps");
   guide.hidden = !csrf || demo;
   if (guide.hidden) {
@@ -213,18 +232,27 @@ function render(data) {
   $("#card-result").textContent =
     "Pagamentos de fatura no mês: " + money(data.card_payment_cents || 0);
   $("#balance").textContent = money(data.balance_cents);
+  $("#balance").classList.toggle("negative", data.balance_cents < 0);
+  $("#balance").classList.toggle("positive", data.balance_cents > 0);
   $("#income").textContent = money(data.income_cents);
   $("#expense").textContent = money(data.expense_cents);
   const cat = $("#categories");
   cat.replaceChildren();
   const entries = Object.entries(data.categories).sort((a, b) => b[1] - a[1]);
+  const comparableCategories = data.expense_cents > 0 && entries.every(([, value]) => value >= 0);
+  if (entries.length && !comparableCategories) cat.append(el("p", "Os valores líquidos incluem créditos ou estornos. Compare os valores abaixo, sem percentuais.", "subtle"));
   if (!entries.length)
     empty(cat, "Suas categorias aparecerão com os primeiros lançamentos.");
   entries.forEach(([name, value]) => {
     const row = el("div", undefined, "category-row"),
       label = el("div", undefined, "category-label");
     label.append(el("span", name), el("strong", money(value)));
-    row.append(label, progress(value, data.expense_cents, name));
+    row.append(label);
+    if (comparableCategories) {
+      const percent = Math.round((value / data.expense_cents) * 100);
+      label.append(el("span", `${percent}%`, "subtle"));
+      row.append(progress(value, data.expense_cents, name));
+    } else if (value < 0) row.append(el("p", "Créditos e estornos líquidos neste período.", "subtle"));
     cat.append(row);
   });
   const ins = $("#insights");
@@ -243,6 +271,17 @@ function render(data) {
     );
     ins.append(card);
   });
+  const attention = $("#overview-attention");
+  const pending = all.filter((entry) => entry.date.startsWith($("#month").value) && !entry.reviewed).length;
+  attention.hidden = data.balance_cents >= 0 && !pending;
+  attention.replaceChildren();
+  if (data.balance_cents < 0) attention.append(el("p", `Despesas acima das receitas em ${money(-data.balance_cents)} neste mês.`));
+  if (pending) {
+    const link = el("a", `${pending} lançamento(s) com revisão pendente`);
+    link.href = "#transactions";
+    link.onclick = (event) => { event.preventDefault(); showView("transactions"); };
+    attention.append(link);
+  }
   renderTransactions();
   renderGoals();
   if (typeof renderFinance === "function") renderFinance();
@@ -251,7 +290,7 @@ function progress(value, max, label) {
   const wrap = el("div", undefined, "track"),
     bar = el("progress");
   bar.max = Math.max(1, max);
-  bar.value = value;
+  bar.value = Math.max(0, Math.min(value, bar.max));
   bar.setAttribute("aria-label", label);
   wrap.append(bar);
   return wrap;
@@ -262,20 +301,21 @@ function transactionNode(t, editable) {
     info = el("div", undefined, "transaction-info");
   info.append(
     el("strong", t.description),
-    el("small", `${t.category} · ${t.date.split("-").reverse().join("/")}`),
+    el("small", `${t.kind === "refund" ? "Estorno" : positive ? "Receita" : "Despesa"} · ${t.category} · ${t.date.split("-").reverse().join("/")}`),
   );
   if (!t.reviewed) info.append(el("div", "Revisão pendente", "pending"));
-  if (t.kind === "refund")
-    info.append(el("small", "Crédito a conferir como estorno"));
+  if (t.kind === "refund" && !t.reviewed)
+    info.append(el("small", "Estorno com categoria a revisar"));
   row.append(
-    el("div", positive ? "↓" : "↑", "transaction-icon"),
+    el("div", undefined, "transaction-icon"),
     info,
     el(
       "strong",
       (positive ? "+ " : "− ") + money(t.amount_cents),
-      "transaction-amount " + (positive ? "positive" : ""),
+      "transaction-amount " + (positive ? "positive" : "expense-value"),
     ),
   );
+  row.querySelector(".transaction-icon").append(uiIcon(positive ? "income" : "expense"));
   if (editable) {
     const actions = el("div", undefined, "row-actions"),
       edit = el("button", "Revisar"),
@@ -283,7 +323,7 @@ function transactionNode(t, editable) {
     edit.onclick = () => openEntry(t);
     del.onclick = () =>
       action(async () => {
-        if (!confirm(`Excluir o lançamento “${t.description}”?`)) return;
+        if (!await confirmAction(`Excluir o lançamento “${t.description}”?`)) return;
         if (!demo)
           await api(
             `/api/transactions/${t.id}?expected_version=${t.version}`,
@@ -293,8 +333,12 @@ function transactionNode(t, editable) {
         await refresh();
         message("Lançamento excluído.");
       });
+    del.className = "danger";
     actions.append(edit, del);
-    row.append(actions);
+    const menu = el("details", undefined, "row-menu"), trigger = el("summary", "Ações");
+    trigger.setAttribute("aria-label", `Ações de ${t.description}`);
+    menu.append(trigger, actions);
+    row.append(menu);
   }
   return row;
 }
@@ -313,14 +357,17 @@ function renderTransactions() {
       .toLocaleLowerCase("pt-BR")
       .includes(search),
   );
+  $("#search-count").textContent = `${filtered.length} ${filtered.length === 1 ? "lançamento encontrado" : "lançamentos encontrados"}`;
+  $("#clear-search").hidden = !search;
   filtered.forEach((t) => list.append(transactionNode(t, true)));
   if (!entries.length)
     empty(
       recent,
       "Seu primeiro lançamento é o começo de uma visão mais clara.",
+      "Registrar lançamento", () => openEntry(),
     );
   if (!filtered.length)
-    empty(list, "Nenhum lançamento encontrado neste período.");
+    empty(list, search ? "Nenhum lançamento corresponde à busca neste período." : "Nenhum lançamento encontrado neste período.", search ? "Limpar busca" : "Novo lançamento", () => search ? $("#clear-search").click() : openEntry());
 }
 let goalGeneration = 0;
 function clearGoalForm() {
@@ -343,7 +390,9 @@ function goalNode(g, editable) {
     el("strong", g.name),
     el("small", "Até " + g.deadline.split("-").reverse().join("/")),
   );
-  head.append(el("span", "◎", "goal-symbol"), label);
+  const symbol = el("span", undefined, "goal-symbol");
+  symbol.append(uiIcon("target"));
+  head.append(symbol, label);
   const values = el("div", undefined, "goal-values");
   values.append(
     el("strong", money(g.saved_cents)),
@@ -391,7 +440,7 @@ function renderGoals() {
     empty(list, "Crie uma meta para começar a planejar.");
   }
 }
-function showView(name) {
+function showView(name, updateHistory = true, moveFocus = true) {
   const pages = {
     overview: ["Visão geral", "Entradas, despesas e resultado do período."],
     transactions: [
@@ -405,6 +454,7 @@ function showView(name) {
   };
   if (!pages[name]) return;
   view = name;
+  document.body.dataset.view = name;
   $("#page-title").textContent = pages[name][0];
   $("#page-description").textContent = pages[name][1];
   document.title = `${pages[name][0]} · Walleturbo`;
@@ -415,22 +465,34 @@ function showView(name) {
     if (n.dataset.view === name) n.setAttribute("aria-current", "page");
     else n.removeAttribute("aria-current");
   });
-  $("#page-title").focus();
+  if (updateHistory) uiWriteRoute(name);
+  if (["planning", "goals", "privacy"].includes(name) && matchMedia("(max-width: 1023px)").matches) {
+    $("#more-navigation-button").setAttribute("aria-expanded", "true");
+    $("#more-navigation").hidden = false;
+  } else if (matchMedia("(max-width: 1023px)").matches) {
+    $("#more-navigation-button").setAttribute("aria-expanded", "false");
+    $("#more-navigation").hidden = true;
+  }
+  if (moveFocus) $("#page-title").focus();
   if (name === "planning" && typeof loadPlanning === "function")
     action(loadPlanning);
 }
 function openDialog(id) {
   const d = $(id);
-  d.querySelector(".dialog-error")?.remove();
+  uiReturnFocus.set(d, document.activeElement);
+  d.dataset.dirty = "false";
+  uiClearErrors(d);
   const title = d.querySelector("h2");
   if (title) {
     if (!title.id) title.id = `${d.id}-title`;
     d.setAttribute("aria-labelledby", title.id);
   }
-  d.showModal();
-  d.querySelector(
+  if (!d.open) d.showModal();
+  const preferred = id === "#delete-dialog" ? d.querySelector(".close") : ["#correction-dialog", "#payment-correction-dialog", "#pdf-dialog"].includes(id) ? title : null;
+  if (preferred === title) title.tabIndex = -1;
+  (preferred || d.querySelector(
     'input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)',
-  )?.focus();
+  ))?.focus();
 }
 let entryGeneration = 0;
 function clearEntryForm() {
@@ -508,9 +570,15 @@ function openGoal(g) {
   openDialog("#goal-dialog");
 }
 function cents(value) {
-  if (!/^\d{1,9}([,.]\d{1,2})?$/.test(value))
-    throw Error("Informe um valor válido com até duas casas decimais.");
-  const [whole, decimal = ""] = value.replace(",", ".").split(".");
+  value = value.trim();
+  const grouped = /^\d{1,3}(\.\d{3}){1,2}(,\d{1,2})?$/.test(value);
+  if (!grouped && !/^\d{1,9}([,.]\d{1,2})?$/.test(value)) {
+    const error = Error("Informe um valor em reais com até duas casas decimais. Ex.: 1.234,56.");
+    error.inputValue = value;
+    throw error;
+  }
+  const normalized = grouped ? value.replaceAll(".", "") : value;
+  const [whole, decimal = ""] = normalized.replace(",", ".").split(".");
   return Number(whole) * 100 + Number(decimal.padEnd(2, "0"));
 }
 categories.forEach((c) => $("#category-options").append(el("option", c)));
@@ -523,8 +591,12 @@ $("#start-balances").onclick = () => {
   $("#balance-date").focus();
 };
 document
-  .querySelectorAll("[data-view]")
-  .forEach((b) => (b.onclick = () => showView(b.dataset.view)));
+  .querySelectorAll("[data-view],[data-route]")
+  .forEach((b) => (b.onclick = (event) => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    showView(b.dataset.view || b.dataset.route);
+  }));
 document
   .querySelectorAll('[data-action="new-entry"]')
   .forEach((b) => (b.onclick = () => openEntry()));
@@ -556,25 +628,21 @@ document.querySelectorAll("dialog").forEach((dialog) => {
 });
 document
   .querySelectorAll(".close")
-  .forEach((b) => (b.onclick = () => b.closest("dialog").close()));
+  .forEach((b) => (b.onclick = () => requestCloseDialog(b.closest("dialog"))));
 $("#theme").onclick = () => {
-  document.body.classList.toggle("dark");
-  try {
-    localStorage.setItem(
-      "walleturbo-theme",
-      document.body.classList.contains("dark") ? "dark" : "light",
-    );
-  } catch {}
+  walleturboTheme.apply(document.body.classList.contains("dark") ? "light" : "dark", true);
 };
-// O seletor de tema permanece acessível também em telas pequenas.
-const mobileTheme = el("button", "◐", "ghost");
-mobileTheme.setAttribute("aria-label", "Alternar tema");
-mobileTheme.onclick = () => $("#theme").click();
-$(".topbar>div").append(mobileTheme);
 $("#month").onchange = () =>
   action(async () => {
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test($("#month").value))
       throw Error("Selecione um mês válido.");
+    if (view === "planning" && typeof planningHasDraft === "function" && planningHasDraft() && planningContext?.month !== $("#month").value) {
+      if (!await confirmAction("Descartar os valores do planejamento ainda não salvos para consultar outro mês?")) {
+        $("#month").value = planningContext.month;
+        return;
+      }
+    }
+    uiWriteRoute(view);
     await refresh();
   });
 $("#retry-load").onclick = () => action(refresh);
@@ -663,8 +731,11 @@ $("#entry-form").onsubmit = (e) => {
         expected_version: Number(f.elements.version.value),
         reason: f.elements.reason.value.trim(),
       });
-    if (!body.description || body.amount_cents <= 0)
-      throw Error("Informe uma descrição e um valor maior que zero.");
+    if (!body.description || body.amount_cents <= 0) {
+      const error = Error(!body.description ? "Informe uma descrição para o lançamento." : "Informe um valor maior que zero.");
+      error.field = !body.description ? "description" : "amount";
+      throw error;
+    }
     submit.disabled = true;
     try {
       if (demo) {
@@ -682,7 +753,7 @@ $("#entry-form").onsubmit = (e) => {
         );
       if (generation !== entryGeneration) return;
       $("#entry-dialog").close();
-      await refresh();
+      await refreshAfterSave();
       message(
         "Lançamento salvo. Se necessário, altere o período para visualizar a data informada.",
       );
@@ -741,7 +812,7 @@ $("#goal-form").onsubmit = (e) => {
         );
       if (generation !== goalGeneration) return;
       $("#goal-dialog").close();
-      await refresh();
+      await refreshAfterSave();
       message(
         "Meta salva. A reserva informada não movimenta dinheiro entre contas.",
       );
@@ -769,7 +840,7 @@ $("#delete-goal").onclick = () =>
       id = f.elements.id.value,
       generation = goalGeneration;
     if (
-      !confirm(
+      !await confirmAction(
         "Excluir a meta arquivada? A exclusão exige reserva informada igual a zero.",
       )
     )
@@ -790,7 +861,7 @@ $("#delete-goal").onclick = () =>
         );
       if (generation !== goalGeneration) return;
       $("#goal-dialog").close();
-      await refresh();
+      await refreshAfterSave();
       message("Meta excluída.");
     } finally {
       if (generation === goalGeneration) button.disabled = !csrf && !demo;
@@ -1027,7 +1098,7 @@ $("#csv-file").onchange = () =>
                   "Informe o motivo para desfazer o vínculo (mínimo 3 caracteres).",
                 );
               if (
-                !confirm(
+                !await confirmAction(
                   "Desfazer somente o vínculo? O lançamento será preservado. Uma nova importação poderá criar outro lançamento; confira o destino na nova prévia.",
                 )
               )
@@ -1241,7 +1312,7 @@ $("#confirm-import").onclick = () =>
       });
       if (version !== importVersion) return;
       $("#import-dialog").close();
-      await refresh();
+      await refreshAfterSave();
       message(
         `${result.created} lançamentos importados; ${result.duplicates} linhas já conhecidas ignoradas.${result.linked ? ` ${result.linked} origens vinculadas a registros existentes.` : ""}${result.skipped ? ` ${result.skipped} não selecionados nesta importação.` : ""}${result.removed ? ` ${result.removed} excluídas anteriormente não foram recriadas.` : ""} Revise as categorias.`,
       );
@@ -1292,7 +1363,7 @@ $("#delete-form").onsubmit = (e) => {
     clearFinance();
     csrf = "";
     $("#delete-dialog").close();
-    await refresh();
+    await refreshAfterSave();
     if (!demo) {
       $("#login").hidden = false;
       $("#logout").hidden = true;
@@ -1301,6 +1372,7 @@ $("#delete-form").onsubmit = (e) => {
     message("Dados financeiros ativos excluídos.");
   });
 };
+showView(uiRoute().view, false, false);
 (async () => {
   render(summary([]));
   try {

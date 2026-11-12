@@ -1,3 +1,12 @@
+## 1.1.0 — redesign de interface — em validação
+
+- Design system em português do Brasil com tokens semânticos, temas claro/escuro, componentes compartilhados e espaçamento pela regra de 8.
+- Navegação por seção/período, histórico do navegador, ações principais e estados de vazio, carregamento, erro e confirmação consistentes nas seis áreas.
+- Visão geral compacta com saldo em destaque, métricas agrupadas, informações complementares recolhíveis e acesso visual aos cartões inspirado na referência aprovada.
+- Cartões exibem dados reais de fatura, vencimento, conferência e restante; seleção por teclado preserva foco e consulta não cria registros.
+- Regressões financeiras/importações adaptadas; CI amplia a matriz Chromium/Firefox, estados de interface e dashboard, com evidências sintéticas.
+- Auditoria, design system, validações e limites em docs/REDESIGN_UI.md e design-system/walleturbo/. Sem nova dependência de aplicação, migração ou alteração dos contratos/regras financeiras.
+
 ## 1.0.0 — V1 básica local — 11/11/2026
 
 - Fecha o recorte financeiro local, com interface revisada, jornada integrada e limites documentados.

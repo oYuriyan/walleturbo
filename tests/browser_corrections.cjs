@@ -2,7 +2,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs"),
   assert = require("assert/strict"),
   { randomUUID } = require("crypto");
-const base = "http://localhost:8000";
+const base = process.env.APP_URL || "http://localhost:8000";
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8"));
   const browser = await chromium.launch({
@@ -22,6 +22,7 @@ const base = "http://localhost:8000";
     },
   ]);
   const page = await context.newPage();
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let headers;
   try {
     const csrf = (await (await context.request.get(base + "/api/me")).json())
@@ -56,7 +57,7 @@ const base = "http://localhost:8000";
     );
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
-    await page.locator('[data-view="finance"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     await page.locator("#statement-list .row-menu > summary").first().click();
     await page
       .getByRole("button", { name: "Corrigir compra", exact: true })

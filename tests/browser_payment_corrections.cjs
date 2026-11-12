@@ -2,7 +2,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs"),
   assert = require("assert/strict"),
   { randomUUID } = require("crypto");
-const base = "http://localhost:8000";
+const base = process.env.APP_URL || "http://localhost:8000";
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8"));
   const browser = await chromium.launch({
@@ -24,6 +24,7 @@ const base = "http://localhost:8000";
     },
   ]);
   const page = await context.newPage();
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let headers;
   try {
     headers = {
@@ -130,7 +131,7 @@ const base = "http://localhost:8000";
     }
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
-    await page.locator('[data-view="finance"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     const form = page.locator("#payment-correction-form"),
       dialog = page.locator("#payment-correction-dialog");
     await page
@@ -216,10 +217,11 @@ const base = "http://localhost:8000";
           .value === "45,00",
     );
     await dialog.getByRole("button", { name: "Fechar", exact: true }).click();
-    page.once("dialog", (d) => d.accept());
-    await row
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await row
       .getByRole("button", { name: "Estornar registro", exact: true })
       .click();
+    });
     await page
       .getByText(
         "Pagamento alterado em outra sessão. Atualize antes de remover.",

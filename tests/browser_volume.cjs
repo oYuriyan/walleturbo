@@ -47,7 +47,7 @@ const fs = require("fs");
       currency: "BRL",
     }).format(fixture.balance_cents / 100);
     assert.equal(await page.locator("#balance").textContent(), expected);
-    await page.locator('.nav[data-view="transactions"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "transactions");
     assert.equal(
       await page.locator("#transaction-list .transaction").count(),
       fixture.month_count,
@@ -57,7 +57,7 @@ const fs = require("fs");
       await page.locator("#transaction-list .transaction").count(),
       1,
     );
-    await page.locator('.nav[data-view="finance"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     assert.equal(
       await page.locator("#statement-list .transaction").count(),
       100,

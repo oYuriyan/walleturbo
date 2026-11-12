@@ -3,7 +3,7 @@ const fs = require("fs"),
   assert = require("assert/strict");
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8")),
-    base = "http://localhost:8000";
+    base = process.env.APP_URL || "http://localhost:8000";
   const browser = await chromium.launch({
     headless: true,
     args: ["--no-sandbox"],
@@ -50,7 +50,7 @@ const fs = require("fs"),
     await panel
       .getByRole("button", { name: "Definir saldo inicial", exact: true })
       .waitFor();
-    await page.locator('.nav[data-view="overview"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "overview");
     await page.locator("#start-balances").click();
     assert(
       await page
@@ -73,7 +73,7 @@ const fs = require("fs"),
     await panel
       .getByRole("button", { name: "Corrigir referência", exact: true })
       .waitFor();
-    await page.locator('.nav[data-view="overview"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "overview");
     await guide
       .getByRole("button", {
         name: "Registrar receita ou despesa",

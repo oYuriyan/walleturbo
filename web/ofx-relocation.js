@@ -140,7 +140,7 @@ function ofxRelocationControls(
         await api(`${base}/relocate`, "POST", prepared);
         if (!current()) return;
         $("#import-dialog").close();
-        await refresh();
+        await refreshAfterSave();
         message(
           "Competência corrigida; lançamento, origem e histórico preservados. Reenvios devem usar a fatura de destino.",
         );

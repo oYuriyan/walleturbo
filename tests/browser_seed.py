@@ -13,7 +13,7 @@ sid = secrets.token_hex(32)
 redis = Redis.from_url(os.environ["REDIS_URL"], decode_responses=True)
 redis.setex(
     "session:" + hashlib.sha256(sid.encode()).hexdigest(),
-    180,
+    min(900, max(180, int(os.environ.get("WALLETURBO_BROWSER_SESSION_TTL", "180")))),
     json.dumps(
         {
             "user": "browser-synthetic-" + secrets.token_hex(16),

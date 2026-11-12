@@ -15,9 +15,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
   await page.goto(process.env.APP_URL || "http://localhost:8000");
   await page.getByRole("button", { name: "Explorar demonstração" }).click();
   await page.screenshot({ path: "artifacts/desktop.png", fullPage: true });
-  await page
-    .getByRole("button", { name: "Movimentações", exact: false })
-    .click();
+  await require("./ui_helpers.cjs").navigate(page, "transactions");
   await page.getByRole("button", { name: "Novo lançamento" }).click();
   await page
     .locator("#entry-form [name=description]")
@@ -29,13 +27,13 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     throw Error("HTML injection");
   if ((await page.locator("#transaction-list .transaction").count()) !== 1)
     throw Error("Lançamento não encontrado");
-  await page.getByRole("button", { name: "Revisar", exact: true }).click();
+  await require("./ui_helpers.cjs").clickRowAction(page.locator("#transaction-list .transaction").first(), "Revisar");
   await page.locator("#entry-form [name=amount]").fill("29,99");
   await page
     .locator("#entry-form [name=reason]")
     .fill("Conferência da demonstração");
   await page.getByRole("button", { name: "Salvar lançamento" }).click();
-  await page.getByRole("button", { name: "Minhas metas" }).click();
+  await require("./ui_helpers.cjs").navigate(page, "goals");
   await page.getByRole("button", { name: "Criar meta", exact: false }).click();
   await page.locator("#goal-form [name=name]").fill("Notebook");
   await page.locator("#goal-form [name=target]").fill("5000");
@@ -44,14 +42,14 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
   await page.getByRole("button", { name: "Salvar meta" }).click();
   if (!(await page.locator("#goal-list").textContent()).includes("Notebook"))
     throw Error("Meta ausente");
-  await page.getByRole("button", { name: "Visão geral" }).click();
+  await require("./ui_helpers.cjs").navigate(page, "overview");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: "artifacts/mobile.png", fullPage: true });
   if (
     await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)
   )
     throw Error("Overflow mobile");
-  await page.locator('.topbar button[aria-label="Alternar tema"]').click();
+  await page.locator("#theme-preference").selectOption("dark");
   await page.waitForTimeout(200);
   await page.screenshot({ path: "artifacts/mobile-dark.png", fullPage: true });
   if (errors.length) throw Error(errors.join("\n"));

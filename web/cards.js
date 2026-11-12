@@ -3,7 +3,9 @@ let financeAccounts = [],
   financeCards = [],
   financeStatements = [];
 let financeGeneration = 0;
+let overviewSelectedCardId = null;
 function clearFinance() {
+  overviewSelectedCardId = null;
   financeGeneration++;
   for (const name of [
     "setup",
@@ -99,6 +101,8 @@ function applyDemoCards(data) {
       data.balance_cents -= amount;
       data.categories[c.category] = (data.categories[c.category] || 0) + amount;
     }
+  data.insights = data.insights.filter((insight) => insight.title !== "Saídas acima das entradas");
+  if (data.balance_cents < 0) data.insights.push({ title: "Saídas acima das entradas", description: "Confira se todas as receitas foram registradas.", amount_cents: -data.balance_cents });
 }
 function populate(select, rows, emptyLabel) {
   select.replaceChildren();
@@ -122,7 +126,13 @@ function populateAccounts(select, optional = false, currentId = null) {
 function button(label, fn, cls = "ghost") {
   const b = el("button", label, cls);
   b.type = "button";
-  b.onclick = () => action(fn);
+  b.onclick = () => action(async () => {
+    if (b.disabled) return;
+    b.disabled = true;
+    const release = uiButtonBusy(b);
+    try { await fn(); }
+    finally { release(); b.disabled = false; }
+  });
   return b;
 }
 function localStatement(card, month) {
@@ -146,7 +156,82 @@ function localStatement(card, month) {
   }
   return s;
 }
+function renderOverviewCards() {
+  const target = $("#overview-cards"), options = $("#overview-card-options");
+  target.replaceChildren();
+  options.replaceChildren();
+  const month = $("#month").value;
+  const available = financeCards.filter((card) => !card.archived || financeStatements.some((bill) => bill.card_id === card.id && bill.month === month));
+  $("#overview-card-count").textContent = available.length > 2 ? `(2 de ${available.length})` : available.length ? `(${available.length})` : "";
+  if (!available.length) {
+    overviewSelectedCardId = null;
+    empty(target, csrf || demo ? "Seus cartões e faturas ficam a um toque daqui." : "Conecte sua conta para acompanhar os cartões.", csrf || demo ? "Cadastrar cartão" : undefined, () => openSetup("card"));
+    return;
+  }
+  const shown = available.slice(0, 2);
+  const card = shown.find((item) => item.id === overviewSelectedCardId) || shown[0];
+  overviewSelectedCardId = card.id;
+  const raw = financeStatements.find((item) => item.card_id === card.id && item.month === month);
+  const bill = raw ? totals(raw) : null;
+  const open = () => {
+    showView("finance");
+    const destination = bill ? document.getElementById("statement-" + bill.id) : $("#card-list").querySelector(`[data-entity-id="${CSS.escape(String(card.id))}"]`);
+    if (destination) { destination.tabIndex = -1; destination.focus({ preventScroll: true }); destination.scrollIntoView({ block: "start" }); }
+  };
+  const stage = el("div", undefined, "card-showcase"), stack = el("div", undefined, "card-stack");
+  const access = el("button", undefined, "credit-access");
+  access.type = "button";
+  access.dataset.cardId = card.id;
+  access.title = card.name;
+  access.setAttribute("aria-label", `Ver ${bill ? "fatura de " : "cartão "}${card.name} no período selecionado`);
+  const face = el("span", undefined, "card-front");
+  face.setAttribute("aria-hidden", "true");
+  const brand = el("span", "walleturbo.", "card-front-brand"), chip = el("span", undefined, "card-chip");
+  const wireless = uiIcon("contactless");
+  wireless.classList.add("card-contactless");
+  const identity = el("span", undefined, "card-front-identity");
+  identity.append(el("span", "Cartão de crédito", "card-front-label"), el("strong", card.name, "card-front-name"));
+  face.append(brand, chip, wireless, identity);
+  access.append(face);
+  access.onclick = open;
+  stack.append(access);
+  const info = el("div", undefined, "card-information");
+  if (card.name.length > 28) info.append(el("strong", card.name, "card-selected-name"));
+  const facts = el("dl", undefined, "card-facts");
+  const fact = (label, value, cls = "") => {
+    const row = el("div");
+    row.append(el("dt", label), el("dd", value, cls));
+    facts.append(row);
+  };
+  const billValue = bill ? money(bill.total_cents).replace(/\u00a0/g, " ") : "Sem fatura";
+  fact("Fatura do período", billValue, "card-bill-total" + (billValue.length > 14 ? " card-value-long" : ""));
+  fact("Vencimento", bill ? bill.due_date.split("-").reverse().join("/") : `Dia ${card.due_day}`);
+  fact("Situação", card.archived ? "Arquivado" : bill ? bill.status === "open" ? "Em revisão" : "Conferida" : "Não registrada");
+  if (bill?.paid_cents > 0) fact("Restante", money(bill.remaining_cents), "credit-remaining");
+  const details = el("button", bill ? "Ver fatura" : "Ver cartão", "text-button card-open");
+  details.type = "button";
+  details.setAttribute("aria-label", `Ver detalhes de ${card.name}`);
+  details.onclick = open;
+  info.append(facts, details);
+  stage.append(stack, info);
+  target.append(stage);
+  if (shown.length > 1) shown.forEach((item) => {
+    const choice = el("button", item.name, "card-choice");
+    choice.type = "button";
+    choice.dataset.cardId = item.id;
+    choice.setAttribute("aria-pressed", String(item.id === card.id));
+    choice.setAttribute("aria-label", `Selecionar cartão ${item.name}`);
+    choice.title = item.name;
+    choice.onclick = () => {
+      overviewSelectedCardId = item.id;
+      renderOverviewCards();
+      options.querySelector(`[data-card-id="${CSS.escape(String(item.id))}"]`).focus({ preventScroll: true });
+    };
+    options.append(choice);
+  });
+}
 function renderFinance() {
+  renderOverviewCards();
   const accounts = $("#account-list"),
     cards = $("#card-list"),
     statements = $("#statement-list");
@@ -201,6 +286,7 @@ function renderFinance() {
         panel = el("article", undefined, "panel statement"),
         heading = el("div", undefined, "section-heading"),
         label = el("div");
+      panel.id = "statement-" + s.id;
       label.append(
         el(
           "h2",
@@ -208,7 +294,7 @@ function renderFinance() {
         ),
         el(
           "p",
-          `Vence em ${s.due_date.split("-").reverse().join("/")} · ${s.status === "open" ? "Em revisão" : s.remaining_cents === 0 ? "Paga" : "Conferida"} · ${s.pending} pendência(s)`,
+          `Vence em ${s.due_date.split("-").reverse().join("/")} · ${s.status === "open" ? "Em revisão" : "Conferida"} · ${s.pending} ${s.pending === 1 ? "categoria pendente" : "categorias pendentes"}`,
         ),
       );
       heading.append(label, el("strong", money(s.total_cents)));
@@ -280,14 +366,14 @@ function renderFinance() {
         actions,
         el(
           "p",
-          `Pago: ${money(s.paid_cents)} · Restante: ${money(s.remaining_cents)}`,
+          `${s.remaining_cents < 0 ? "Crédito na fatura" : s.status !== "open" && s.remaining_cents === 0 ? "Fatura paga" : s.paid_cents > 0 ? "Pagamento parcial" : "Sem pagamento registrado"} · Pago: ${money(s.paid_cents)} · Restante: ${money(s.remaining_cents)}`,
         ),
       );
       s.charges.forEach((c) => {
         const row = transactionNode(
           {
             ...c,
-            kind: c.kind === "refund" ? "income" : "expense",
+            kind: c.kind,
             description: `${c.description}${c.kind === "refund" ? " · Estorno" : ""} · ${c.installment}/${c.installments}`,
           },
           false,
@@ -314,7 +400,7 @@ function renderFinance() {
                 ? await api("/api/card-operations/" + c.operation_id)
                 : null;
               if (
-                !confirm(
+                !await confirmAction(
                   current
                     ? `Excluir “${current.description}” e suas ${current.installments} parcela(s), total ${money(current.amount_cents)}? Todas as faturas afetadas precisam estar abertas.`
                     : "Excluir esta compra e todas as suas parcelas?",
@@ -367,7 +453,7 @@ function renderFinance() {
             "Estornar registro",
             async () => {
               if (
-                !confirm(
+                !await confirmAction(
                   "Remover apenas este registro de pagamento? Isso não desfaz uma operação bancária.",
                 )
               )
@@ -431,7 +517,7 @@ $("#setup-form").onsubmit = (e) => {
     else
       await api(type === "card" ? "/api/cards" : "/api/accounts", "POST", body);
     $("#setup-dialog").close();
-    await refresh();
+    await refreshAfterSave();
     message("Cadastro salvo.");
   });
 };
@@ -518,7 +604,7 @@ $("#purchase-form").onsubmit = (e) => {
       }
     } else await api("/api/card-purchases", "POST", body);
     $("#purchase-dialog").close();
-    await refresh();
+    await refreshAfterSave();
     message(
       "Compra ou estorno registrado. Confira as faturas nos meses de vencimento.",
     );
@@ -563,7 +649,7 @@ $("#review-charge-form").onsubmit = (e) => {
     } else
       await api(`/api/card-charges/${f.elements.id.value}/review`, "PUT", body);
     $("#review-charge-dialog").close();
-    await refresh();
+    await refreshAfterSave();
   });
 };
 $("#reload-reconcile").onclick = () =>
@@ -605,7 +691,7 @@ $("#reconcile-form").onsubmit = (e) => {
         expected_revision: f.elements.revision.value,
       });
     $("#reconcile-dialog").close();
-    await refresh();
+    await refreshAfterSave();
     message(
       "Fatura conferida. Agora você pode registrar os pagamentos realizados.",
     );
@@ -638,7 +724,7 @@ $("#payment-form").onsubmit = (e) => {
         body,
       );
     $("#payment-dialog").close();
-    await refresh();
+    await refreshAfterSave();
     message("Pagamento registrado, sem duplicar a despesa.");
   });
 };

@@ -26,6 +26,7 @@ const fs = require("fs");
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let csrf;
   try {
     await page.goto(base);
@@ -33,7 +34,7 @@ const fs = require("fs");
     csrf = (await (await context.request.get(base + "/api/me")).json()).csrf;
     await page.locator("#month").fill("2026-11");
     await page.locator("#month").dispatchEvent("change");
-    await page.getByRole("button", { name: "Contas e cartões" }).click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     await page.locator("#new-account").click();
     await page.locator("#setup-form [name=name]").fill("Conta de teste");
     await page
@@ -125,17 +126,17 @@ const fs = require("fs");
       path: "artifacts/cards-desktop.png",
       fullPage: true,
     });
-    await page.getByRole("button", { name: "Visão geral" }).click();
+    await require("./ui_helpers.cjs").navigate(page, "overview");
     if (!(await page.locator("#expense").textContent()).includes("33,34"))
       throw Error("Pagamento duplicou despesa");
     if (!(await page.locator("#cash-result").textContent()).includes("20,00"))
       throw Error("Caixa incorreto");
     await page.locator("#month").fill("2026-12");
     await page.locator("#month").dispatchEvent("change");
-    await page.getByRole("button", { name: "Contas e cartões" }).click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     await page.getByText("Compra parcelada · 2/3", { exact: true }).waitFor();
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator('.topbar button[aria-label="Alternar tema"]').click();
+    await page.locator("#theme-preference").selectOption("dark");
     await page.waitForTimeout(200);
     await page.screenshot({
       path: "artifacts/cards-mobile-dark.png",

@@ -242,3 +242,5 @@ Plano de 10/11/2026 — 0.25: (1) simplificar informação e ações nas seis á
 0.25 integrada pelo PR #17, CI 42880867890: 265 testes e interface Chromium/Firefox aprovados.
 
 Plano de 11/11/2026 — fechamento 1.0: (1) gerar override do Compose com `.env` recuperado; (2) ampliar o ensaio existente para iniciar API/Keycloak no destino, autenticar com OTP existente e comparar a jornada antes de reativar a origem; (3) medir leitura/mobile com um usuário e 10 mil lançamentos/2.400 compras em 24 meses; (4) consolidar critérios/limites em ACEITE_V1.md; (5) executar regressão integral e integrar somente com a CI aprovada. Sem serviço, dependência de aplicação, schema ou funcionalidade avançada nova. O roadmap amplo continua backlog; não impede esta V1 local.
+
+Plano de 11/11/2026 — 1.1: consolidar o redesign solicitado e o dashboard compacto, documentar tokens/componentes/referência dos cartões, adaptar regressões e ampliar a CI Chromium/Firefox. Mantém o recorte financeiro local da V1, sem novos serviços, frameworks, dependências de aplicação ou regras financeiras. Implementação e verificações locais em REDESIGN_UI.md; integração segue por PR com CI aprovada.

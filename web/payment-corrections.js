@@ -134,6 +134,6 @@ $("#confirm-payment-correction").onclick = () =>
     );
     if (generation !== paymentCorrectionGeneration || !csrf) return;
     $("#payment-correction-dialog").close();
-    await refresh();
+    await refreshAfterSave();
     message("Registro de pagamento corrigido. Histórico e saldos atualizados.");
   });

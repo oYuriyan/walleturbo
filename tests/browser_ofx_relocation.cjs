@@ -34,6 +34,7 @@ const fs = require("fs"),
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   const content = fs.readFileSync("tests/fixtures/ofx/card-102.ofx", "utf8");
   const imported = { content, reviewed: true, excluded_indices: [1, 2] };
   const post = (url, data) =>
@@ -61,9 +62,7 @@ const fs = require("fs"),
     await page.getByText("Conta conectada", { exact: true }).waitFor();
     await page.locator("#month").fill("2026-11");
     await page.locator("#month").dispatchEvent("change");
-    await page
-      .getByRole("button", { name: "Contas e cartões", exact: true })
-      .click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     const open = async () => {
       await page
         .locator("#statement-list")
@@ -169,7 +168,7 @@ const fs = require("fs"),
     });
     await simulate().click();
     await received;
-    await page.locator("#import-dialog .close").click();
+    await require("./ui_helpers.cjs").confirmNext(page, () => page.locator("#import-dialog .close").click());
     const finished = page.waitForResponse((r) =>
       r.url().endsWith("/import/ofx/relocate/preview"),
     );

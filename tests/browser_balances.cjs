@@ -1,7 +1,7 @@
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs"),
   assert = require("assert/strict");
-const base = "http://localhost:8000";
+const base = process.env.APP_URL || "http://localhost:8000";
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8"));
   const browser = await chromium.launch({
@@ -21,6 +21,7 @@ const base = "http://localhost:8000";
     },
   ]);
   const page = await context.newPage();
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let csrf;
   try {
     const me = await context.request.get(base + "/api/me");
@@ -39,7 +40,7 @@ const base = "http://localhost:8000";
     }
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
-    await page.locator('[data-view="finance"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     await page.locator("#balance-date").fill("2026-11-30");
     await page.locator("#balance-date").dispatchEvent("change");
     for (const [name, amount] of [
