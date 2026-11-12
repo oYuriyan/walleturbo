@@ -1,7 +1,7 @@
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs"),
   assert = require("assert/strict");
-const base = "http://localhost:8000";
+const base = process.env.APP_URL || "http://localhost:8000";
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8"));
   const browser = await chromium.launch({
@@ -21,6 +21,7 @@ const base = "http://localhost:8000";
     },
   ]);
   const page = await context.newPage();
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let headers;
   try {
     const csrf = (await (await context.request.get(base + "/api/me")).json())
@@ -28,7 +29,7 @@ const base = "http://localhost:8000";
     headers = { Origin: base, "X-CSRF-Token": csrf };
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
-    await page.locator('.nav[data-view="goals"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "goals");
     await page.locator('#goals [data-action="new-goal"]').click();
     const form = page.locator("#goal-form"),
       dialog = page.locator("#goal-dialog");
@@ -96,8 +97,9 @@ const base = "http://localhost:8000";
       0,
     );
     await manage();
-    page.once("dialog", (d) => d.accept());
-    await page.locator("#delete-goal").click();
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await page.locator("#delete-goal").click();
+    });
     await dialog
       .getByText(
         "Meta possui reserva informada. Mantenha arquivada ou revise a reserva antes de excluir.",
@@ -125,14 +127,15 @@ const base = "http://localhost:8000";
     await form.locator('[name="saved"]').fill("0,00");
     await saveAndRefresh();
     await manage();
-    page.once("dialog", (d) => d.accept());
-    await page.locator("#delete-goal").click();
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await page.locator("#delete-goal").click();
+    });
     await dialog.waitFor({ state: "hidden" });
     await page
       .locator("#goal-list")
       .getByText("Crie uma meta para começar a planejar.", { exact: true })
       .waitFor();
-    await page.locator('[data-view="finance"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     const unsafe = "<img src=x onerror=alert(1)>";
     assert.equal(
       (
@@ -176,7 +179,7 @@ const base = "http://localhost:8000";
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     );
-    await page.locator('.nav[data-view="goals"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "goals");
     await page.locator('#goals [data-action="new-goal"]').click();
     await form.locator('[name="name"]').fill("Não deve persistir na tela");
     await form.locator('[name="target"]').fill("10,00");

@@ -48,6 +48,10 @@ docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-pr
 
 ## Documentação de engenharia
 
+- [Redesign implementado e verificações de interface](docs/REDESIGN_UI.md)
+- [Auditoria de interface e plano de validação — etapa 1](docs/AUDITORIA_UI_UX.md)
+- [Design system — hierarquia, temas e componentes](design-system/walleturbo/MASTER.md)
+- [Dashboard compacto e referência dos cartões](design-system/walleturbo/pages/dashboard.md)
 - [Arquitetura e decisões](docs/ARQUITETURA.md)
 - [Autenticação e identidade](docs/AUTENTICACAO.md)
 - [Segurança e ameaças](docs/SEGURANCA.md)

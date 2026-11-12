@@ -245,3 +245,11 @@ Firefox local não pôde ser instalado porque os domínios de download foram rec
 266 testes locais aprovados, incluindo proteção do arquivo de configuração recuperado. Restauração financeira local aprovada com casos negativos e reativação da API. Compose validado com marcador exclusivo no `.env` recuperado, recebido pela API/migração. Cenário local com 10 mil lançamentos/2.400 compras em 24 meses, 12.530 eventos de auditoria e 12.400 recibos aprovou totais, contagens, exportação e busca mobile; medição em ACEITE_V1.md. Capturas/relatório sintéticos publicados pela CI.
 
 O ambiente local possui cerca de 0,7 GB livres e não tem imagem Keycloak: a duplicação completa é ensaiada no runner do GitHub. `RECOVERY_TEST=1` conserva a fixture OIDC em memória, promove o projeto isolado, exige OTP existente, recusa cookie anterior, compara exportação/resultado e reativa a origem. A CI final do PR é requisito de aceite; nenhum resultado de login recuperado é presumido a partir da comparação SQL. A aplicação passa a 1.0.0 para o recorte financeiro local, sem autorização de publicação pública.
+
+## Incremento 1.1 — redesign de interface — em validação
+
+Tokens semânticos e componentes compartilhados nas seis áreas, navegação por seção/período e dashboard compacto com acesso aos cartões conforme referência. Sem migração, dependência de aplicação ou alteração de contratos/regras financeiras; `app/main.py` altera apenas os metadados de versão.
+
+Evidências locais e limitações em [REDESIGN_UI.md](REDESIGN_UI.md), auditoria em [AUDITORIA_UI_UX.md](AUDITORIA_UI_UX.md) e contrato visual em [dashboard.md](../design-system/walleturbo/pages/dashboard.md). Foram aprovados 266 testes no Docker na etapa de implementação, 13 regressões financeiras/importações, matrizes de seis áreas Chromium/Firefox e a adaptação final dos cartões em cinco larguras/dois temas. Não equivale a certificação WCAG ou teste em aparelho físico.
+
+A CI passa a executar os roteiros de redesign em demonstração/sessão sintética, estados e dashboard, com artefatos e cotas preservadas. Resultado integral e commit final serão registrados no PR antes da integração.

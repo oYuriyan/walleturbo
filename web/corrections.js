@@ -142,7 +142,7 @@ $("#confirm-correction").onclick = () =>
     );
     if (generation !== correctionGeneration || !csrf) return;
     $("#correction-dialog").close();
-    await refresh();
+    await refreshAfterSave();
     message(
       "Compra corrigida. Todas as parcelas e o histórico foram atualizados.",
     );

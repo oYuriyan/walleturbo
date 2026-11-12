@@ -27,6 +27,7 @@ const { randomUUID } = require("crypto");
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let csrf;
   try {
     await page.goto(base);
@@ -45,7 +46,7 @@ const { randomUUID } = require("crypto");
     );
     await page.locator("#month").fill("2026-11");
     await page.locator("#month").dispatchEvent("change");
-    await page.getByRole("button", { name: "Contas e cartões" }).click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     await page.getByRole("button", { name: "Ler PDF", exact: true }).click();
     let originalPreview;
     // Capturar pelo transporte HTTP evita depender do cache de inspeção do Chromium.
@@ -249,13 +250,14 @@ const { randomUUID } = require("crypto");
     await page.locator("#pdf-dialog").screenshot({
       path: "artifacts/pdf-link-mobile.png",
     });
-    page.once("dialog", (dialog) => dialog.accept());
     const releasedResponse = page.waitForResponse(
       (r) => r.url().endsWith("/import/pdf/unlink") && r.status() === 200,
     );
-    await page
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await page
       .getByRole("button", { name: "Desfazer vínculo", exact: true })
       .click();
+    });
     if ((await (await releasedResponse).json()).released !== 1)
       throw Error("Desfazimento PDF falhou");
     await reason.waitFor({ state: "detached" });

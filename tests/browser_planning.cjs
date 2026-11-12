@@ -24,6 +24,7 @@ const fs = require("fs");
   let csrf;
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   try {
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
@@ -51,9 +52,7 @@ const fs = require("fs");
     }
     await page.locator("#month").fill("2026-11");
     await page.locator("#month").dispatchEvent("change");
-    await page
-      .getByRole("button", { name: "Planejamento", exact: true })
-      .click();
+    await require("./ui_helpers.cjs").navigate(page, "planning");
     await page
       .getByText("Sugestão de aporte indisponível até conferir os dados", {
         exact: true,
@@ -87,7 +86,7 @@ const fs = require("fs");
         { exact: true },
       )
       .waitFor();
-    await page.locator("#reload-planning").click();
+    await require("./ui_helpers.cjs").confirmNext(page, () => page.locator("#reload-planning").click());
     await page.waitForFunction(
       () =>
         !document.querySelector("#plan-form [name=complete]").checked &&
@@ -127,7 +126,7 @@ const fs = require("fs");
         { exact: true },
       )
       .waitFor();
-    await page.locator("#reload-planning").click();
+    await require("./ui_helpers.cjs").confirmNext(page, () => page.locator("#reload-planning").click());
     await page.waitForFunction(
       () =>
         document.querySelector("#plan-form [name=buffer]").value === "200,00",
@@ -164,9 +163,7 @@ const fs = require("fs");
     if (erased.status() !== 200)
       throw Error("Falha ao limpar dados sintéticos");
     csrf = null;
-    await page
-      .getByRole("button", { name: "Planejamento", exact: true })
-      .click();
+    await require("./ui_helpers.cjs").navigate(page, "planning");
     await page.getByText("Sessão encerrada", { exact: true }).waitFor();
     if (
       (await page.locator("#capacity").textContent()) ||

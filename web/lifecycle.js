@@ -44,7 +44,7 @@ $("#lifecycle-form").onsubmit = (e) => {
       });
       if (generation !== lifecycleGeneration) return;
       $("#lifecycle-dialog").close();
-      await refresh();
+      await refreshAfterSave();
       message("Cadastro atualizado. Histórico e vínculos preservados.");
     } finally {
       if (generation === lifecycleGeneration) submit.disabled = !csrf;
@@ -72,7 +72,7 @@ $("#delete-empty-entity").onclick = () =>
   action(async () => {
     const f = $("#lifecycle-form");
     if (
-      !confirm(
+      !await confirmAction(
         "Excluir este cadastro arquivado? A operação será recusada se houver registros vinculados.",
       )
     )
@@ -87,7 +87,7 @@ $("#delete-empty-entity").onclick = () =>
       );
       if (generation !== lifecycleGeneration) return;
       $("#lifecycle-dialog").close();
-      await refresh();
+      await refreshAfterSave();
       message("Cadastro vazio excluído.");
     } finally {
       if (generation === lifecycleGeneration) button.disabled = !csrf;

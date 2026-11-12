@@ -33,6 +33,7 @@ const fs = require("fs"),
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   const source = fs.readFileSync("tests/fixtures/ofx/card-102.ofx", "utf8");
   const file = (text) => ({
     name: "cartao-sintetico.ofx",
@@ -79,9 +80,7 @@ const fs = require("fs"),
     await page.getByText("Conta conectada", { exact: true }).waitFor();
     await page.locator("#month").fill("2026-11");
     await page.locator("#month").dispatchEvent("change");
-    await page
-      .getByRole("button", { name: "Contas e cartões", exact: true })
-      .click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     const open = async (text = source) => {
       await page
         .locator("#statement-list")
@@ -161,11 +160,12 @@ const fs = require("fs"),
     await page
       .locator('input[data-release-reason="0"]')
       .fill("Destino conferido novamente");
-    page.once("dialog", (dialog) => dialog.accept());
     response = page.waitForResponse(
       (r) => r.url().endsWith("/import/ofx/unlink") && r.status() === 200,
     );
-    await page.locator('button[data-release-index="0"]').click();
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await page.locator('button[data-release-index="0"]').click();
+    });
     assert.equal((await (await response).json()).released, 1);
     await page
       .locator('input[data-release-reason="0"]')

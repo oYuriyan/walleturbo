@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>Walleturbo · Seu dinheiro, com direção</title>
+    <link rel="stylesheet" href="/assets/tokens.css" />
     <link rel="stylesheet" href="/assets/style.css" />
+    <link rel="stylesheet" href="/assets/dashboard.css" />
+    <script src="/assets/theme.js"></script>
+    <script src="/assets/ui.js" defer></script>
     <script src="/assets/app.js" defer></script>
     <script src="/assets/cards.js" defer></script>
     <script src="/assets/pdf.js" defer></script>
@@ -26,33 +30,31 @@
         ></a
       >
       <nav aria-label="Navegação principal">
-        <button class="nav active" data-view="overview" aria-current="page">
-          <span aria-hidden="true">◫</span> Visão geral</button
-        ><button class="nav" data-view="transactions">
-          <span aria-hidden="true">⇄</span> Movimentações</button
-        ><button class="nav" data-view="finance">
-          <span aria-hidden="true">▤</span> Contas e cartões</button
-        ><button class="nav" data-view="planning">
-          <span aria-hidden="true">▥</span> Planejamento</button
-        ><button class="nav" data-view="goals">
-          <span aria-hidden="true">◎</span> Minhas metas</button
-        ><button class="nav" data-view="privacy">
-          <span aria-hidden="true">◇</span> Privacidade
-        </button>
+        <a class="nav active" href="#overview" data-view="overview" aria-current="page"><span data-icon="overview" aria-hidden="true"></span>Visão geral</a>
+        <a class="nav" href="#transactions" data-view="transactions"><span data-icon="transactions" aria-hidden="true"></span>Movimentações</a>
+        <a class="nav" href="#finance" data-view="finance"><span data-icon="wallet" aria-hidden="true"></span>Contas e cartões</a>
+        <button id="more-navigation-button" class="nav mobile-only" type="button" aria-expanded="false" aria-controls="more-navigation"><span data-icon="more" aria-hidden="true"></span>Mais</button>
+        <div id="more-navigation" class="more-links">
+          <a class="nav" href="#planning" data-view="planning"><span data-icon="chart" aria-hidden="true"></span>Planejamento</a>
+          <a class="nav" href="#goals" data-view="goals"><span data-icon="target" aria-hidden="true"></span>Minhas metas</a>
+          <a class="nav" href="#privacy" data-view="privacy"><span data-icon="shield" aria-hidden="true"></span>Privacidade</a>
+        </div>
       </nav>
       <div class="sidebar-bottom">
-        <button id="theme" class="nav">◐ <span>Alternar tema</span></button
-        ><span class="version">Walleturbo · versão 1.0</span>
+        <span class="version">Seu dinheiro, com direção.</span>
+        <span class="version">Walleturbo · versão 1.0</span>
       </div>
     </aside>
     <main aria-busy="false">
       <header class="topbar">
-        <span>Seu controle financeiro</span>
+        <span class="topbar-caption">Organize hoje. Planeje o amanhã.</span>
         <div>
           <span id="mode" class="badge">Não conectado</span
           ><a class="button small" href="/auth/login" id="login"
-            >Entrar com segurança ↑</a
+            >Entrar com segurança</a
           ><button id="logout" class="ghost" hidden>Sair</button>
+          <button id="theme" class="icon-button" type="button" aria-label="Alternar tema" title="Alternar tema"><span data-icon="theme" aria-hidden="true"></span></button>
+          <label class="theme-label"><span class="sr-only">Preferência de tema</span><select id="theme-preference" aria-label="Preferência de tema"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
         </div>
       </header>
       <section class="welcome">
@@ -62,9 +64,13 @@
             Entradas, despesas e resultado do período.
           </p>
         </div>
-        <label class="month-label"
-          >Período<input type="month" id="month" aria-label="Mês de referência"
-        /></label>
+        <div class="page-tools">
+          <label class="month-label">Período<input type="month" id="month" aria-label="Mês de referência" /></label>
+          <div id="overview-quick-actions" class="actions overview-quick-actions">
+            <button class="icon-button" id="overview-import" type="button" aria-label="Importar arquivo" title="Importar arquivo"><span data-icon="upload" aria-hidden="true"></span></button>
+            <button class="button" data-action="new-entry" type="button" aria-label="Novo lançamento"><span data-icon="plus" aria-hidden="true"></span><span class="action-label-desktop">Novo lançamento</span><span class="action-label-mobile">Registrar</span></button>
+          </div>
+        </div>
       </section>
       <div id="notice" class="notice">
         <span
@@ -77,7 +83,38 @@
       <button id="retry-load" class="ghost" type="button" hidden>
         Tentar novamente
       </button>
-      <section id="overview" class="view">
+      <section id="overview" class="view dashboard">
+        <p class="subtle dashboard-demo-note" data-demo-note hidden>Importações e saldos ficam disponíveis com sua conta conectada.</p>
+        <div class="dashboard-top">
+          <section class="financial-overview" aria-labelledby="account-summary-title">
+            <article class="balance-card account-summary">
+              <div class="section-heading"><h2 id="account-summary-title">Saldo calculado das contas</h2><a class="text-button" href="#finance" data-route="finance">Ver contas <span aria-hidden="true">→</span></a></div>
+              <strong id="overview-account-balance" class="money-large">Saldo indisponível</strong>
+              <p id="overview-balance-context">Conecte sua conta para consultar os saldos.</p>
+              <details class="balance-help"><summary>Como este saldo é calculado?</summary><p>Pelos seus registros, sem consulta bancária. A data do saldo é independente do mês selecionado. Contas sem referência aplicável deixam o total indisponível.</p></details>
+            </article>
+            <div class="summary-grid dashboard-metrics" role="group" aria-label="Resultado do mês selecionado">
+              <article class="metric result-card"><span>Resultado do mês</span><strong id="balance">R$ 0,00</strong><small>Receitas − despesas</small></article>
+              <article class="metric"><span>Receitas</span><strong id="income">R$ 0,00</strong><small>Entradas no período</small></article>
+              <article class="metric"><span>Despesas líquidas</span><strong id="expense">R$ 0,00</strong><small>Parcelas pelo vencimento</small></article>
+            </div>
+            <details class="cash-details"><summary>Consultar movimentação de caixa</summary><div><p id="cash-result">Movimentação de caixa: R$ 0,00</p><p id="card-result">Pagamentos de fatura no mês: R$ 0,00</p><p class="subtle">Pagamentos de fatura não duplicam despesas.</p></div></details>
+          </section>
+          <section class="overview-card-panel" aria-labelledby="overview-cards-title">
+            <div class="section-heading"><h2 id="overview-cards-title">Seus cartões <span id="overview-card-count" class="subtle"></span></h2><button id="overview-new-card" class="ghost small" type="button" aria-label="Adicionar cartão"><span data-icon="plus" aria-hidden="true"></span>Cartão</button></div>
+            <div id="overview-cards" class="overview-cards"></div>
+            <div class="card-showcase-footer"><div id="overview-card-options" class="card-options" role="group" aria-label="Selecionar cartão"></div><a class="text-button" href="#finance" data-route="finance">Ver todos</a></div>
+          </section>
+        </div>
+        <div id="overview-attention" class="attention-banner" hidden></div>
+        <div class="content-grid overview-grid">
+          <article class="panel recent-panel" aria-labelledby="recent-title"><div class="section-heading"><h2 id="recent-title">Últimas movimentações</h2><button class="text-button" data-view="transactions">Ver todas</button></div><div id="recent"></div></article>
+          <article class="panel categories-panel" aria-labelledby="categories-title"><div class="section-heading"><h2 id="categories-title">Despesas por categoria</h2></div><div id="categories" class="categories"></div></article>
+        </div>
+        <details class="overview-secondary"><summary>Metas e pontos de atenção</summary><div class="content-grid">
+          <article class="panel"><div class="section-heading"><h2>Suas metas</h2><button class="text-button" data-view="goals">Ver metas</button></div><div id="goal-preview"></div></article>
+          <article class="panel insights-panel"><h2>Pontos de atenção</h2><p class="subtle">Sinais calculados a partir dos seus registros.</p><div id="insights"></div></article>
+        </div></details>
         <details id="first-steps" class="panel" hidden>
           <summary>Primeiros passos</summary>
           <p>Comece com uma conta e os registros do seu dia a dia.</p>
@@ -111,87 +148,13 @@
             qualquer momento.
           </p>
         </details>
-        <div class="summary-grid">
-          <article class="balance-card">
-            <div class="card-top">
-              <span>Resultado do mês</span><span>↑</span>
-            </div>
-            <strong id="balance">R$ 0,00</strong
-            ><span class="muted-light"
-              >Receitas menos despesas e parcelas deste mês</span
-            >
-          </article>
-          <article class="metric">
-            <div class="icon-circle income">↓</div>
-            <span>Entradas</span><strong id="income">R$ 0,00</strong
-            ><small>Receitas no período</small>
-          </article>
-          <article class="metric">
-            <div class="icon-circle expense">↑</div>
-            <span>Despesas líquidas</span><strong id="expense">R$ 0,00</strong
-            ><small>Cartões pelo mês de vencimento</small>
-          </article>
-        </div>
-        <div class="notice">
-          <span id="cash-result">Movimentação de caixa: R$ 0,00</span
-          ><span id="card-result"
-            >Pagamentos de fatura não duplicam despesas.</span
-          >
-        </div>
-        <div class="content-grid overview-grid">
-          <div class="overview-column">
-            <article class="panel">
-              <div class="section-heading">
-                <div>
-                  <h2>Despesas por categoria</h2>
-                  <p>Gastos por categoria neste mês</p>
-                </div>
-                <span class="subtle">● BRL</span>
-              </div>
-              <div id="categories" class="categories"></div>
-            </article>
-            <article class="panel">
-              <div class="section-heading">
-                <div>
-                  <h2>Últimas movimentações</h2>
-                  <p>Registros recentes no período.</p>
-                </div>
-                <button class="text-button" data-view="transactions">
-                  Ver todas ↑
-                </button>
-              </div>
-              <div id="recent"></div>
-            </article>
-          </div>
-          <div class="overview-column">
-            <article class="panel">
-              <div class="section-heading">
-                <div>
-                  <h2>Suas metas</h2>
-                  <p>Seu objetivo em destaque.</p>
-                </div>
-                <button class="text-button" data-view="goals">Ver metas</button>
-              </div>
-              <div id="goal-preview"></div>
-            </article>
-            <details class="panel secondary-panel insights-panel">
-              <summary>Pontos de atenção</summary>
-              <p class="subtle">
-                Sinais calculados a partir dos seus registros.
-              </p>
-              <div id="insights"></div>
-              <div class="fine-print">
-                Calculado a partir dos registros informados.
-              </div>
-            </details>
-          </div>
-        </div>
       </section>
       <section id="transactions" class="view" hidden>
+        <p class="subtle" data-demo-note hidden>Importação disponível com conta conectada. Você pode criar e revisar lançamentos manuais nesta demonstração.</p>
         <div class="section-heading">
           <div class="actions">
             <button class="ghost" id="import-button">
-              ↑ Importar CSV / OFX</button
+              <span data-icon="upload" aria-hidden="true"></span>Importar CSV / OFX</button
             ><button class="button" data-action="new-entry">
               + Novo lançamento
             </button>
@@ -204,14 +167,15 @@
               type="search"
               placeholder="Descrição ou categoria"
           /></label>
+          <div class="search-summary"><p id="search-count" class="subtle" role="status"></p><button id="clear-search" class="text-button" type="button" hidden>Limpar busca</button></div>
           <div id="transaction-list"></div>
         </div>
       </section>
       <section id="finance" class="view" hidden>
         <div class="section-heading">
           <div class="actions">
-            <button class="ghost" id="new-account">+ Conta</button
-            ><button class="ghost" id="new-card">+ Cartão</button
+            <button class="ghost" id="new-account"><span data-icon="plus" aria-hidden="true"></span>Conta</button
+            ><button class="ghost" id="new-card"><span data-icon="plus" aria-hidden="true"></span>Cartão</button
             ><button class="button" id="new-purchase">
               + Compra ou estorno
             </button>
@@ -221,6 +185,7 @@
           As faturas abaixo vencem no mês selecionado. Informe a primeira fatura
           conforme o emissor; datas de fechamento não são presumidas.
         </div>
+        <p id="finance-demo-help" class="notice" hidden>Na demonstração, você pode explorar contas, cartões e compras. Saldos, transferências e importações ficam disponíveis com uma conta conectada.</p>
         <div id="account-list" class="account-list"></div>
         <article class="panel balance-panel">
           <div class="section-heading">
@@ -249,6 +214,7 @@
             Carregar mais transferências
           </button>
         </article>
+        <h2 class="statement-heading">Seus cartões</h2>
         <div id="card-list" class="goals-grid"></div>
         <h2 class="statement-heading">Faturas do período</h2>
         <div id="statement-list"></div>
@@ -337,7 +303,7 @@
       </section>
       <section id="goals" class="view" hidden>
         <div class="section-heading">
-          <button class="button" data-action="new-goal">+ Criar meta</button>
+          <button class="button" data-action="new-goal"><span data-icon="plus" aria-hidden="true"></span>Criar meta</button>
         </div>
         <div id="goal-list" class="goals-grid"></div>
       </section>
@@ -358,7 +324,7 @@
             Exporte lançamentos, metas, contas, cartões, faturas e pagamentos em
             JSON.
           </p>
-          <button id="export" class="ghost">Baixar meus dados ↓</button>
+          <button id="export" class="ghost"><span data-icon="download" aria-hidden="true"></span>Baixar meus dados</button>
           <h3>Excluir dados financeiros</h3>
           <p>
             A exclusão remove todos os registros financeiros ativos. Não exclui
@@ -373,6 +339,15 @@
         <span>Valores em reais · pt-BR</span>
       </footer>
     </main>
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title" class="confirmation-dialog">
+      <form method="dialog">
+        <span class="confirmation-symbol" data-icon="shield" aria-hidden="true"></span>
+        <h2 id="confirm-title">Confirmar alteração</h2>
+        <p id="confirm-description"></p>
+        <p class="subtle">Esta ação altera os registros do Walleturbo. Não executa operações no banco.</p>
+        <div class="actions"><button class="ghost" value="cancel" autofocus>Cancelar</button><button class="danger" value="confirm">Confirmar alteração</button></div>
+      </form>
+    </dialog>
     <dialog id="entry-dialog">
       <form id="entry-form">
         <div class="section-heading">
@@ -420,6 +395,7 @@
             <option value="">Sem conta vinculada</option>
           </select></label
         >
+        <p class="field-help">Sem conta vinculada, o lançamento entra no resultado do mês e não altera o saldo de uma conta.</p>
         <label class="checkbox"
           ><input type="checkbox" name="reviewed" checked /> Categoria revisada
           por mim</label
@@ -655,7 +631,7 @@
         </select></label
       >
       <a href="/assets/exemplo.csv" download class="text-button"
-        >Baixar modelo de CSV ↓</a
+        >Baixar modelo de CSV</a
       ><label
         >Selecione o arquivo<input
           type="file"

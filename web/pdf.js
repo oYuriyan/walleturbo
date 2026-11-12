@@ -195,7 +195,7 @@ function renderPdfLinks(data) {
             if (explanation.length < 3)
               throw Error("Informe o motivo (mínimo 3 caracteres).");
             if (
-              !confirm(
+              !await confirmAction(
                 "Desfazer somente o vínculo e reler o arquivo? O lançamento será preservado; edições ainda não importadas serão descartadas.",
               )
             )
@@ -395,7 +395,7 @@ $("#pdf-form").onsubmit = (e) => {
       );
       if (generation !== pdfGeneration) return;
       $("#pdf-dialog").close();
-      await refresh();
+      await refreshAfterSave();
       message(
         `${result.created} lançamento(s) importado(s); ${result.duplicates} linha(s) já conhecida(s) ignorada(s).${result.linked ? ` ${result.linked} origem(ns) vinculada(s) a registros existentes.` : ""}${result.removed ? ` ${result.removed} excluída(s) anteriormente não foram recriadas.` : ""} Confira agora o total da fatura.`,
       );

@@ -1,7 +1,7 @@
 // Roteiro financeiro para uma sessão autenticada; valores exclusivamente sintéticos.
 const assert = require("assert/strict");
 const { randomUUID } = require("crypto");
-const base = "http://localhost:8000";
+const base = process.env.APP_URL || "http://localhost:8000";
 async function request(
   context,
   csrf,

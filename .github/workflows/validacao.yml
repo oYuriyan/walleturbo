@@ -36,6 +36,12 @@ jobs:
           node --check web/corrections.js
           node --check web/payment-corrections.js
           node --check web/ofx-relocation.js
+          node --check web/theme.js
+          node --check web/ui.js
+          node --check tests/ui_helpers.cjs
+          node --check tests/browser_redesign.cjs
+          node --check tests/browser_ui_states.cjs
+          node --check tests/browser_dashboard.cjs
       - name: Validar PostgreSQL e Redis reais em volume novo
         run: |
           cp .env.example .env
@@ -109,6 +115,20 @@ jobs:
           sleep 60
           PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright AXE_PATH=/tmp/walleturbo-e2e/node_modules/axe-core/axe.min.js node tests/browser_ui.cjs
           docker compose exec -T -e WALLETURBO_INTEGRATION=1 api python < tests/browser_seed.py | BROWSER_ENGINE=firefox UI_AUTH=1 PLAYWRIGHT_MODULE=/tmp/walleturbo-e2e/node_modules/playwright AXE_PATH=/tmp/walleturbo-e2e/node_modules/axe-core/axe.min.js node tests/browser_ui.cjs
+      - name: Validar redesign, estados e dashboard
+        env:
+          PLAYWRIGHT_MODULE: /tmp/walleturbo-e2e/node_modules/playwright
+          AXE_PATH: /tmp/walleturbo-e2e/node_modules/axe-core/axe.min.js
+          UI_RATE_RETRY: '1'
+        run: |
+          node tests/browser_ui_states.cjs
+          for engine in chromium firefox; do
+            BROWSER_ENGINE=$engine node tests/browser_dashboard.cjs
+            BROWSER_ENGINE=$engine UI_AUTH=0 node tests/browser_redesign.cjs
+            # Sessão própria e janela de cotas para a jornada autenticada.
+            sleep 60
+            docker compose exec -T -e WALLETURBO_INTEGRATION=1 -e WALLETURBO_BROWSER_SESSION_TTL=900 api python < tests/browser_seed.py | BROWSER_ENGINE=$engine UI_AUTH=1 node tests/browser_redesign.cjs
+          done
       - name: Validar OFX no PostgreSQL e navegador
         run: |
           sleep 60
@@ -146,6 +166,10 @@ jobs:
             artifacts/balances-*.png
             artifacts/first-steps-*.png
             artifacts/ui-*.png
+            artifacts/redesign-*/**
+            artifacts/dashboard-*.png
+            artifacts/dashboard-*-results.json
+            artifacts/card-reference-*.png
             artifacts/volume-mobile.png
             artifacts/v1-volume.json
             artifacts/lifecycle-*.png

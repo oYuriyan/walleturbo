@@ -1,7 +1,7 @@
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs"),
   assert = require("assert/strict");
-const base = "http://localhost:8000";
+const base = process.env.APP_URL || "http://localhost:8000";
 (async () => {
   const seed = JSON.parse(fs.readFileSync(0, "utf8"));
   const browser = await chromium.launch({
@@ -21,6 +21,7 @@ const base = "http://localhost:8000";
     },
   ]);
   const page = await context.newPage();
+  await require("./ui_helpers.cjs").respectRateLimits(context, page);
   let headers;
   try {
     const csrf = (await (await context.request.get(base + "/api/me")).json())
@@ -50,7 +51,7 @@ const base = "http://localhost:8000";
     );
     await page.goto(base);
     await page.getByText("Conta conectada", { exact: true }).waitFor();
-    await page.locator('[data-view="finance"]').click();
+    await require("./ui_helpers.cjs").navigate(page, "finance");
     const form = page.locator("#lifecycle-form"),
       dialog = page.locator("#lifecycle-dialog");
     const manage = async (id, kind) => {
@@ -139,8 +140,9 @@ const base = "http://localhost:8000";
     await form.locator('[name="archived"]').check();
     await save();
     await manage(card.id, "cards");
-    page.once("dialog", (d) => d.accept());
-    await page.locator("#delete-empty-entity").click();
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await page.locator("#delete-empty-entity").click();
+    });
     await dialog
       .getByText(
         "Cadastro possui registros vinculados. Mantenha arquivado para preservar o histórico.",
@@ -159,8 +161,9 @@ const base = "http://localhost:8000";
     );
     await dialog.getByRole("button", { name: "Fechar", exact: true }).click();
     await manage(account.id, "accounts");
-    page.once("dialog", (d) => d.accept());
-    await page.locator("#delete-empty-entity").click();
+    await require("./ui_helpers.cjs").confirmNext(page, async () => {
+      await page.locator("#delete-empty-entity").click();
+    });
     await dialog.waitFor({ state: "hidden" });
     assert.equal(
       (await (await context.request.get(base + "/api/accounts")).json()).length,
