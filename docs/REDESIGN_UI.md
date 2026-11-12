@@ -58,6 +58,8 @@ Na preparação do versionamento 1.1.0, a mesma tarefa foi repetida: **266 teste
 
 O ambiente foi reconstruído novamente com a versão 1.1.0. Foram repetidos com sucesso o redesign autenticado em Chromium (37 auditorias axe), os estados (7 grupos/6 auditorias) e o dashboard em Chromium/Firefox (20 combinações de largura/tema). O roteiro autenticado usa a mesma espera por cotas configurada na CI.
 
+Na primeira execução do PR #19, a suíte anterior `browser_ui.cjs` encontrou dois botões com o nome Novo lançamento na sessão autenticada (ação de Movimentações e guia de primeiro uso). O seletor foi restringido à ação da seção, preservando a verificação do formulário. A suíte Firefox autenticada passou novamente no ambiente local após esse ajuste; nenhuma regra da aplicação foi alterada.
+
 ## Validação em navegador
 
 Foram usados navegadores reais em modo headless pelo Playwright, com capturas inspecionadas visualmente. Isso evita o bloqueio de controle nativo do Firefox identificado na etapa 1. A aplicação foi acessada em localhost; não foi publicada.

@@ -248,9 +248,7 @@ const assert = require("assert/strict");
     }
     await page.locator("#theme").click();
     await page.locator('.nav[data-view="transactions"]').click();
-    await page
-      .getByRole("button", { name: "Novo lançamento", exact: false })
-      .click();
+    await page.locator('#transactions [data-action="new-entry"]').click();
     const dialog = page.getByRole("dialog", {
       name: "Novo lançamento",
       exact: true,
